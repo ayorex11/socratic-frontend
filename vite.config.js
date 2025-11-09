@@ -3,16 +3,14 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 // Only use proxy in development
-const isDevelopment = process.env.NODE_ENV !== 'production';
+const isDevelopment = process.env.NODE_ENV !== 'production'
 
 export default defineConfig({
-  plugins: [
-    vue(),
-  ],
+  plugins: [vue()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
   },
   // Only include server config for development
   ...(isDevelopment && {
@@ -21,14 +19,14 @@ export default defineConfig({
       open: true,
       proxy: {
         '/api': {
-          target: 'http://localhost:8000', // Local Django for development
+          target: 'https://socratic-f2kh.onrender.com/', // Local Django for development
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '')
+          rewrite: (path) => path.replace(/^\/api/, ''),
         },
-      }
-    }
+      },
+    },
   }),
   build: {
     outDir: 'dist',
-  }
+  },
 })
