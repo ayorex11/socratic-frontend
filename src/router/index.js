@@ -100,6 +100,15 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 
+  // Check token validity on every route change for authenticated users
+  if (authStore.isAuthenticated) {
+    const isValid = authStore.checkTokenValidity()
+    if (!isValid) {
+      next('/login?session_expired=true')
+      return
+    }
+  }
+
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     // Redirect to login if trying to access protected route without auth
     next('/login')

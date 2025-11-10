@@ -7,6 +7,11 @@
         <p>Welcome back</p>
       </div>
 
+      <!-- Session Expired Message -->
+      <div v-if="$route.query.session_expired" class="session-expired-message">
+        Your session has expired. Please log in again.
+      </div>
+
       <!-- Login Form -->
       <form @submit.prevent="handleSubmit" class="login-form">
         <div class="input-group">
@@ -72,11 +77,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const loading = ref(false)
 const resendLoading = ref(false)
@@ -149,6 +155,14 @@ const resendVerification = async () => {
     resendLoading.value = false
   }
 }
+
+// Clear session expired message when component mounts
+onMounted(() => {
+  if (route.query.session_expired) {
+    // You can optionally clear the query parameter here
+    console.log('Session expired - user needs to login again')
+  }
+})
 </script>
 
 <style scoped>
@@ -184,6 +198,18 @@ const resendVerification = async () => {
 
 .logo-section p {
   color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+/* Add this new style for session expired message */
+.session-expired-message {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  text-align: center;
   font-size: 0.9rem;
 }
 
