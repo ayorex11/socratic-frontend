@@ -1,11 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
   let expirationCheckInterval = null
+  let routerInstance = null
+
+  // Method to set router instance (called from main.js)
+  const setRouter = (router) => {
+    routerInstance = router
+  }
 
   const login = async (credentials) => {
     try {
@@ -42,7 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const logout = () => {
+  const logout = (redirectToLogin = false) => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
@@ -55,6 +60,16 @@ export const useAuthStore = defineStore('auth', () => {
     if (expirationCheckInterval) {
       clearInterval(expirationCheckInterval)
       expirationCheckInterval = null
+    }
+
+    // Redirect to login if requested
+    if (redirectToLogin) {
+      if (routerInstance && routerInstance.currentRoute.value.path !== '/login') {
+        routerInstance.push('/login')
+      } else if (!routerInstance && window.location.pathname !== '/login') {
+        // Fallback to window.location if router not available
+        window.location.href = '/login'
+      }
     }
   }
 
@@ -74,7 +89,7 @@ export const useAuthStore = defineStore('auth', () => {
     // If refresh token is expired, log out immediately
     if (isTokenExpired(refreshExpiration)) {
       console.log('Refresh token expired, logging out')
-      logout()
+      logout(true)
       return
     }
 
@@ -83,8 +98,10 @@ export const useAuthStore = defineStore('auth', () => {
     if (isTokenExpired(accessExpiration)) {
       console.log('Access token expired')
       // Option 1: Log out immediately
-      logout()
+      logout(true)
 
+      // Option 2: Attempt to refresh the token (implement this if your backend supports it)
+      // attemptTokenRefresh()
     }
   }
 
@@ -113,7 +130,7 @@ export const useAuthStore = defineStore('auth', () => {
       // Check if token is already expired
       if (isTokenExpired(accessExpiration)) {
         console.log('Token expired on initialization, logging out')
-        logout()
+        logout(false) // Don't redirect on init, let router handle it
       } else {
         user.value = JSON.parse(storedUser)
         isAuthenticated.value = true
@@ -130,5 +147,6 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     initializeAuth,
     checkTokenExpiration,
+    setRouter,
   }
 })
