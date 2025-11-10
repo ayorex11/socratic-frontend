@@ -5,12 +5,6 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
   let expirationCheckInterval = null
-  let routerInstance = null
-
-  // Method to set router instance (called from main.js)
-  const setRouter = (router) => {
-    routerInstance = router
-  }
 
   const login = async (credentials) => {
     try {
@@ -47,7 +41,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const logout = (redirectToLogin = false) => {
+  const logout = () => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
@@ -62,14 +56,10 @@ export const useAuthStore = defineStore('auth', () => {
       expirationCheckInterval = null
     }
 
-    // Redirect to login if requested
-    if (redirectToLogin) {
-      if (routerInstance && routerInstance.currentRoute.value.path !== '/login') {
-        routerInstance.push('/login')
-      } else if (!routerInstance && window.location.pathname !== '/login') {
-        // Fallback to window.location if router not available
-        window.location.href = '/login'
-      }
+    // Force redirect to login using window.location
+    // This works without importing router and avoids circular dependencies
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login'
     }
   }
 
@@ -89,19 +79,14 @@ export const useAuthStore = defineStore('auth', () => {
     // If refresh token is expired, log out immediately
     if (isTokenExpired(refreshExpiration)) {
       console.log('Refresh token expired, logging out')
-      logout(true)
+      logout()
       return
     }
 
-    // If access token is expired but refresh token is still valid,
-    // you could attempt to refresh the token here
+    // If access token is expired, log out
     if (isTokenExpired(accessExpiration)) {
-      console.log('Access token expired')
-      // Option 1: Log out immediately
-      logout(true)
-
-      // Option 2: Attempt to refresh the token (implement this if your backend supports it)
-      // attemptTokenRefresh()
+      console.log('Access token expired, logging out')
+      logout()
     }
   }
 
@@ -129,8 +114,15 @@ export const useAuthStore = defineStore('auth', () => {
     if (storedUser && accessToken && accessExpiration) {
       // Check if token is already expired
       if (isTokenExpired(accessExpiration)) {
-        console.log('Token expired on initialization, logging out')
-        logout(false) // Don't redirect on init, let router handle it
+        console.log('Token expired on initialization, clearing auth')
+        // Clear everything but don't redirect (let the app/router handle routing)
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('user')
+        localStorage.removeItem('accessExpiration')
+        localStorage.removeItem('refreshExpiration')
+        user.value = null
+        isAuthenticated.value = false
       } else {
         user.value = JSON.parse(storedUser)
         isAuthenticated.value = true
@@ -146,7 +138,5 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     initializeAuth,
-    checkTokenExpiration,
-    setRouter,
   }
 })
