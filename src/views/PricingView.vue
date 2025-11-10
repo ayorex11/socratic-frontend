@@ -186,39 +186,48 @@ onMounted(() => {
 
 <style scoped>
 .pricing {
-  padding: 80px 0;
+  padding: clamp(40px, 8vw, 80px) 0;
   background: #f8f9fa;
-  min-height: calc(100vh - 70px);
+  min-height: calc(100vh - clamp(60px, 8vw, 70px));
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 20px);
 }
 
 .location-indicator {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: clamp(20px, 4vw, 30px);
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 15px;
+  gap: clamp(10px, 2.5vw, 15px);
   flex-wrap: wrap;
 }
 
 .location-badge {
   background: #27ae60;
   color: white;
-  padding: 8px 16px;
+  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px);
   border-radius: 20px;
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .location-toggle {
   background: transparent;
   color: #27ae60;
   border: 1px solid #27ae60;
-  padding: 8px 16px;
+  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px);
   border-radius: 20px;
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   cursor: pointer;
   transition: all 0.3s ease;
+  white-space: nowrap;
+  min-height: 40px;
 }
 
 .location-toggle:hover {
@@ -228,17 +237,17 @@ onMounted(() => {
 
 .loading-state {
   text-align: center;
-  padding: 60px 0;
+  padding: clamp(40px, 8vw, 60px) 0;
 }
 
 .loading-spinner {
   border: 3px solid #f3f3f3;
   border-top: 3px solid #27ae60;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: clamp(32px, 8vw, 40px);
+  height: clamp(32px, 8vw, 40px);
   animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
+  margin: 0 auto clamp(16px, 3vw, 20px);
 }
 
 @keyframes spin {
@@ -246,38 +255,50 @@ onMounted(() => {
   100% { transform: rotate(360deg); }
 }
 
+.loading-state p {
+  color: #5a6c7d;
+  font-size: clamp(0.9rem, 3vw, 1rem);
+}
+
 .pricing-header {
   text-align: center;
-  margin-bottom: 60px;
+  margin-bottom: clamp(40px, 6vw, 60px);
 }
 
 .pricing-header h1 {
-  font-size: 3rem;
+  font-size: clamp(2rem, 6vw, 3rem);
   color: #2c3e50;
-  margin-bottom: 20px;
+  margin-bottom: clamp(12px, 3vw, 20px);
+  line-height: 1.2;
 }
 
 .pricing-header p {
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 3vw, 1.2rem);
   color: #5a6c7d;
+  line-height: 1.4;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .pricing-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: clamp(20px, 4vw, 30px);
   max-width: 1100px;
   margin: 0 auto;
 }
 
 .pricing-card {
   background: white;
-  padding: 40px 30px;
+  padding: clamp(24px, 5vw, 40px) clamp(20px, 4vw, 30px);
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
   text-align: center;
   transition: transform 0.3s ease;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
 }
 
 .pricing-card:hover {
@@ -286,11 +307,11 @@ onMounted(() => {
 
 .pricing-card.featured {
   border: 2px solid #27ae60;
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 .pricing-card.featured:hover {
-  transform: scale(1.05) translateY(-5px);
+  transform: scale(1.02) translateY(-5px);
 }
 
 .plan-badge {
@@ -300,10 +321,11 @@ onMounted(() => {
   transform: translateX(-50%);
   background: #95a5a6;
   color: white;
-  padding: 6px 20px;
+  padding: clamp(4px, 1vw, 6px) clamp(16px, 3vw, 20px);
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: clamp(0.7rem, 2.5vw, 0.8rem);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .plan-badge.featured-badge {
@@ -311,24 +333,26 @@ onMounted(() => {
 }
 
 .plan-header {
-  margin-bottom: 30px;
+  margin-bottom: clamp(20px, 4vw, 30px);
   margin-top: 10px;
 }
 
 .plan-header h3 {
-  font-size: 1.5rem;
+  font-size: clamp(1.3rem, 4vw, 1.5rem);
   color: #2c3e50;
-  margin-bottom: 15px;
+  margin-bottom: clamp(12px, 2.5vw, 15px);
+  line-height: 1.2;
 }
 
 .price {
-  font-size: 3rem;
+  font-size: clamp(2.5rem, 6vw, 3rem);
   font-weight: bold;
   color: #27ae60;
+  line-height: 1;
 }
 
 .price span {
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
   color: #7f8c8d;
   font-weight: normal;
 }
@@ -336,14 +360,17 @@ onMounted(() => {
 .features-list {
   list-style: none;
   padding: 0;
-  margin: 30px 0;
+  margin: clamp(20px, 4vw, 30px) 0;
   text-align: left;
+  flex-grow: 1;
 }
 
 .features-list li {
-  padding: 10px 0;
+  padding: clamp(8px, 2vw, 10px) 0;
   color: #5a6c7d;
   border-bottom: 1px solid #ecf0f1;
+  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+  line-height: 1.4;
 }
 
 .features-list li:last-child {
@@ -356,14 +383,19 @@ onMounted(() => {
 
 .plan-button {
   display: inline-block;
-  padding: 12px 30px;
+  padding: clamp(12px, 3vw, 14px) clamp(20px, 4vw, 30px);
   border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
   width: 100%;
   text-align: center;
-  margin-top: 10px;
+  margin-top: auto;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .plan-button.primary {
@@ -391,14 +423,15 @@ onMounted(() => {
 
 /* Feature Comparison Table */
 .feature-comparison {
-  margin-top: 80px;
+  margin-top: clamp(50px, 8vw, 80px);
   text-align: center;
 }
 
 .feature-comparison h3 {
   color: #2c3e50;
-  margin-bottom: 30px;
-  font-size: 1.8rem;
+  margin-bottom: clamp(20px, 4vw, 30px);
+  font-size: clamp(1.4rem, 4vw, 1.8rem);
+  line-height: 1.2;
 }
 
 .comparison-table {
@@ -416,15 +449,17 @@ onMounted(() => {
   background: #34495e;
   color: white;
   font-weight: 600;
-  padding: 20px;
+  padding: clamp(16px, 3vw, 20px);
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
 }
 
 .comparison-row {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
-  padding: 15px 20px;
+  padding: clamp(12px, 2.5vw, 15px) clamp(16px, 3vw, 20px);
   border-bottom: 1px solid #ecf0f1;
   align-items: center;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
 }
 
 .comparison-row:last-child {
@@ -452,8 +487,8 @@ onMounted(() => {
 
 .payment-methods-info {
   text-align: center;
-  margin-top: 60px;
-  padding: 30px;
+  margin-top: clamp(40px, 6vw, 60px);
+  padding: clamp(20px, 4vw, 30px);
   background: white;
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
@@ -461,28 +496,33 @@ onMounted(() => {
 
 .payment-methods-info h3 {
   color: #2c3e50;
-  margin-bottom: 20px;
+  margin-bottom: clamp(16px, 3vw, 20px);
+  font-size: clamp(1.2rem, 4vw, 1.4rem);
+  line-height: 1.2;
 }
 
 .methods-list {
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: clamp(10px, 2.5vw, 20px);
   flex-wrap: wrap;
 }
 
 .methods-list span {
   background: #f8f9fa;
-  padding: 10px 20px;
+  padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 20px);
   border-radius: 25px;
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   color: #5a6c7d;
   border: 1px solid #e9ecef;
+  white-space: nowrap;
 }
 
+/* Mobile-specific optimizations */
 @media (max-width: 768px) {
   .pricing-card.featured {
     transform: none;
+    order: -1;
   }
 
   .pricing-card.featured:hover {
@@ -491,35 +531,247 @@ onMounted(() => {
 
   .location-indicator {
     flex-direction: column;
+    text-align: center;
   }
 
-  .methods-list {
-    gap: 10px;
+  .pricing-card {
+    min-height: auto;
+    padding: 20px 16px;
   }
 
-  .methods-list span {
-    font-size: 0.8rem;
-    padding: 8px 16px;
+  .features-list {
+    margin: 20px 0;
   }
 
   .comparison-header,
   .comparison-row {
     grid-template-columns: 1fr;
     text-align: center;
-    padding: 15px 10px;
+    padding: 12px 10px;
+    gap: 8px;
   }
 
   .feature-name {
     text-align: center;
     font-weight: 600;
     background: #f8f9fa;
-    margin: -15px -10px 10px -10px;
+    margin: -12px -10px 8px -10px;
     padding: 10px;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.9rem;
   }
 
   .comparison-row {
     position: relative;
     padding-top: 50px;
+  }
+
+  .plan-type {
+    font-weight: 600;
+    background: #34495e;
+    color: white;
+    margin: -12px -10px 8px -10px;
+    padding: 8px;
+    border-radius: 0;
+  }
+
+  .comparison-header {
+    display: none;
+  }
+}
+
+/* Small mobile optimizations */
+@media (max-width: 480px) {
+  .pricing {
+    padding: 30px 0;
+  }
+
+  .pricing-grid {
+    gap: 16px;
+  }
+
+  .pricing-card {
+    padding: 20px 16px;
+    border-radius: 10px;
+  }
+
+  .plan-button {
+    min-height: 48px;
+    font-size: 0.9rem;
+  }
+
+  .methods-list {
+    gap: 8px;
+  }
+
+  .methods-list span {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pricing-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pricing-card.featured {
+    grid-column: span 2;
+    transform: none;
+  }
+
+  .pricing-card.featured:hover {
+    transform: translateY(-5px);
+  }
+}
+
+/* Large desktop enhancements */
+@media (min-width: 1200px) {
+  .pricing-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .pricing-card.featured {
+    transform: scale(1.05);
+  }
+
+  .pricing-card.featured:hover {
+    transform: scale(1.05) translateY(-5px);
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .pricing-card,
+  .plan-button,
+  .location-toggle {
+    transition: none;
+  }
+
+  .pricing-card:hover,
+  .pricing-card.featured:hover,
+  .plan-button:hover,
+  .location-toggle:hover {
+    transform: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .pricing {
+    background: #1a1a1a;
+  }
+
+  .pricing-header h1,
+  .feature-comparison h3,
+  .payment-methods-info h3,
+  .plan-header h3,
+  .feature-name {
+    color: #ffffff;
+  }
+
+  .pricing-header p,
+  .features-list li,
+  .plan-feature,
+  .methods-list span {
+    color: #cccccc;
+  }
+
+  .pricing-card,
+  .comparison-table,
+  .payment-methods-info {
+    background: #2d2d2d;
+    color: #ffffff;
+  }
+
+  .features-list li {
+    border-bottom-color: #444;
+  }
+
+  .features-list li strong {
+    color: #ffffff;
+  }
+
+  .comparison-row:nth-child(even) {
+    background: #3d3d3d;
+  }
+
+  .methods-list span {
+    background: #3d3d3d;
+    border-color: #555;
+  }
+
+  .plan-button.secondary {
+    border-color: #27ae60;
+    color: #27ae60;
+  }
+
+  .plan-button.secondary:hover {
+    background: #27ae60;
+    color: #ffffff;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .pricing-card,
+  .comparison-table,
+  .payment-methods-info {
+    border: 2px solid #000;
+  }
+
+  .plan-button {
+    border: 2px solid #000;
+  }
+
+  .location-badge,
+  .plan-badge {
+    border: 1px solid #000;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .pricing-card:hover,
+  .pricing-card.featured:hover,
+  .plan-button:hover,
+  .location-toggle:hover {
+    transform: none;
+  }
+
+  .pricing-card:active,
+  .plan-button:active,
+  .location-toggle:active {
+    transform: scale(0.98);
+  }
+
+  .plan-button.primary:active {
+    background: #219a52;
+  }
+
+  .plan-button.secondary:active {
+    background: #27ae60;
+    color: white;
+  }
+}
+
+/* Print styles */
+@media print {
+  .location-indicator,
+  .plan-button,
+  .payment-methods-info {
+    display: none;
+  }
+
+  .pricing-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+    break-inside: avoid;
+  }
+
+  .pricing-card.featured {
+    border: 2px solid #27ae60;
   }
 }
 </style>
