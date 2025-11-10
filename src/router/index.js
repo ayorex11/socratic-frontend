@@ -92,26 +92,31 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
 
-// Add navigation guard to protect authenticated routes
+// Navigation guard to check authentication
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    // Redirect to login if trying to access protected route without auth
+  // List of routes that require authentication
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+
+  // List of public routes (login, register, etc.)
+  const publicRoutes = ['/login', '/register', '/password-reset', '/verify-email-prompt']
+  const isPublicRoute = publicRoutes.includes(to.path)
+
+  if (requiresAuth && !authStore.isAuthenticated) {
+    // If route requires auth and user is not authenticated, redirect to login
     next('/login')
-  } else if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    // Redirect to dashboard if trying to access login/register while authenticated
-    next('/dashboard')
-  } else if (to.path === '/' && authStore.isAuthenticated) {
-    // Redirect authenticated users from home to dashboard
-    next('/dashboard')
+  } else if (isPublicRoute && authStore.isAuthenticated) {
+    // If user is authenticated and tries to access login/register, redirect to home
+    next('/')
   } else {
+    // Otherwise, proceed as normal
     next()
   }
 })
 
-export default router
+
