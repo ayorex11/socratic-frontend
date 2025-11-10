@@ -4,7 +4,6 @@ import { ref } from 'vue'
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
-  let expirationCheckInterval = null
 
   const login = async (credentials) => {
     try {
@@ -19,19 +18,13 @@ export const useAuthStore = defineStore('auth', () => {
       const data = await response.json()
 
       if (response.ok) {
-        // Save tokens, user data, and expiration times
+        // Save tokens and user data
         localStorage.setItem('accessToken', data.access)
         localStorage.setItem('refreshToken', data.refresh)
         localStorage.setItem('user', JSON.stringify(data.user))
-        localStorage.setItem('accessExpiration', data.access_expiration)
-        localStorage.setItem('refreshExpiration', data.refresh_expiration)
 
         user.value = data.user
         isAuthenticated.value = true
-
-        // Start checking for token expiration
-        startExpirationCheck()
-
         return { success: true }
       } else {
         return { success: false, error: data }
@@ -45,90 +38,18 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
-    localStorage.removeItem('accessExpiration')
-    localStorage.removeItem('refreshExpiration')
     user.value = null
     isAuthenticated.value = false
-
-    // Stop the expiration check interval
-    if (expirationCheckInterval) {
-      clearInterval(expirationCheckInterval)
-      expirationCheckInterval = null
-    }
-
-    // Force redirect to login using window.location
-    // This works without importing router and avoids circular dependencies
-    if (window.location.pathname !== '/login') {
-      window.location.href = '/login'
-    }
-  }
-
-  const isTokenExpired = (expirationDate) => {
-    if (!expirationDate) return true
-
-    const expiration = new Date(expirationDate)
-    const now = new Date()
-
-    return now >= expiration
-  }
-
-  const checkTokenExpiration = () => {
-    const accessExpiration = localStorage.getItem('accessExpiration')
-    const refreshExpiration = localStorage.getItem('refreshExpiration')
-
-    // If refresh token is expired, log out immediately
-    if (isTokenExpired(refreshExpiration)) {
-      console.log('Refresh token expired, logging out')
-      logout()
-      return
-    }
-
-    // If access token is expired, log out
-    if (isTokenExpired(accessExpiration)) {
-      console.log('Access token expired, logging out')
-      logout()
-    }
-  }
-
-  const startExpirationCheck = () => {
-    // Clear any existing interval
-    if (expirationCheckInterval) {
-      clearInterval(expirationCheckInterval)
-    }
-
-    // Check immediately
-    checkTokenExpiration()
-
-    // Check every minute
-    expirationCheckInterval = setInterval(() => {
-      checkTokenExpiration()
-    }, 60000) // 60000ms = 1 minute
   }
 
   // Initialize auth state on app start
   const initializeAuth = () => {
     const storedUser = localStorage.getItem('user')
     const accessToken = localStorage.getItem('accessToken')
-    const accessExpiration = localStorage.getItem('accessExpiration')
 
-    if (storedUser && accessToken && accessExpiration) {
-      // Check if token is already expired
-      if (isTokenExpired(accessExpiration)) {
-        console.log('Token expired on initialization, clearing auth')
-        // Clear everything but don't redirect (let the app/router handle routing)
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        localStorage.removeItem('user')
-        localStorage.removeItem('accessExpiration')
-        localStorage.removeItem('refreshExpiration')
-        user.value = null
-        isAuthenticated.value = false
-      } else {
-        user.value = JSON.parse(storedUser)
-        isAuthenticated.value = true
-        // Start checking for expiration
-        startExpirationCheck()
-      }
+    if (storedUser && accessToken) {
+      user.value = JSON.parse(storedUser)
+      isAuthenticated.value = true
     }
   }
 
