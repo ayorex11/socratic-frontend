@@ -47,6 +47,68 @@
           </div>
         </div>
 
+        <!-- Transaction History Section -->
+        <div class="profile-card">
+          <h2>Transaction History</h2>
+          <button @click="toggleTransactions" class="view-transactions-btn">
+            {{ showTransactions ? 'Hide Transactions' : 'View Transactions' }}
+          </button>
+
+          <div v-if="showTransactions" class="transactions-container">
+            <div v-if="loadingTransactions" class="loading-message">
+              Loading transactions...
+            </div>
+
+            <div v-else-if="transactionError" class="error-message">
+              {{ transactionError }}
+            </div>
+
+            <div v-else-if="transactions.length === 0" class="no-transactions">
+              No transactions found
+            </div>
+
+            <div v-else class="transactions-list">
+              <div
+                v-for="transaction in transactions"
+                :key="transaction.reference"
+                class="transaction-item"
+                :class="{ completed: transaction.completed }"
+              >
+                <div class="transaction-header">
+                  <span class="transaction-type">{{ transaction.type_of_transaction }}</span>
+                  <span
+                    :class="['transaction-status', transaction.completed ? 'completed' : 'pending']"
+                  >
+                    {{ transaction.completed ? 'Completed' : 'Pending' }}
+                  </span>
+                </div>
+
+                <div class="transaction-details">
+                  <div class="transaction-detail">
+                    <span class="detail-label">Amount:</span>
+                    <span class="detail-value amount">₦{{ transaction.amount_paid.toLocaleString() }}</span>
+                  </div>
+
+                  <div class="transaction-detail">
+                    <span class="detail-label">Reference:</span>
+                    <span class="detail-value">{{ transaction.reference }}</span>
+                  </div>
+
+                  <div class="transaction-detail">
+                    <span class="detail-label">Created:</span>
+                    <span class="detail-value">{{ formatTransactionDate(transaction.date_created) }}</span>
+                  </div>
+
+                  <div v-if="transaction.completed && transaction.date_completed" class="transaction-detail">
+                    <span class="detail-label">Completed:</span>
+                    <span class="detail-value">{{ formatTransactionDate(transaction.date_completed) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Password Change Section -->
         <div class="profile-card">
           <h2>Change Password</h2>
@@ -136,6 +198,12 @@ const passwordError = ref('')
 const passwordSuccess = ref('')
 const showNewPassword = ref(false)
 const showConfirmPassword = ref(false)
+
+// Transaction state
+const transactions = ref([])
+const showTransactions = ref(false)
+const loadingTransactions = ref(false)
+const transactionError = ref('')
 
 const fetchUserData = async () => {
   try {
@@ -234,6 +302,54 @@ const toggleNewPasswordVisibility = () => {
 
 const toggleConfirmPasswordVisibility = () => {
   showConfirmPassword.value = !showConfirmPassword.value
+}
+
+const toggleTransactions = async () => {
+  showTransactions.value = !showTransactions.value
+
+  // Fetch transactions when showing for the first time
+  if (showTransactions.value && transactions.value.length === 0) {
+    await fetchTransactions()
+  }
+}
+
+const fetchTransactions = async () => {
+  loadingTransactions.value = true
+  transactionError.value = ''
+
+  try {
+    const accessToken = localStorage.getItem('accessToken')
+    const response = await fetch('https://socratic-f2kh.onrender.com/payment/transaction_history/', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      transactions.value = data.transactions || []
+    } else {
+      transactionError.value = 'Failed to load transactions. Please try again.'
+    }
+  } catch (error) {
+    console.error('Error fetching transactions:', error)
+    transactionError.value = 'Network error. Please check your connection and try again.'
+  } finally {
+    loadingTransactions.value = false
+  }
+}
+
+const formatTransactionDate = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 const formatDate = (dateString) => {
@@ -515,6 +631,151 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
+/* Transaction Styles */
+.view-transactions-btn {
+  width: 100%;
+  padding: 12px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+  min-height: 48px;
+}
+
+.view-transactions-btn:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.transactions-container {
+  margin-top: 20px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loading-message {
+  text-align: center;
+  padding: 30px;
+  color: #5a6c7d;
+  font-size: 1rem;
+}
+
+.no-transactions {
+  text-align: center;
+  padding: 40px;
+  color: #95a5a6;
+  font-size: 1.1rem;
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.transaction-item {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #95a5a6;
+  transition: all 0.3s ease;
+}
+
+.transaction-item.completed {
+  border-left-color: #27ae60;
+}
+
+.transaction-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.transaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.transaction-type {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.transaction-status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.transaction-status.completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.transaction-status.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.transaction-details {
+  display: grid;
+  gap: 10px;
+}
+
+.transaction-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.transaction-detail:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 0.95rem;
+  color: #2c3e50;
+  text-align: right;
+  word-break: break-all;
+}
+
+.detail-value.amount {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #27ae60;
+}
+
 /* Enhanced Mobile Responsiveness */
 @media (max-width: 768px) {
   .user-profile {
@@ -615,6 +876,35 @@ onMounted(() => {
     gap: 20px;
     margin-bottom: 30px;
   }
+
+  .view-transactions-btn {
+    padding: 14px;
+    min-height: 52px;
+  }
+
+  .transaction-item {
+    padding: 16px;
+  }
+
+  .transaction-type {
+    font-size: 1rem;
+  }
+
+  .transaction-status {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+  }
+
+  .transaction-detail {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    padding: 10px 0;
+  }
+
+  .detail-value {
+    text-align: left;
+  }
 }
 
 @media (max-width: 480px) {
@@ -668,6 +958,25 @@ onMounted(() => {
     padding: 12px;
     min-height: 48px;
     font-size: 15px;
+  }
+
+  .transaction-item {
+    padding: 14px;
+  }
+
+  .transaction-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .detail-label,
+  .detail-value {
+    font-size: 0.85rem;
+  }
+
+  .detail-value.amount {
+    font-size: 1rem;
   }
 }
 

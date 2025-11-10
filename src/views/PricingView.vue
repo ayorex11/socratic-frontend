@@ -40,7 +40,16 @@
             <li>✓ Delete old generations to create new ones</li>
             <li>✓ Community support</li>
           </ul>
-          <router-link to="/register" class="plan-button secondary">
+          <button
+            v-if="isLoggedIn"
+            @click="handleFreePlan"
+            class="plan-button secondary"
+            :disabled="isProcessing"
+          >
+            <span v-if="isProcessing">Processing...</span>
+            <span v-else>Continue with Free Plan</span>
+          </button>
+          <router-link v-else to="/register" class="plan-button secondary">
             Get Started Free
           </router-link>
         </div>
@@ -53,6 +62,9 @@
             <div class="price">
               {{ locationStore.isNigeria ? '₦7,500' : '$9' }}<span>/month</span>
             </div>
+            <div v-if="!locationStore.isNigeria" class="coming-soon-badge">
+              Coming Soon
+            </div>
           </div>
           <ul class="features-list">
             <li>✓ Audio Generation</li>
@@ -64,53 +76,111 @@
             <li>✓ Export capabilities</li>
             <li>✓ Community support</li>
           </ul>
+          <button
+            v-if="isLoggedIn && locationStore.isNigeria"
+            @click="handlePremiumPlan"
+            class="plan-button primary"
+            :disabled="isProcessing"
+          >
+            <span v-if="isProcessing">Processing...</span>
+            <span v-else>Get Premium</span>
+          </button>
           <router-link
-            :to="locationStore.isNigeria ? '/register?plan=premium-ng' : '/register?plan=premium-us'"
+            v-else-if="!isLoggedIn && locationStore.isNigeria"
+            to="/register?plan=premium-ng"
             class="plan-button primary"
           >
             Get Premium
           </router-link>
-        </div>
-
-        <!-- Student Plan -->
-        <div class="pricing-card">
-          <div class="plan-badge">Student</div>
-          <div class="plan-header">
-            <h3>Student Pro</h3>
-            <div class="price">
-              {{ locationStore.isNigeria ? '₦3,300' : '$4' }}<span>/month</span>
-            </div>
-          </div>
-          <ul class="features-list">
-            <li>✓ All Premium features</li>
-            <li>✓ <strong>20+ questions</strong> per summary & quiz</li>
-            <li>✓ <strong>Unlimited generations</strong> at a time</li>
-            <li>✓ No deletion required</li>
-            <li>✓ Student verification required</li>
-          </ul>
-          <router-link
-            :to="locationStore.isNigeria ? '/register?plan=student-ng' : '/register?plan=student-us'"
-            class="plan-button secondary"
+          <button
+            v-else
+            class="plan-button primary disabled"
+            disabled
           >
-            Get Student Plan
-          </router-link>
+            Coming Soon
+          </button>
         </div>
       </div>
 
       <!-- Feature Comparison Table -->
       <div v-if="!locationStore.isLoading" class="feature-comparison">
         <h3>Plan Comparison</h3>
-        <div class="comparison-table">
+        <div class="comparison-table-mobile">
+          <div class="comparison-card">
+            <div class="comparison-card-header">Starter Plan</div>
+            <div class="comparison-item">
+              <span class="feature-label">Audio Generation</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Summary Generation</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Questions per Summary</span>
+              <span class="feature-value">5</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Simultaneous Generations</span>
+              <span class="feature-value">3</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Delete to Generate New</span>
+              <span class="feature-value">Required</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Priority Support</span>
+              <span class="feature-value">-</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Export Capabilities</span>
+              <span class="feature-value">-</span>
+            </div>
+          </div>
+
+          <div class="comparison-card featured-card">
+            <div class="comparison-card-header">Premium Plan</div>
+            <div class="comparison-item">
+              <span class="feature-label">Audio Generation</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Summary Generation</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Questions per Summary</span>
+              <span class="feature-value">20+</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Simultaneous Generations</span>
+              <span class="feature-value">Unlimited</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Delete to Generate New</span>
+              <span class="feature-value">Not Required</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Priority Support</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Export Capabilities</span>
+              <span class="feature-value">✓</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop Table (hidden on mobile) -->
+        <div class="comparison-table-desktop">
           <div class="comparison-header">
             <div class="feature-name">Feature</div>
             <div class="plan-type">Starter</div>
             <div class="plan-type">Premium</div>
-            <div class="plan-type">Student Pro</div>
           </div>
 
           <div class="comparison-row">
             <div class="feature-name">Audio Generation</div>
-            <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
           </div>
@@ -119,13 +189,11 @@
             <div class="feature-name">Summary Generation</div>
             <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
-            <div class="plan-feature">✓</div>
           </div>
 
           <div class="comparison-row">
             <div class="feature-name">Questions per Summary</div>
             <div class="plan-feature">5</div>
-            <div class="plan-feature">20+</div>
             <div class="plan-feature">20+</div>
           </div>
 
@@ -133,13 +201,11 @@
             <div class="feature-name">Simultaneous Generations</div>
             <div class="plan-feature">3</div>
             <div class="plan-feature">Unlimited</div>
-            <div class="plan-feature">Unlimited</div>
           </div>
 
           <div class="comparison-row">
             <div class="feature-name">Delete to Generate New</div>
             <div class="plan-feature">Required</div>
-            <div class="plan-feature">Not Required</div>
             <div class="plan-feature">Not Required</div>
           </div>
 
@@ -147,6 +213,11 @@
             <div class="feature-name">Priority Support</div>
             <div class="plan-feature">-</div>
             <div class="plan-feature">✓</div>
+          </div>
+
+          <div class="comparison-row">
+            <div class="feature-name">Export Capabilities</div>
+            <div class="plan-feature">-</div>
             <div class="plan-feature">✓</div>
           </div>
         </div>
@@ -160,7 +231,7 @@
             <span>📱 Paystack</span>
           </div>
           <div v-else class="methods-list">
-            <span>📊 Stripe</span>
+            <span>📊 Stripe (Coming Soon)</span>
           </div>
         </div>
       </div>
@@ -169,22 +240,159 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useLocationStore } from '@/stores/locationStore';
+import { useAuthStore } from '@/stores/auth';
 
 const locationStore = useLocationStore();
+const authStore = useAuthStore();
+const router = useRouter();
+
+const isProcessing = ref(false);
+
+// Check if user is logged in
+const isLoggedIn = computed(() => {
+  return authStore.isAuthenticated;
+});
+
+// Get user email safely
+const getUserEmail = () => {
+  if (!authStore.user) {
+    console.error('No user found in auth store');
+    return null;
+  }
+
+  console.log('Full user object:', authStore.user);
+
+  // Try different possible email fields
+  const email = authStore.user.email || authStore.user.user_email || authStore.user.user_email;
+
+  if (!email) {
+    console.error('No email found in user object. Available keys:', Object.keys(authStore.user));
+  } else {
+    console.log('Found email:', email);
+  }
+
+  return email;
+};
 
 // Toggle location for testing
 const toggleLocation = () => {
   locationStore.setManualLocation(locationStore.isNigeria ? 'US' : 'NG');
 };
 
+// Handle free plan selection for logged-in users
+const handleFreePlan = async () => {
+  if (!isLoggedIn.value) {
+    router.push('/register');
+    return;
+  }
+
+  isProcessing.value = true;
+
+  try {
+    router.push('/dashboard');
+  } catch (error) {
+    console.error('Error handling free plan:', error);
+  } finally {
+    isProcessing.value = false;
+  }
+};
+
+// Handle premium plan selection for logged-in users
+const handlePremiumPlan = async () => {
+  if (!isLoggedIn.value) {
+    router.push('/register?plan=premium-ng');
+    return;
+  }
+
+  if (!locationStore.isNigeria) {
+    return;
+  }
+
+  isProcessing.value = true;
+
+  try {
+    // Get user email safely
+    const userEmail = getUserEmail();
+
+    if (!userEmail) {
+      alert('Unable to retrieve your email. Please ensure your account has a valid email address.');
+      return;
+    }
+
+    console.log('Initiating payment for email:', userEmail);
+
+    // Get the access token for authorization
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      throw new Error('No authentication token found');
+    }
+
+    // Call your payment endpoint with authorization
+    const response = await fetch('https://socratic-f2kh.onrender.com/payment/initialize_deposit/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({
+        amount: 7500, // ₦7,500 for Nigeria
+        email: userEmail
+      })
+    });
+
+    console.log('Payment response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Payment error response:', errorText);
+      throw new Error(`Payment initialization failed: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('Payment response data:', data);
+
+    if (data.data?.status && data.data.data?.authorization_url) {
+      // Redirect to Paystack payment page
+      window.location.href = data.data.data.authorization_url;
+    } else {
+      console.error('Invalid payment response structure:', data);
+      throw new Error('Invalid response from payment server');
+    }
+  } catch (error) {
+    console.error('Payment error:', error);
+    alert(`Payment initialization failed: ${error.message}. Please try again.`);
+  } finally {
+    isProcessing.value = false;
+  }
+};
+
 onMounted(() => {
   locationStore.detectUserLocation();
+  // Debug: log auth state
+  console.log('Auth state on mount:', {
+    isAuthenticated: authStore.isAuthenticated,
+    user: authStore.user
+  });
 });
 </script>
 
 <style scoped>
+/* Add disabled state styling */
+.plan-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.plan-button:disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Rest of the styles remain the same */
 .pricing {
   padding: clamp(40px, 8vw, 80px) 0;
   background: #f8f9fa;
@@ -284,7 +492,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
   gap: clamp(20px, 4vw, 30px);
-  max-width: 1100px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -357,6 +565,17 @@ onMounted(() => {
   font-weight: normal;
 }
 
+.coming-soon-badge {
+  display: inline-block;
+  background: #e67e22;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: clamp(0.75rem, 2vw, 0.85rem);
+  margin-top: 8px;
+  font-weight: 500;
+}
+
 .features-list {
   list-style: none;
   padding: 0;
@@ -396,6 +615,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+  cursor: pointer;
 }
 
 .plan-button.primary {
@@ -403,10 +624,16 @@ onMounted(() => {
   color: white;
 }
 
-.plan-button.primary:hover {
+.plan-button.primary:hover:not(.disabled):not(:disabled) {
   background: #219a52;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(39, 174, 96, 0.3);
+}
+
+.plan-button.primary.disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .plan-button.secondary {
@@ -415,7 +642,7 @@ onMounted(() => {
   border: 2px solid #27ae60;
 }
 
-.plan-button.secondary:hover {
+.plan-button.secondary:hover:not(:disabled) {
   background: #27ae60;
   color: white;
   transform: translateY(-2px);
@@ -434,18 +661,81 @@ onMounted(() => {
   line-height: 1.2;
 }
 
-.comparison-table {
+/* Mobile Comparison Cards */
+.comparison-table-mobile {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.comparison-card {
   background: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-  max-width: 1000px;
+}
+
+.comparison-card.featured-card {
+  border: 2px solid #27ae60;
+}
+
+.comparison-card-header {
+  background: #34495e;
+  color: white;
+  padding: 16px;
+  font-weight: 600;
+  font-size: clamp(1rem, 3vw, 1.1rem);
+}
+
+.comparison-card.featured-card .comparison-card-header {
+  background: #27ae60;
+}
+
+.comparison-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.comparison-item:last-child {
+  border-bottom: none;
+}
+
+.comparison-item:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.feature-label {
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+  text-align: left;
+}
+
+.feature-value {
+  font-weight: 600;
+  color: #27ae60;
+  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+}
+
+/* Desktop Table - Hidden on mobile */
+.comparison-table-desktop {
+  display: none;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  max-width: 900px;
   margin: 0 auto;
 }
 
 .comparison-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr;
   background: #34495e;
   color: white;
   font-weight: 600;
@@ -455,7 +745,7 @@ onMounted(() => {
 
 .comparison-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr;
   padding: clamp(12px, 2.5vw, 15px) clamp(16px, 3vw, 20px);
   border-bottom: 1px solid #ecf0f1;
   align-items: center;
@@ -518,120 +808,23 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-/* Mobile-specific optimizations */
-@media (max-width: 768px) {
-  .pricing-card.featured {
-    transform: none;
-    order: -1;
-  }
-
-  .pricing-card.featured:hover {
-    transform: translateY(-5px);
-  }
-
-  .location-indicator {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .pricing-card {
-    min-height: auto;
-    padding: 20px 16px;
-  }
-
-  .features-list {
-    margin: 20px 0;
-  }
-
-  .comparison-header,
-  .comparison-row {
-    grid-template-columns: 1fr;
-    text-align: center;
-    padding: 12px 10px;
-    gap: 8px;
-  }
-
-  .feature-name {
-    text-align: center;
-    font-weight: 600;
-    background: #f8f9fa;
-    margin: -12px -10px 8px -10px;
-    padding: 10px;
-    border-bottom: 1px solid #e9ecef;
-    font-size: 0.9rem;
-  }
-
-  .comparison-row {
-    position: relative;
-    padding-top: 50px;
-  }
-
-  .plan-type {
-    font-weight: 600;
-    background: #34495e;
-    color: white;
-    margin: -12px -10px 8px -10px;
-    padding: 8px;
-    border-radius: 0;
-  }
-
-  .comparison-header {
+/* Tablet and above - Show desktop table */
+@media (min-width: 769px) {
+  .comparison-table-mobile {
     display: none;
   }
-}
 
-/* Small mobile optimizations */
-@media (max-width: 480px) {
-  .pricing {
-    padding: 30px 0;
+  .comparison-table-desktop {
+    display: block;
   }
 
-  .pricing-grid {
-    gap: 16px;
-  }
-
-  .pricing-card {
-    padding: 20px 16px;
-    border-radius: 10px;
-  }
-
-  .plan-button {
-    min-height: 48px;
-    font-size: 0.9rem;
-  }
-
-  .methods-list {
-    gap: 8px;
-  }
-
-  .methods-list span {
-    padding: 8px 16px;
-    font-size: 0.8rem;
-  }
-}
-
-/* Tablet optimizations */
-@media (min-width: 769px) and (max-width: 1024px) {
   .pricing-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .pricing-card.featured {
-    grid-column: span 2;
-    transform: none;
-  }
-
-  .pricing-card.featured:hover {
-    transform: translateY(-5px);
   }
 }
 
 /* Large desktop enhancements */
 @media (min-width: 1200px) {
-  .pricing-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
   .pricing-card.featured {
     transform: scale(1.05);
   }
@@ -667,7 +860,8 @@ onMounted(() => {
   .feature-comparison h3,
   .payment-methods-info h3,
   .plan-header h3,
-  .feature-name {
+  .feature-name,
+  .feature-label {
     color: #ffffff;
   }
 
@@ -679,13 +873,15 @@ onMounted(() => {
   }
 
   .pricing-card,
-  .comparison-table,
+  .comparison-card,
+  .comparison-table-desktop,
   .payment-methods-info {
     background: #2d2d2d;
     color: #ffffff;
   }
 
-  .features-list li {
+  .features-list li,
+  .comparison-item {
     border-bottom-color: #444;
   }
 
@@ -693,7 +889,8 @@ onMounted(() => {
     color: #ffffff;
   }
 
-  .comparison-row:nth-child(even) {
+  .comparison-row:nth-child(even),
+  .comparison-item:nth-child(even) {
     background: #3d3d3d;
   }
 
@@ -707,7 +904,7 @@ onMounted(() => {
     color: #27ae60;
   }
 
-  .plan-button.secondary:hover {
+  .plan-button.secondary:hover:not(:disabled) {
     background: #27ae60;
     color: #ffffff;
   }
@@ -716,7 +913,8 @@ onMounted(() => {
 /* High contrast mode */
 @media (prefers-contrast: high) {
   .pricing-card,
-  .comparison-table,
+  .comparison-card,
+  .comparison-table-desktop,
   .payment-methods-info {
     border: 2px solid #000;
   }
@@ -741,16 +939,16 @@ onMounted(() => {
   }
 
   .pricing-card:active,
-  .plan-button:active,
+  .plan-button:active:not(.disabled):not(:disabled),
   .location-toggle:active {
     transform: scale(0.98);
   }
 
-  .plan-button.primary:active {
+  .plan-button.primary:active:not(.disabled):not(:disabled) {
     background: #219a52;
   }
 
-  .plan-button.secondary:active {
+  .plan-button.secondary:active:not(:disabled) {
     background: #27ae60;
     color: white;
   }

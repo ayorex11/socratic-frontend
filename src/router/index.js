@@ -88,7 +88,15 @@ const routes = [
   path: '/quiz/:id',
   name: 'Quiz',
   component: () => import('@/views/Quiz.vue')
-}
+  },
+  {
+    path: '/payment/success',
+    name: 'PaymentSuccess',
+    component: () => import('@/views/PaymentSuccess.vue'),
+    meta: { requiresAuth: true }
+  },
+
+
 ]
 
 const router = createRouter({
