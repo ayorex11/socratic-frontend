@@ -4,7 +4,7 @@
       <!-- Quiz Header -->
       <div class="quiz-header">
         <div class="header-content">
-          <router-link to="/documents" class="back-button"> ← Back </router-link>
+          <router-link to="/documents" class="back-button"> ← Back to Documents </router-link>
           <h1>Quiz</h1>
           <p>Test your knowledge from the document</p>
         </div>
@@ -13,14 +13,16 @@
         <div class="quiz-progress">
           <div class="progress-info">
             <span class="progress-text">
-              Q{{ currentQuestionIndex + 1 }}/{{ questions.length }}
+              Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}
             </span>
             <div class="progress-bar">
               <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
             </div>
           </div>
           <div class="progress-stats">
-            <span class="answered-count">{{ answeredQuestions }}/{{ questions.length }}</span>
+            <span class="answered-count"
+              >{{ answeredQuestions }} / {{ questions.length }} answered</span
+            >
             <div class="timer" v-if="timeLimit > 0">⏱️ {{ formatTime(timeRemaining) }}</div>
           </div>
         </div>
@@ -81,7 +83,7 @@
               @click="previousQuestion"
               :disabled="currentQuestionIndex === 0"
             >
-              ← Prev
+              ← Previous
             </button>
 
             <div class="navigation-center">
@@ -90,13 +92,16 @@
                 @click="showReviewSection = true"
                 :disabled="answeredQuestions === 0"
               >
-                📋 Review ({{ answeredQuestions }})
+                📋 Review Answers ({{ answeredQuestions }}/{{ questions.length }})
               </button>
-              <select v-model="currentQuestionIndex" class="question-select">
-                <option v-for="(question, index) in questions" :key="question.id" :value="index">
-                  Q{{ index + 1 }}{{ isQuestionAnswered(question.id) ? '✓' : '' }}
-                </option>
-              </select>
+              <span class="question-jump">
+                Jump to:
+                <select v-model="currentQuestionIndex" class="question-select">
+                  <option v-for="(question, index) in questions" :key="question.id" :value="index">
+                    Q{{ index + 1 }} {{ isQuestionAnswered(question.id) ? '✓' : '' }}
+                  </option>
+                </select>
+              </span>
             </div>
 
             <button
@@ -104,7 +109,7 @@
               @click="nextQuestion"
               :disabled="currentQuestionIndex === questions.length - 1"
             >
-              Next →
+              Next Question →
             </button>
           </div>
         </div>
@@ -118,8 +123,8 @@
         <div class="review-card">
           <div class="review-header">
             <div class="review-icon">📝</div>
-            <h2>Review Answers</h2>
-            <p>{{ answeredQuestions }} of {{ questions.length }} answered</p>
+            <h2>Review Your Answers</h2>
+            <p>You've answered {{ answeredQuestions }} out of {{ questions.length }} questions</p>
           </div>
 
           <div class="answer-summary">
@@ -132,14 +137,14 @@
             >
               <span class="question-number">Q{{ index + 1 }}</span>
               <span class="answer-status" :class="{ answered: isQuestionAnswered(question.id) }">
-                {{ isQuestionAnswered(question.id) ? '✓' : '❌' }}
+                {{ isQuestionAnswered(question.id) ? '✓ Answered' : '❌ Not answered' }}
               </span>
             </div>
           </div>
 
           <div class="review-actions">
             <button class="action-btn continue-btn" @click="showReviewSection = false">
-              Continue
+              📖 Continue Quiz
             </button>
             <button
               class="action-btn submit-final-btn"
@@ -147,7 +152,7 @@
               :disabled="answeredQuestions === 0"
               :class="{ disabled: answeredQuestions === 0 }"
             >
-              Submit Quiz
+              🚀 Submit Quiz
             </button>
           </div>
         </div>
@@ -159,7 +164,7 @@
           <div class="results-header">
             <div class="results-icon">🎉</div>
             <h2>Quiz Completed!</h2>
-            <p>Here's how you did:</p>
+            <p>You've finished the quiz. Here's how you did:</p>
           </div>
 
           <div class="score-section">
@@ -170,12 +175,16 @@
 
             <div class="score-details">
               <div class="score-item">
-                <span class="score-label">Correct:</span>
+                <span class="score-label">Correct Answers:</span>
                 <span class="score-value correct">{{ results.score }}</span>
               </div>
               <div class="score-item">
-                <span class="score-label">Total:</span>
+                <span class="score-label">Total Questions:</span>
                 <span class="score-value">{{ results.totalQuestions }}</span>
+              </div>
+              <div class="score-item">
+                <span class="score-label">Percentage:</span>
+                <span class="score-value">{{ results.percentage }}%</span>
               </div>
               <div class="score-item">
                 <span class="score-label">Status:</span>
@@ -191,22 +200,22 @@
 
           <div class="performance-message">
             <p v-if="results.percentage >= 80" class="excellent">
-              Excellent work! 🏆
+              Excellent work! You've mastered this material. 🏆
             </p>
             <p v-else-if="results.percentage >= 70" class="good">
-              Good job! 👍
+              Good job! You passed the quiz. 👍
             </p>
             <p v-else-if="results.percentage >= 50" class="average">
-              Review the material 📚
+              Not bad! Review the material to improve. 📚
             </p>
-            <p v-else class="poor">Keep studying! 💪</p>
+            <p v-else class="poor">Keep studying! You'll get better with practice. 💪</p>
           </div>
 
           <div class="results-actions">
-            <button class="action-btn review-btn" @click="enterReviewMode">Review Quiz</button>
-            <button class="action-btn retry-btn" @click="retryQuiz">Retry Quiz</button>
+            <button class="action-btn review-btn" @click="enterReviewMode">📖 Review Quiz</button>
+            <button class="action-btn retry-btn" @click="retryQuiz">🔄 Retry Quiz</button>
             <router-link to="/documents" class="action-btn documents-btn">
-              Back to Documents
+              📚 Back to Documents
             </router-link>
           </div>
         </div>
@@ -216,13 +225,15 @@
       <div v-else-if="questions.length > 0 && reviewMode" class="quiz-content">
         <div class="review-mode-header">
           <h2>📖 Quiz Review</h2>
-          <p>Review your answers</p>
+          <p>Review your answers and see the correct solutions</p>
           <div class="review-stats">
             <span class="score-display"
-              >{{ results.score }}/{{ results.totalQuestions }} ({{ results.percentage }}%)</span
+              >Score: {{ results.score }}/{{ results.totalQuestions }} ({{
+                results.percentage
+              }}%)</span
             >
             <button class="nav-btn exit-review-btn" @click="exitReviewMode">
-              ← Back
+              ← Back to Results
             </button>
           </div>
         </div>
@@ -239,7 +250,7 @@
         >
           <div class="question-header">
             <h2 class="question-number">
-              Q{{ currentQuestionIndex + 1 }}
+              Question {{ currentQuestionIndex + 1 }}
               <span
                 class="review-status-badge"
                 :class="{
@@ -274,7 +285,7 @@
                 <div class="option-identifier">
                   <span class="option-letter">{{ String.fromCharCode(65 + index) }}</span>
                   <span v-if="isCorrectAnswer(currentQuestion, index)" class="correct-indicator"
-                    >✓ Correct</span
+                    >✓ Correct Answer</span
                   >
                   <span
                     v-if="
@@ -316,24 +327,29 @@
               @click="previousQuestion"
               :disabled="currentQuestionIndex === 0"
             >
-              ← Previous
+              ← Previous Question
             </button>
 
-            <select v-model="currentQuestionIndex" class="question-select">
-              <option v-for="(question, index) in questions" :key="question.id" :value="index">
-                Q{{ index + 1 }}
-                <span v-if="isAnswerCorrect(question.id)">✓</span>
-                <span v-else-if="isQuestionAnswered(question.id)">✗</span>
-                <span v-else>○</span>
-              </option>
-            </select>
+            <div class="navigation-center">
+              <span class="question-jump">
+                Jump to:
+                <select v-model="currentQuestionIndex" class="question-select">
+                  <option v-for="(question, index) in questions" :key="question.id" :value="index">
+                    Q{{ index + 1 }}
+                    <span v-if="isAnswerCorrect(question.id)">✓</span>
+                    <span v-else-if="isQuestionAnswered(question.id)">✗</span>
+                    <span v-else>○</span>
+                  </option>
+                </select>
+              </span>
+            </div>
 
             <button
               class="nav-btn next-btn"
               @click="nextQuestion"
               :disabled="currentQuestionIndex === questions.length - 1"
             >
-              Next →
+              Next Question →
             </button>
           </div>
         </div>
@@ -345,9 +361,9 @@
         <h3>Unable to Load Quiz</h3>
         <p>{{ error }}</p>
         <div class="error-actions">
-          <button class="action-btn" @click="retryLoading">Try Again</button>
+          <button class="action-btn" @click="retryLoading">🔄 Try Again</button>
           <router-link to="/documents" class="action-btn secondary">
-            Back to Documents
+            📚 Back to Documents
           </router-link>
         </div>
       </div>
@@ -357,7 +373,7 @@
         <div class="no-questions-icon">❓</div>
         <h3>No Questions Available</h3>
         <p>This document doesn't have any quiz questions yet.</p>
-        <router-link to="/documents" class="action-btn"> Back to Documents </router-link>
+        <router-link to="/documents" class="action-btn"> 📚 Back to Documents </router-link>
       </div>
 
       <!-- Submission Loading Overlay -->
@@ -372,12 +388,349 @@
 </template>
 
 <script setup>
-// ... (script section remains exactly the same) ...
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+const route = useRoute()
+const router = useRouter()
+
+// Reactive data
+const questions = ref([])
+const loading = ref(true)
+const submitting = ref(false)
+const error = ref('')
+const currentQuestionIndex = ref(0)
+const userAnswers = ref({}) // Store as { questionId: selectedOptionIndex }
+const quizCompleted = ref(false)
+const showReviewSection = ref(false)
+const reviewMode = ref(false) // New state for review mode after completion
+const timeRemaining = ref(0)
+const quizStartTime = ref(null)
+const totalTimeTaken = ref(0)
+const results = ref({
+  score: 0,
+  totalQuestions: 0,
+  percentage: 0,
+  isPassed: false,
+  scorePercentage: 0,
+})
+
+// Quiz settings
+const timeLimit = ref(0) // 0 means no time limit
+
+// Computed properties
+const currentQuestion = computed(() => {
+  return questions.value[currentQuestionIndex.value] || {}
+})
+
+const options = computed(() => {
+  return [
+    currentQuestion.value.option_1,
+    currentQuestion.value.option_2,
+    currentQuestion.value.option_3,
+    currentQuestion.value.option_4,
+  ].filter((option) => option !== undefined && option !== null)
+})
+
+const isLastQuestion = computed(() => {
+  return currentQuestionIndex.value === questions.value.length - 1
+})
+
+const progressPercentage = computed(() => {
+  return ((currentQuestionIndex.value + 1) / questions.value.length) * 100
+})
+
+const answeredQuestions = computed(() => {
+  return Object.keys(userAnswers.value).length
+})
+
+// Methods
+const fetchQuizQuestions = async () => {
+  try {
+    loading.value = true
+    error.value = ''
+    const documentId = route.params.id
+    const token = localStorage.getItem('accessToken')
+
+    if (!token) {
+      router.push('/login')
+      return
+    }
+
+    const response = await fetch(
+      `https://socratic-f2kh.onrender.com/quiz/quizzes/${documentId}/start/`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+
+    if (response.ok) {
+      const data = await response.json()
+      questions.value = data
+      initializeQuiz()
+    } else if (response.status === 401) {
+      router.push('/login')
+    } else if (response.status === 404) {
+      error.value = 'Quiz not found for this document'
+    } else {
+      throw new Error('Failed to fetch quiz questions')
+    }
+  } catch (err) {
+    console.error('Error fetching quiz:', err)
+    error.value = 'Failed to load quiz. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const initializeQuiz = () => {
+  userAnswers.value = {}
+  currentQuestionIndex.value = 0
+  quizCompleted.value = false
+  showReviewSection.value = false
+  reviewMode.value = false
+  quizStartTime.value = Date.now()
+  results.value = {
+    score: 0,
+    totalQuestions: 0,
+    percentage: 0,
+    isPassed: false,
+    scorePercentage: 0,
+  }
+
+  if (timeLimit.value > 0) {
+    timeRemaining.value = timeLimit.value * 60
+  }
+}
+
+const formatQuestionText = (text) => {
+  if (!text) return ''
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>')
+}
+
+const formatOptionText = (text) => {
+  if (!text) return ''
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>')
+    .replace(/\* (.*?)(?=\n|$)/g, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+}
+
+const formatTime = (seconds) => {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+const selectOption = (index) => {
+  const questionId = currentQuestion.value.id
+  if (questionId) {
+    userAnswers.value[questionId] = index
+  }
+}
+
+const getSelectedOption = (questionId) => {
+  return userAnswers.value[questionId] ?? null
+}
+
+const isQuestionAnswered = (questionId) => {
+  return userAnswers.value.hasOwnProperty(questionId)
+}
+
+// New methods for review mode
+const isAnswerCorrect = (questionId) => {
+  const question = questions.value.find((q) => q.id === parseInt(questionId))
+  if (!question || !isQuestionAnswered(questionId)) return false
+
+  const userAnswerIndex = userAnswers.value[questionId]
+  const userAnswerText = getQuestionOptions(question)[userAnswerIndex]
+  return userAnswerText === question.answer
+}
+
+const isCorrectAnswer = (question, optionIndex) => {
+  const optionText = getQuestionOptions(question)[optionIndex]
+  return optionText === question.answer
+}
+
+const getUserAnswerIndex = (questionId) => {
+  return userAnswers.value[questionId] ?? null
+}
+
+const getQuestionOptions = (question) => {
+  return [question.option_1, question.option_2, question.option_3, question.option_4].filter(
+    (option) => option !== undefined && option !== null,
+  )
+}
+
+const getQuestionStatus = (questionId) => {
+  if (!isQuestionAnswered(questionId)) return 'Unanswered'
+  return isAnswerCorrect(questionId) ? 'Correct' : 'Incorrect'
+}
+
+const previousQuestion = () => {
+  if (currentQuestionIndex.value > 0) {
+    currentQuestionIndex.value--
+  }
+}
+
+const nextQuestion = () => {
+  if (currentQuestionIndex.value < questions.value.length - 1) {
+    currentQuestionIndex.value++
+  }
+}
+
+const jumpToQuestion = (index) => {
+  currentQuestionIndex.value = index
+  showReviewSection.value = false
+}
+
+const submitAllAnswers = async () => {
+  if (answeredQuestions.value === 0) return
+
+  try {
+    submitting.value = true
+    const documentId = route.params.id
+    const token = localStorage.getItem('accessToken')
+
+    if (!token) {
+      router.push('/login')
+      return
+    }
+
+    // Prepare answers in the required format: { questionId: "option_text" }
+    const submissionData = {}
+    Object.entries(userAnswers.value).forEach(([questionId, optionIndex]) => {
+      const question = questions.value.find((q) => q.id === parseInt(questionId))
+      if (question) {
+        const optionText = [
+          question.option_1,
+          question.option_2,
+          question.option_3,
+          question.option_4,
+        ][optionIndex]
+
+        if (optionText) {
+          submissionData[questionId] = optionText
+        }
+      }
+    })
+
+    // Proper JSON parsing and submission
+    const response = await fetch(
+      `https://socratic-f2kh.onrender.com/quiz/quizzes/${documentId}/submit/`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          answers: submissionData,
+        }),
+      },
+    )
+
+    if (response.ok) {
+      const result = await response.json()
+
+      // Parse and validate the response with proper JSON handling
+      if (result && typeof result === 'object') {
+        results.value = {
+          score: parseInt(result.score) || 0,
+          totalQuestions: parseInt(result.total_questions) || questions.value.length,
+          percentage: parseFloat(result.percentage) || 0,
+          isPassed: Boolean(result.is_passed),
+          scorePercentage: Math.round(
+            ((parseInt(result.score) || 0) / (parseInt(result.total_questions) || 1)) * 100,
+          ),
+        }
+
+        quizCompleted.value = true
+        showReviewSection.value = false
+        totalTimeTaken.value = Math.floor((Date.now() - quizStartTime.value) / 1000)
+
+        // Save results to localStorage
+        localStorage.setItem(
+          `quiz_results_${documentId}`,
+          JSON.stringify({
+            ...results.value,
+            documentId: documentId,
+            completedAt: new Date().toISOString(),
+            timeTaken: totalTimeTaken.value,
+          }),
+        )
+      } else {
+        throw new Error('Invalid response format from server')
+      }
+    } else {
+      const errorText = await response.text()
+      let errorMessage = `Submission failed: ${response.status}`
+      try {
+        const errorData = JSON.parse(errorText)
+        errorMessage = errorData.error || errorData.detail || errorMessage
+      } catch {
+        errorMessage = errorText || errorMessage
+      }
+      throw new Error(errorMessage)
+    }
+  } catch (err) {
+    console.error('Error submitting quiz:', err)
+    error.value = `Failed to submit quiz: ${err.message}`
+  } finally {
+    submitting.value = false
+  }
+}
+
+const enterReviewMode = () => {
+  reviewMode.value = true
+  currentQuestionIndex.value = 0
+}
+
+const exitReviewMode = () => {
+  reviewMode.value = false
+}
+
+const retryQuiz = () => {
+  initializeQuiz()
+}
+
+const retryLoading = () => {
+  fetchQuizQuestions()
+}
+
+// Timer functionality
+watch(timeRemaining, (newTime) => {
+  if (newTime <= 0 && timeLimit.value > 0) {
+    submitAllAnswers()
+  }
+})
+
+// Start timer if time limit is set
+if (timeLimit.value > 0) {
+  setInterval(() => {
+    if (timeRemaining.value > 0 && !quizCompleted.value && !submitting.value) {
+      timeRemaining.value--
+    }
+  }, 1000)
+}
+
+onMounted(() => {
+  fetchQuizQuestions()
+})
 </script>
 
 <style scoped>
 .quiz-page {
-  padding: 10px;
+  padding: 20px;
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
@@ -386,8 +739,8 @@
   max-width: 800px;
   margin: 0 auto;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   overflow: hidden;
 }
 
@@ -395,17 +748,16 @@
 .quiz-header {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: white;
-  padding: 20px;
+  padding: 30px;
 }
 
 .back-button {
   color: white;
   text-decoration: none;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
   display: inline-block;
   opacity: 0.9;
-  font-size: 0.9rem;
 }
 
 .back-button:hover {
@@ -413,37 +765,36 @@
 }
 
 .quiz-header h1 {
-  font-size: 1.8rem;
-  margin: 0 0 6px 0;
+  font-size: 2.5rem;
+  margin: 0 0 8px 0;
   font-weight: 700;
 }
 
 .quiz-header p {
   margin: 0;
   opacity: 0.9;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
 }
 
 .quiz-progress {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 20px;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 25px;
   background: rgba(255, 255, 255, 0.1);
-  padding: 15px;
+  padding: 15px 20px;
   border-radius: 12px;
   backdrop-filter: blur(10px);
 }
 
 .progress-info {
-  width: 100%;
+  flex: 1;
 }
 
 .progress-text {
   font-weight: 600;
   margin-bottom: 8px;
   display: block;
-  font-size: 0.9rem;
 }
 
 .progress-bar {
@@ -463,9 +814,8 @@
 
 .progress-stats {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  width: 100%;
+  gap: 20px;
 }
 
 .answered-count {
@@ -473,39 +823,38 @@
   background: rgba(255, 255, 255, 0.2);
   padding: 6px 12px;
   border-radius: 12px;
-  font-size: 0.9rem;
 }
 
 .timer {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   background: rgba(255, 255, 255, 0.2);
-  padding: 6px 12px;
-  border-radius: 16px;
+  padding: 8px 16px;
+  border-radius: 20px;
 }
 
 /* Quiz Content */
 .quiz-content {
-  padding: 20px;
+  padding: 40px;
 }
 
 .question-card {
   background: #f8fafc;
-  border-radius: 14px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 30px;
   border: 2px solid #e2e8f0;
 }
 
 .question-header {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .question-number {
   color: #1e293b;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
   margin: 0;
 }
@@ -525,10 +874,10 @@
 }
 
 .question-text {
-  font-size: 1.1rem;
-  line-height: 1.5;
+  font-size: 1.2rem;
+  line-height: 1.6;
   color: #1e293b;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   font-weight: 500;
 }
 
@@ -536,24 +885,24 @@
 .options-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 30px;
 }
 
 .option-card {
   background: white;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   position: relative;
 }
 
 .option-card:hover:not(.answered) {
   border-color: #94a3b8;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .option-card.selected {
@@ -569,14 +918,13 @@
 .option-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 10px;
-  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .option-identifier {
-  min-width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   background: #64748b;
   color: white;
@@ -584,8 +932,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.85rem;
-  flex-shrink: 0;
+  font-size: 0.9rem;
 }
 
 .option-card.selected .option-identifier {
@@ -597,9 +944,8 @@
 }
 
 .option-status {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  flex-shrink: 0;
 }
 
 .status-answered {
@@ -607,9 +953,8 @@
 }
 
 .option-content {
-  line-height: 1.5;
+  line-height: 1.6;
   color: #475569;
-  font-size: 0.95rem;
 }
 
 .option-content :deep(strong) {
@@ -623,41 +968,39 @@
 }
 
 .option-content :deep(ul) {
-  margin: 6px 0;
-  padding-left: 18px;
+  margin: 8px 0;
+  padding-left: 20px;
 }
 
 .option-content :deep(li) {
-  margin-bottom: 3px;
-  font-size: 0.9rem;
+  margin-bottom: 4px;
 }
 
 /* Navigation */
 .quiz-navigation {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .nav-btn {
-  padding: 14px 16px;
+  padding: 12px 24px;
   border: none;
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.95rem;
-  flex: 1;
+  transition: all 0.3s ease;
+  font-size: 1rem;
 }
 
 .prev-btn {
   background: #f1f5f9;
   color: #475569;
-  order: 1;
 }
 
 .prev-btn:hover:not(:disabled) {
   background: #e2e8f0;
+  transform: translateX(-2px);
 }
 
 .prev-btn:disabled {
@@ -668,12 +1011,12 @@
 .next-btn {
   background: #10b981;
   color: white;
-  order: 3;
 }
 
 .next-btn:hover:not(:disabled) {
   background: #059669;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .next-btn:disabled {
@@ -683,9 +1026,8 @@
 
 .navigation-center {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  order: 2;
+  align-items: center;
+  gap: 15px;
 }
 
 .review-btn {
@@ -693,16 +1035,16 @@
   color: white;
   border: none;
   border-radius: 10px;
-  padding: 14px 16px;
+  padding: 12px 20px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.95rem;
+  transition: all 0.3s ease;
 }
 
 .review-btn:hover:not(:disabled) {
   background: #2563eb;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .review-btn:disabled {
@@ -710,76 +1052,81 @@
   cursor: not-allowed;
 }
 
+.question-jump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
 .question-select {
-  padding: 12px;
+  padding: 6px 10px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 6px;
   background: white;
   color: #1e293b;
-  font-size: 0.95rem;
-  width: 100%;
+  font-size: 0.9rem;
 }
 
 /* Review Section */
 .review-section {
-  padding: 20px;
+  padding: 40px;
 }
 
 .review-card {
   background: #f8fafc;
-  border-radius: 14px;
-  padding: 24px;
+  border-radius: 16px;
+  padding: 30px;
   border: 2px solid #e2e8f0;
   text-align: center;
 }
 
 .review-header {
-  margin-bottom: 24px;
+  margin-bottom: 30px;
 }
 
 .review-icon {
-  font-size: 2.5rem;
-  margin-bottom: 12px;
+  font-size: 3rem;
+  margin-bottom: 15px;
 }
 
 .review-header h2 {
   color: #1e293b;
-  margin: 0 0 8px 0;
-  font-size: 1.5rem;
+  margin: 0 0 10px 0;
+  font-size: 1.8rem;
 }
 
 .review-header p {
   color: #64748b;
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .answer-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 8px;
-  margin: 20px 0;
-  max-height: 150px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 30px 0;
+  max-height: 200px;
   overflow-y: auto;
 }
 
 .summary-item {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 6px;
-  padding: 10px 8px;
+  padding: 10px 15px;
   background: white;
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 50px;
-  justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .summary-item:hover {
   border-color: #3b82f6;
+  transform: translateY(-2px);
 }
 
 .summary-item.unanswered {
@@ -790,42 +1137,30 @@
 .question-number {
   font-weight: 600;
   color: #1e293b;
-  font-size: 0.9rem;
 }
 
 .answer-status {
   font-size: 0.8rem;
   font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
 .answer-status.answered {
+  background: #dcfce7;
   color: #166534;
 }
 
 .answer-status:not(.answered) {
+  background: #fef2f2;
   color: #dc2626;
 }
 
 .review-actions {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.action-btn {
-  padding: 14px 20px;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
+  gap: 15px;
   justify-content: center;
-  gap: 6px;
-  font-size: 0.95rem;
-  width: 100%;
+  flex-wrap: wrap;
 }
 
 .continue-btn {
@@ -835,7 +1170,8 @@
 
 .continue-btn:hover {
   background: #2563eb;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .submit-final-btn {
@@ -845,55 +1181,58 @@
 
 .submit-final-btn:hover:not(.disabled) {
   background: #059669;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .submit-final-btn.disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* Results */
 .quiz-results {
-  padding: 20px;
+  padding: 40px;
 }
 
 .results-card {
   text-align: center;
   background: #f8fafc;
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 20px;
+  padding: 40px;
   border: 2px solid #e2e8f0;
 }
 
 .results-icon {
-  font-size: 3rem;
-  margin-bottom: 16px;
+  font-size: 4rem;
+  margin-bottom: 20px;
 }
 
 .results-header h2 {
-  font-size: 1.6rem;
+  font-size: 2.2rem;
   color: #1e293b;
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
 }
 
 .results-header p {
   color: #64748b;
-  font-size: 1rem;
-  margin: 0 0 24px 0;
+  font-size: 1.1rem;
+  margin: 0 0 30px 0;
 }
 
 .score-section {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 24px;
-  margin: 24px 0;
+  justify-content: center;
+  gap: 50px;
+  margin: 40px 0;
+  flex-wrap: wrap;
 }
 
 .score-circle {
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   background: conic-gradient(
     #10b981 0% v-bind('results.scorePercentage') %,
@@ -908,14 +1247,14 @@
 .score-circle::before {
   content: '';
   position: absolute;
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   background: white;
   border-radius: 50%;
 }
 
 .score-percentage {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: #1e293b;
   position: relative;
@@ -924,24 +1263,24 @@
 
 .score-text {
   position: absolute;
-  bottom: 20px;
-  font-size: 0.8rem;
+  bottom: 25px;
+  font-size: 0.9rem;
   color: #64748b;
   font-weight: 600;
   z-index: 1;
 }
 
 .score-details {
-  text-align: center;
-  width: 100%;
+  text-align: left;
 }
 
 .score-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  padding: 12px 0;
   border-bottom: 1px solid #e2e8f0;
+  min-width: 200px;
 }
 
 .score-item:last-child {
@@ -951,13 +1290,11 @@
 .score-label {
   color: #64748b;
   font-weight: 500;
-  font-size: 0.95rem;
 }
 
 .score-value {
   font-weight: 700;
   color: #1e293b;
-  font-size: 0.95rem;
 }
 
 .score-value.correct {
@@ -973,15 +1310,15 @@
 }
 
 .performance-message {
-  margin: 20px 0;
-  padding: 16px;
-  border-radius: 10px;
+  margin: 30px 0;
+  padding: 20px;
+  border-radius: 12px;
   background: #f8fafc;
 }
 
 .performance-message p {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
 }
 
@@ -1003,8 +1340,23 @@
 
 .results-actions {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
 }
 
 .review-btn {
@@ -1014,7 +1366,8 @@
 
 .review-btn:hover {
   background: #2563eb;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .retry-btn {
@@ -1024,7 +1377,8 @@
 
 .retry-btn:hover {
   background: #d97706;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .documents-btn {
@@ -1034,7 +1388,8 @@
 
 .documents-btn:hover {
   background: #475569;
-  box-shadow: 0 2px 8px rgba(100, 116, 139, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
 }
 
 .action-btn.secondary {
@@ -1051,17 +1406,17 @@
 .error-state,
 .no-questions-state {
   text-align: center;
-  padding: 40px 20px;
+  padding: 60px 40px;
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e2e8f0;
-  border-top: 3px solid #3b82f6;
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
+  margin: 0 auto 20px;
 }
 
 @keyframes spin {
@@ -1075,28 +1430,29 @@
 
 .error-icon,
 .no-questions-icon {
-  font-size: 3rem;
-  margin-bottom: 16px;
+  font-size: 4rem;
+  margin-bottom: 20px;
 }
 
 .error-state h3,
 .no-questions-state h3 {
   color: #1e293b;
-  margin: 0 0 8px 0;
-  font-size: 1.3rem;
+  margin: 0 0 10px 0;
+  font-size: 1.5rem;
 }
 
 .error-state p,
 .no-questions-state p {
   color: #64748b;
-  margin: 0 0 24px 0;
-  font-size: 1rem;
+  margin: 0 0 30px 0;
+  font-size: 1.1rem;
 }
 
 .error-actions {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 /* Submission Overlay */
@@ -1111,67 +1467,64 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
 }
 
 .submission-loading {
   background: white;
-  padding: 30px;
-  border-radius: 14px;
+  padding: 40px;
+  border-radius: 16px;
   text-align: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  max-width: 300px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .submission-loading p {
-  margin: 16px 0 0 0;
+  margin: 20px 0 0 0;
   color: #64748b;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 /* Review Mode Styles */
 .review-mode-header {
   text-align: center;
-  margin-bottom: 20px;
-  padding: 20px;
+  margin-bottom: 30px;
+  padding: 25px;
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: white;
-  border-radius: 14px;
+  border-radius: 16px;
 }
 
 .review-mode-header h2 {
-  margin: 0 0 8px 0;
-  font-size: 1.5rem;
+  margin: 0 0 10px 0;
+  font-size: 2rem;
   font-weight: 700;
 }
 
 .review-mode-header p {
-  margin: 0 0 12px 0;
+  margin: 0 0 15px 0;
   opacity: 0.9;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .review-stats {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .score-display {
   background: rgba(255, 255, 255, 0.2);
   padding: 8px 16px;
-  border-radius: 16px;
+  border-radius: 20px;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .exit-review-btn {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 10px 16px;
 }
 
 .exit-review-btn:hover {
@@ -1180,23 +1533,23 @@
 
 /* Review question card states */
 .review-question-card.correct {
-  border-left: 4px solid #10b981;
+  border-left: 6px solid #10b981;
 }
 
 .review-question-card.incorrect {
-  border-left: 4px solid #ef4444;
+  border-left: 6px solid #ef4444;
 }
 
 .review-question-card.unanswered {
-  border-left: 4px solid #f59e0b;
+  border-left: 6px solid #f59e0b;
 }
 
 .review-status-badge {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 16px;
-  margin-left: 8px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-left: 12px;
 }
 
 .correct-badge {
@@ -1245,16 +1598,15 @@
 .option-identifier {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .correct-indicator,
 .user-answer-indicator,
 .correct-user-indicator {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 2px 8px;
   border-radius: 6px;
 }
 
@@ -1276,166 +1628,169 @@
 /* Explanation section */
 .explanation-section {
   background: #f8fafc;
-  border-radius: 10px;
-  padding: 16px;
-  margin-top: 20px;
-  border-left: 3px solid #3b82f6;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 25px;
+  border-left: 4px solid #3b82f6;
 }
 
 .explanation-header {
   color: #1e293b;
-  font-size: 1rem;
-  margin-bottom: 10px;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .explanation-content {
   color: #475569;
-  line-height: 1.5;
-  font-size: 0.95rem;
+  line-height: 1.6;
+  font-size: 1rem;
 }
 
-/* Desktop-specific styles */
-@media (min-width: 768px) {
+/* Responsive Design */
+@media (max-width: 768px) {
   .quiz-page {
-    padding: 20px;
+    padding: 15px;
   }
 
   .quiz-header {
-    padding: 30px;
+    padding: 20px;
   }
 
   .quiz-header h1 {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
 
   .quiz-progress {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .progress-info {
-    flex: 1;
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
   }
 
   .progress-stats {
-    justify-content: flex-end;
-    gap: 20px;
-    width: auto;
+    justify-content: space-between;
   }
 
   .quiz-content {
-    padding: 40px;
+    padding: 25px;
   }
 
   .question-card {
-    padding: 30px;
+    padding: 20px;
   }
 
   .question-header {
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 
   .quiz-navigation {
-    flex-direction: row;
+    flex-direction: column;
     gap: 15px;
   }
 
   .navigation-center {
-    flex-direction: row;
-    gap: 15px;
-    order: 0;
+    flex-direction: column;
+    gap: 10px;
   }
 
   .nav-btn {
-    width: auto;
-  }
-
-  .prev-btn {
-    order: 0;
-  }
-
-  .next-btn {
-    order: 0;
+    width: 100%;
   }
 
   .review-section {
-    padding: 40px;
+    padding: 25px;
   }
 
   .answer-summary {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
   }
 
   .review-actions {
-    flex-direction: row;
-  }
-
-  .action-btn {
-    width: auto;
+    flex-direction: column;
   }
 
   .score-section {
-    flex-direction: row;
-    gap: 50px;
-  }
-
-  .score-details {
-    text-align: left;
+    flex-direction: column;
+    gap: 30px;
   }
 
   .results-actions,
   .error-actions {
-    flex-direction: row;
+    flex-direction: column;
+  }
+
+  .action-btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .review-mode-header {
-    padding: 25px;
+    padding: 20px;
   }
 
-  .review-stats {
-    flex-direction: row;
-    justify-content: space-between;
-  }
-
-  .quiz-navigation {
-    flex-direction: row;
-  }
-}
-
-@media (max-width: 380px) {
-  .quiz-header h1 {
+  .review-mode-header h2 {
     font-size: 1.6rem;
   }
 
+  .review-stats {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option-identifier {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .explanation-section {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .quiz-header h1 {
+    font-size: 1.8rem;
+  }
+
   .question-text {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 
   .option-card {
-    padding: 12px;
+    padding: 15px;
   }
 
-  .answer-summary {
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  .review-card,
+  .results-card {
+    padding: 25px;
   }
 
   .score-circle {
+    width: 120px;
+    height: 120px;
+  }
+
+  .score-circle::before {
     width: 100px;
     height: 100px;
   }
 
-  .score-circle::before {
-    width: 80px;
-    height: 80px;
+  .score-percentage {
+    font-size: 1.7rem;
   }
 
-  .score-percentage {
-    font-size: 1.3rem;
+  .review-mode-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .review-status-badge {
+    margin-left: 8px;
+    font-size: 0.8rem;
   }
 }
 </style>
