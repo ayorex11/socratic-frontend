@@ -124,6 +124,7 @@ const handleSubmit = async () => {
   min-height: 100vh;
   background-color: #f4f7f9; /* Light, educational background */
   padding: 20px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .register-card {
@@ -167,6 +168,8 @@ const handleSubmit = async () => {
   border-radius: 6px;
   box-sizing: border-box;
   transition: border-color 0.3s;
+  font-size: 16px; /* Prevent zoom on iOS */
+  min-height: 48px; /* Better touch target */
 }
 
 .form-group input:focus {
@@ -185,6 +188,8 @@ const handleSubmit = async () => {
   cursor: pointer;
   transition: background-color 0.3s;
   margin-top: 10px;
+  min-height: 50px; /* Better touch target */
+  font-size: 16px; /* Prevent zoom on iOS */
 }
 
 .submit-button:hover:not(:disabled) {
@@ -205,6 +210,7 @@ const handleSubmit = async () => {
   background-color: #f8d7da;
   text-align: left;
   font-size: 0.9rem;
+  word-wrap: break-word;
 }
 
 .login-link {
@@ -216,5 +222,173 @@ const handleSubmit = async () => {
   color: #007bff;
   text-decoration: none;
   font-weight: 600;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .register-container {
+    padding: 15px;
+    align-items: flex-start;
+    min-height: calc(100vh - 30px);
+  }
+
+  .register-card {
+    padding: 30px 25px;
+    margin-top: 20px;
+    max-width: 100%;
+  }
+
+  .card-title {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+  }
+
+  .card-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group input {
+    padding: 14px 12px;
+    min-height: 52px;
+  }
+
+  .submit-button {
+    padding: 14px;
+    min-height: 54px;
+    font-size: 1.05rem;
+  }
+
+  .error-message {
+    padding: 12px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+
+  .login-link {
+    margin-top: 15px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-container {
+    padding: 10px;
+  }
+
+  .register-card {
+    padding: 25px 20px;
+    margin-top: 10px;
+    border-radius: 10px;
+  }
+
+  .card-title {
+    font-size: 1.4rem;
+  }
+
+  .card-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 18px;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group label {
+    font-size: 0.95rem;
+  }
+
+  .form-group input {
+    padding: 12px;
+    min-height: 48px;
+    font-size: 15px;
+  }
+
+  .submit-button {
+    padding: 12px;
+    min-height: 50px;
+    font-size: 1rem;
+  }
+
+  .error-message {
+    padding: 10px;
+    font-size: 0.8rem;
+  }
+
+  .login-link {
+    font-size: 0.9rem;
+  }
+}
+
+/* Small phone optimizations */
+@media (max-width: 380px) {
+  .register-card {
+    padding: 20px 15px;
+  }
+
+  .card-title {
+    font-size: 1.3rem;
+  }
+
+  .card-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .form-group input {
+    padding: 10px;
+    min-height: 46px;
+  }
+
+  .submit-button {
+    padding: 10px;
+    min-height: 48px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Safe area insets for notched phones */
+@supports (padding: max(0px)) {
+  .register-container {
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Improved touch feedback for mobile */
+@media (max-width: 768px) {
+  .submit-button:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
+  .form-group input:active {
+    border-color: #007bff;
+  }
+}
+
+/* Prevent horizontal scrolling */
+@media (max-width: 768px) {
+  .register-container {
+    overflow-x: hidden;
+  }
+
+  .register-card {
+    width: calc(100% - 20px);
+  }
+}
+
+/* Keyboard avoidance for mobile */
+@media (max-width: 768px) {
+  .register-container {
+    align-items: flex-start;
+    padding-top: 40px;
+  }
 }
 </style>

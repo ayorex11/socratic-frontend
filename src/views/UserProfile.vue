@@ -262,6 +262,7 @@ onMounted(() => {
   padding: 40px 20px;
   min-height: calc(100vh - 70px);
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  -webkit-overflow-scrolling: touch;
 }
 
 .profile-container {
@@ -387,6 +388,8 @@ onMounted(() => {
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s ease;
+  min-height: 48px;
+  font-size: 16px; /* Prevent zoom on iOS */
 }
 
 .password-input:focus {
@@ -401,12 +404,14 @@ onMounted(() => {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 8px;
   border-radius: 4px;
   transition: background-color 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 40px;
+  min-width: 40px;
 }
 
 .password-toggle:hover {
@@ -425,6 +430,8 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 10px;
+  min-height: 50px;
+  font-size: 16px; /* Prevent zoom on iOS */
 }
 
 .change-password-btn:hover:not(:disabled) {
@@ -449,6 +456,7 @@ onMounted(() => {
   border-radius: 6px;
   text-align: center;
   font-size: 0.9rem;
+  word-wrap: break-word;
 }
 
 .success-message {
@@ -460,6 +468,7 @@ onMounted(() => {
   border-radius: 6px;
   text-align: center;
   font-size: 0.9rem;
+  word-wrap: break-word;
 }
 
 .profile-actions {
@@ -479,6 +488,8 @@ onMounted(() => {
   text-decoration: none;
   display: inline-block;
   text-align: center;
+  min-height: 48px;
+  font-size: 16px; /* Prevent zoom on iOS */
 }
 
 .action-btn.primary {
@@ -504,21 +515,227 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
+/* Enhanced Mobile Responsiveness */
 @media (max-width: 768px) {
+  .user-profile {
+    padding: 20px 15px;
+    min-height: calc(100vh - 40px);
+  }
+
+  .profile-header {
+    margin-bottom: 30px;
+  }
+
+  .profile-header h1 {
+    font-size: 2rem;
+  }
+
+  .profile-header p {
+    font-size: 1rem;
+  }
+
   .profile-card {
-    padding: 30px 20px;
+    padding: 25px 20px;
+    border-radius: 10px;
+  }
+
+  .profile-card h2 {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+  }
+
+  .profile-info {
+    margin-bottom: 0;
+  }
+
+  .info-group {
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+  }
+
+  .info-group label {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+
+  .info-value {
+    font-size: 1rem;
+  }
+
+  .premium-badge {
+    font-size: 0.85rem;
+    padding: 5px 10px;
+  }
+
+  .password-form {
+    max-width: 100%;
+  }
+
+  .input-group {
+    margin-bottom: 16px;
+  }
+
+  .password-input {
+    padding: 14px 45px 14px 14px;
+    min-height: 52px;
+  }
+
+  .password-toggle {
+    padding: 10px;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .change-password-btn {
+    padding: 16px;
+    min-height: 54px;
+    font-size: 1.05rem;
+  }
+
+  .error-message,
+  .success-message {
+    padding: 14px;
+    font-size: 0.85rem;
+    margin-top: 12px;
   }
 
   .profile-actions {
     flex-direction: column;
+    gap: 12px;
   }
 
   .action-btn {
     width: 100%;
+    padding: 14px;
+    min-height: 52px;
   }
 
   .profile-sections {
     gap: 20px;
+    margin-bottom: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-profile {
+    padding: 15px 10px;
+  }
+
+  .profile-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .profile-header p {
+    font-size: 0.95rem;
+  }
+
+  .profile-card {
+    padding: 20px 15px;
+  }
+
+  .profile-card h2 {
+    font-size: 1.2rem;
+  }
+
+  .info-group label {
+    font-size: 0.8rem;
+  }
+
+  .info-value {
+    font-size: 0.95rem;
+  }
+
+  .password-input {
+    padding: 12px 40px 12px 12px;
+    min-height: 48px;
+    font-size: 15px;
+  }
+
+  .password-toggle {
+    padding: 8px;
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  .change-password-btn {
+    padding: 14px;
+    min-height: 50px;
+    font-size: 1rem;
+  }
+
+  .action-btn {
+    padding: 12px;
+    min-height: 48px;
+    font-size: 15px;
+  }
+}
+
+/* Small phone optimizations */
+@media (max-width: 380px) {
+  .profile-card {
+    padding: 18px 12px;
+  }
+
+  .profile-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .info-group {
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+  }
+
+  .password-input {
+    padding: 10px 38px 10px 10px;
+    min-height: 46px;
+  }
+}
+
+/* Safe area insets for notched phones */
+@supports (padding: max(0px)) {
+  .user-profile {
+    padding-left: max(15px, env(safe-area-inset-left));
+    padding-right: max(15px, env(safe-area-inset-right));
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Improved touch feedback for mobile */
+@media (max-width: 768px) {
+  .change-password-btn:active,
+  .action-btn:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
+  .password-toggle:active {
+    background-color: #e9ecef;
+  }
+}
+
+/* Prevent horizontal scrolling */
+@media (max-width: 768px) {
+  .user-profile {
+    overflow-x: hidden;
+  }
+
+  .profile-container {
+    width: calc(100% - 20px);
+  }
+}
+
+/* Better focus states for mobile */
+@media (max-width: 768px) {
+  .password-input:focus {
+    border-color: #27ae60;
+    box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2);
+  }
+
+  .action-btn:focus {
+    outline: 2px solid #27ae60;
+    outline-offset: 2px;
   }
 }
 </style>

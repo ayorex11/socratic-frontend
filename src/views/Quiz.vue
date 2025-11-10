@@ -733,6 +733,7 @@ onMounted(() => {
   padding: 20px;
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-overflow-scrolling: touch;
 }
 
 .quiz-container {
@@ -897,6 +898,7 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
+  min-height: 60px;
 }
 
 .option-card:hover:not(.answered) {
@@ -991,6 +993,7 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 1rem;
+  min-height: 48px;
 }
 
 .prev-btn {
@@ -1039,6 +1042,7 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-height: 48px;
 }
 
 .review-btn:hover:not(:disabled) {
@@ -1122,6 +1126,7 @@ onMounted(() => {
   border: 1px solid #e2e8f0;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-height: 50px;
 }
 
 .summary-item:hover {
@@ -1357,6 +1362,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   font-size: 1rem;
+  min-height: 48px;
 }
 
 .review-btn {
@@ -1649,36 +1655,48 @@ onMounted(() => {
   font-size: 1rem;
 }
 
-/* Responsive Design */
+/* Enhanced Mobile Responsiveness */
 @media (max-width: 768px) {
   .quiz-page {
-    padding: 15px;
+    padding: 10px;
   }
 
   .quiz-header {
-    padding: 20px;
+    padding: 20px 15px;
   }
 
   .quiz-header h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
+  }
+
+  .quiz-header p {
+    font-size: 1rem;
   }
 
   .quiz-progress {
     flex-direction: column;
-    gap: 15px;
-    align-items: stretch;
+    gap: 12px;
+    padding: 15px;
+    margin-top: 20px;
   }
 
   .progress-stats {
+    width: 100%;
     justify-content: space-between;
   }
 
+  .answered-count,
+  .timer {
+    font-size: 0.9rem;
+    padding: 5px 10px;
+  }
+
   .quiz-content {
-    padding: 25px;
+    padding: 20px 15px;
   }
 
   .question-card {
-    padding: 20px;
+    padding: 20px 15px;
   }
 
   .question-header {
@@ -1687,40 +1705,92 @@ onMounted(() => {
     gap: 10px;
   }
 
+  .question-text {
+    font-size: 1.1rem;
+    line-height: 1.4;
+  }
+
+  .options-container {
+    gap: 10px;
+  }
+
+  .option-card {
+    padding: 16px;
+    min-height: 50px;
+  }
+
+  .option-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .option-identifier {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+  }
+
+  .option-content {
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
   .quiz-navigation {
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
   }
 
   .navigation-center {
+    order: -1;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
   }
 
   .nav-btn {
     width: 100%;
+    text-align: center;
+  }
+
+  .question-jump {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .question-select {
+    width: 100%;
+    padding: 10px;
   }
 
   .review-section {
-    padding: 25px;
+    padding: 20px 15px;
+  }
+
+  .review-card {
+    padding: 20px;
+  }
+
+  .review-header h2 {
+    font-size: 1.5rem;
   }
 
   .answer-summary {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 8px;
+    max-height: 150px;
+  }
+
+  .summary-item {
+    padding: 10px 8px;
+    flex-direction: column;
+    text-align: center;
+    min-height: 45px;
   }
 
   .review-actions {
     flex-direction: column;
-  }
-
-  .score-section {
-    flex-direction: column;
-    gap: 30px;
-  }
-
-  .results-actions,
-  .error-actions {
-    flex-direction: column;
+    gap: 10px;
   }
 
   .action-btn {
@@ -1728,46 +1798,72 @@ onMounted(() => {
     justify-content: center;
   }
 
+  .quiz-results {
+    padding: 20px 15px;
+  }
+
+  .results-card {
+    padding: 25px 20px;
+  }
+
+  .results-header h2 {
+    font-size: 1.6rem;
+  }
+
+  .score-section {
+    flex-direction: column;
+    gap: 25px;
+  }
+
+  .score-details {
+    text-align: center;
+    width: 100%;
+  }
+
+  .score-item {
+    justify-content: space-between;
+  }
+
+  .results-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
   .review-mode-header {
-    padding: 20px;
+    padding: 20px 15px;
   }
 
   .review-mode-header h2 {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
   }
 
   .review-stats {
     flex-direction: column;
     gap: 10px;
+    align-items: center;
   }
 
-  .option-identifier {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .explanation-section {
-    padding: 15px;
+  .exit-review-btn {
+    width: 100%;
+    max-width: 200px;
   }
 }
 
 @media (max-width: 480px) {
+  .quiz-page {
+    padding: 8px 5px;
+  }
+
   .quiz-header h1 {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
   }
 
   .question-text {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
-  .option-card {
-    padding: 15px;
-  }
-
-  .review-card,
-  .results-card {
-    padding: 25px;
+  .answer-summary {
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
   }
 
   .score-circle {
@@ -1785,12 +1881,36 @@ onMounted(() => {
   }
 
   .review-mode-header h2 {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
+  }
+}
+
+/* Safe area insets for notched phones */
+@supports (padding: max(0px)) {
+  .quiz-page {
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Improved touch feedback for mobile */
+@media (max-width: 768px) {
+  .option-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
   }
 
-  .review-status-badge {
-    margin-left: 8px;
-    font-size: 0.8rem;
+  .nav-btn:active,
+  .action-btn:active {
+    transform: translateY(1px);
+  }
+
+  .question-text,
+  .option-content,
+  .explanation-content {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }
 </style>
