@@ -146,47 +146,57 @@
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 clamp(16px, 4vw, 20px);
 }
 
 /* Hero Section */
 .hero {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
+  grid-template-columns: 1fr;
+  gap: clamp(30px, 6vw, 60px);
   align-items: center;
-  padding: 80px 20px;
+  padding: clamp(40px, 8vw, 80px) clamp(16px, 4vw, 20px);
   max-width: 1200px;
   margin: 0 auto;
+  text-align: center;
 }
 
 .hero-title {
-  font-size: 3rem;
+  font-size: clamp(2rem, 6vw, 3rem);
   font-weight: 700;
   color: #2c3e50;
-  margin-bottom: 20px;
+  margin-bottom: clamp(16px, 3vw, 20px);
   line-height: 1.1;
 }
 
 .hero-subtitle {
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 3vw, 1.2rem);
   color: #5a6c7d;
-  margin-bottom: 40px;
+  margin-bottom: clamp(24px, 5vw, 40px);
   line-height: 1.6;
 }
 
 .hero-actions {
   display: flex;
-  gap: 20px;
+  gap: clamp(12px, 3vw, 20px);
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .cta-button {
-  padding: 15px 30px;
+  padding: clamp(12px, 3vw, 15px) clamp(20px, 4vw, 30px);
   border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
   display: inline-block;
+  text-align: center;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
 }
 
 .cta-button.primary {
@@ -213,38 +223,41 @@
 }
 
 .cta-button.large {
-  padding: 18px 40px;
-  font-size: 1.1rem;
+  padding: clamp(14px, 3vw, 18px) clamp(24px, 5vw, 40px);
+  font-size: clamp(1rem, 3vw, 1.1rem);
+  min-height: 60px;
 }
 
 .hero-image {
   display: flex;
   justify-content: center;
   align-items: center;
+  order: -1;
 }
 
 .placeholder-image {
-  font-size: 8rem;
+  font-size: clamp(4rem, 15vw, 8rem);
   opacity: 0.8;
 }
 
 /* Workflow Section */
 .workflow {
-  padding: 100px 0;
+  padding: clamp(50px, 8vw, 100px) 0;
   background: #f8f9fa;
 }
 
 .section-title {
   text-align: center;
-  font-size: 2.5rem;
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
   color: #2c3e50;
-  margin-bottom: 60px;
+  margin-bottom: clamp(30px, 6vw, 60px);
+  line-height: 1.2;
 }
 
 .workflow-steps {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: clamp(24px, 5vw, 40px);
 }
 
 .step {
@@ -253,48 +266,54 @@
 }
 
 .step-number {
-  width: 60px;
-  height: 60px;
+  width: clamp(50px, 10vw, 60px);
+  height: clamp(50px, 10vw, 60px);
   background: #27ae60;
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
   font-weight: bold;
-  margin: 0 auto 20px;
+  margin: 0 auto clamp(16px, 3vw, 20px);
 }
 
 .step-content h3 {
-  font-size: 1.3rem;
+  font-size: clamp(1.1rem, 3vw, 1.3rem);
   color: #2c3e50;
-  margin-bottom: 15px;
+  margin-bottom: clamp(12px, 2.5vw, 15px);
+  line-height: 1.3;
 }
 
 .step-content p {
   color: #5a6c7d;
   line-height: 1.6;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 /* Features Section */
 .features {
-  padding: 100px 0;
+  padding: clamp(50px, 8vw, 100px) 0;
 }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: clamp(20px, 4vw, 30px);
 }
 
 .feature-card {
   background: white;
-  padding: 40px 30px;
+  padding: clamp(24px, 5vw, 40px) clamp(20px, 4vw, 30px);
   border-radius: 12px;
   text-align: center;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 280px;
 }
 
 .feature-card:hover {
@@ -302,93 +321,268 @@
 }
 
 .feature-icon {
-  font-size: 3rem;
-  margin-bottom: 20px;
+  font-size: clamp(2.5rem, 6vw, 3rem);
+  margin-bottom: clamp(16px, 3vw, 20px);
 }
 
 .feature-card h3 {
-  font-size: 1.3rem;
+  font-size: clamp(1.1rem, 3vw, 1.3rem);
   color: #2c3e50;
-  margin-bottom: 15px;
+  margin-bottom: clamp(12px, 2.5vw, 15px);
+  line-height: 1.3;
 }
 
 .feature-card p {
   color: #5a6c7d;
   line-height: 1.6;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 /* Use Cases Section */
 .use-cases {
-  padding: 100px 0;
+  padding: clamp(50px, 8vw, 100px) 0;
   background: #f8f9fa;
 }
 
 .use-cases-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: clamp(24px, 5vw, 40px);
 }
 
 .use-case {
   background: white;
-  padding: 40px 30px;
+  padding: clamp(24px, 5vw, 40px) clamp(20px, 4vw, 30px);
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  min-height: 200px;
 }
 
 .use-case h3 {
-  font-size: 1.3rem;
+  font-size: clamp(1.1rem, 3vw, 1.3rem);
   color: #2c3e50;
-  margin-bottom: 15px;
+  margin-bottom: clamp(12px, 2.5vw, 15px);
+  line-height: 1.3;
 }
 
 .use-case p {
   color: #5a6c7d;
   line-height: 1.6;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 /* CTA Section */
 .cta-section {
-  padding: 80px 0;
+  padding: clamp(50px, 8vw, 80px) 0;
   background: #27ae60;
   color: white;
   text-align: center;
 }
 
 .cta-section h2 {
-  font-size: 2.5rem;
-  margin-bottom: 20px;
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  margin-bottom: clamp(16px, 3vw, 20px);
+  line-height: 1.2;
 }
 
 .cta-section p {
-  font-size: 1.2rem;
-  margin-bottom: 40px;
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  margin-bottom: clamp(24px, 5vw, 40px);
   opacity: 0.9;
+  line-height: 1.4;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
+/* Tablet and Desktop Layout */
+@media (min-width: 768px) {
   .hero {
-    grid-template-columns: 1fr;
-    text-align: center;
-    padding: 60px 20px;
+    grid-template-columns: 1fr 1fr;
+    text-align: left;
+    gap: clamp(40px, 6vw, 60px);
   }
 
-  .hero-title {
-    font-size: 2.2rem;
+  .hero-image {
+    order: 1;
   }
 
   .hero-actions {
-    justify-content: center;
-    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 
   .workflow-steps {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .features-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .use-cases-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Large Desktop Enhancements */
+@media (min-width: 1200px) {
+  .features-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Small Mobile Optimizations */
+@media (max-width: 480px) {
+  .hero {
+    padding: 30px 16px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cta-button {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .feature-card,
+  .use-case {
+    min-height: auto;
+    padding: 20px 16px;
+  }
+
+  .workflow-steps {
+    gap: 20px;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .cta-button,
+  .feature-card {
+    transition: none;
+  }
+
+  .cta-button:hover,
+  .feature-card:hover {
+    transform: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .hero-title,
+  .section-title,
+  .step-content h3,
+  .feature-card h3,
+  .use-case h3,
+  .cta-section h2 {
+    color: #ffffff;
+  }
+
+  .hero-subtitle,
+  .step-content p,
+  .feature-card p,
+  .use-case p,
+  .cta-section p {
+    color: #cccccc;
+  }
+
+  .workflow,
+  .use-cases {
+    background: #1a1a1a;
+  }
+
+  .feature-card,
+  .use-case {
+    background: #2d2d2d;
+    color: #ffffff;
+  }
+
+  .feature-card p,
+  .use-case p {
+    color: #aaaaaa;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .feature-card,
+  .use-case {
+    border: 2px solid #000;
+  }
+
+  .cta-button {
+    border: 2px solid #000;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .cta-button:hover,
+  .feature-card:hover {
+    transform: none;
+  }
+
+  .cta-button:active,
+  .feature-card:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Landscape mode for mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero {
+    padding: 30px 20px;
+    grid-template-columns: 2fr 1fr;
+    align-items: center;
+  }
+
+  .hero-title {
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+  }
+
+  .hero-actions {
+    gap: 10px;
+  }
+
+  .cta-button {
+    min-height: 44px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+
+  .placeholder-image {
+    font-size: 4rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .hero-actions,
+  .cta-section {
+    display: none;
+  }
+
+  .hero,
+  .workflow,
+  .features,
+  .use-cases {
+    padding: 20px 0;
+  }
+
+  .feature-card,
+  .use-case {
+    box-shadow: none;
+    border: 1px solid #ddd;
   }
 }
 </style>

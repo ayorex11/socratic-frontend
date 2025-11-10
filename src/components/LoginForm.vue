@@ -41,6 +41,7 @@
               @click="togglePasswordVisibility"
               class="password-toggle"
               :disabled="loading"
+              aria-label="Toggle password visibility"
             >
               <span v-if="showPassword">👁️</span>
               <span v-else>👁️‍🗨️</span>
@@ -172,65 +173,70 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 20px;
+  padding: clamp(12px, 4vw, 20px);
 }
 
 .login-card {
   background: white;
-  padding: 40px;
+  padding: clamp(24px, 5vw, 40px);
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 400px;
+  max-width: min(400px, 92vw);
+  margin: 0 auto;
 }
 
 .logo-section {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: clamp(20px, 4vw, 30px);
 }
 
 .logo-section h1 {
   color: #27ae60;
-  font-size: 2.5rem;
+  font-size: clamp(2rem, 6vw, 2.5rem);
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  line-height: 1.2;
 }
 
 .logo-section p {
   color: #7f8c8d;
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 3vw, 0.9rem);
 }
 
-/* Add this new style for session expired message */
+/* Session expired message */
 .session-expired-message {
   background: #fff3cd;
   border: 1px solid #ffeaa7;
   color: #856404;
-  padding: 12px;
+  padding: clamp(10px, 2.5vw, 12px);
   border-radius: 6px;
-  margin-bottom: 20px;
+  margin-bottom: clamp(16px, 3vw, 20px);
   text-align: center;
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  line-height: 1.4;
 }
 
 .input-group {
-  margin-bottom: 20px;
+  margin-bottom: clamp(16px, 3vw, 20px);
 }
 
 label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: clamp(6px, 1.5vw, 8px);
   color: #2c3e50;
   font-weight: 500;
+  font-size: clamp(0.9rem, 3vw, 1rem);
 }
 
 input {
   width: 100%;
-  padding: 12px 16px;
+  padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
   border: 2px solid #ecf0f1;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 3vw, 1rem);
   transition: all 0.3s ease;
+  min-height: 48px;
 }
 
 input:focus {
@@ -251,21 +257,23 @@ input:disabled {
 }
 
 .password-input {
-  padding: 12px 45px 12px 16px;
+  padding: clamp(10px, 2.5vw, 12px) clamp(40px, 8vw, 45px) clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
 }
 
 .password-toggle {
   position: absolute;
-  right: 12px;
+  right: clamp(8px, 2vw, 12px);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   border-radius: 4px;
   transition: background-color 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
 }
 
 .password-toggle:hover:not(:disabled) {
@@ -279,21 +287,22 @@ input:disabled {
 
 .login-btn {
   width: 100%;
-  padding: 14px;
+  padding: clamp(12px, 3vw, 14px);
   background: #27ae60;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: clamp(1rem, 3.5vw, 1.1rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 10px;
+  margin-top: clamp(8px, 2vw, 10px);
+  min-height: 54px;
 }
 
 .login-btn:hover:not(:disabled) {
   background: #219a52;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
 
@@ -306,80 +315,229 @@ input:disabled {
 
 .form-links {
   text-align: center;
-  margin: 15px 0;
+  margin: clamp(12px, 3vw, 15px) 0;
 }
 
 .forgot-password {
   color: #7f8c8d;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+  padding: clamp(8px, 2vw, 10px);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  display: inline-block;
+  min-height: 44px;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .forgot-password:hover {
   color: #27ae60;
-  text-decoration: underline;
+  text-decoration: none;
+  background-color: #f8f9fa;
 }
 
 .error-message {
-  margin-top: 16px;
-  padding: 12px;
+  margin-top: clamp(12px, 3vw, 16px);
+  padding: clamp(10px, 2.5vw, 12px);
   background: #ffeaea;
   color: #e74c3c;
   border: 1px solid #ffcdd2;
   border-radius: 6px;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+  line-height: 1.4;
 }
 
 .verification-prompt {
-  margin-top: 10px;
-  padding: 10px;
+  margin-top: clamp(8px, 2vw, 10px);
+  padding: clamp(8px, 2vw, 10px);
   background: #fff3cd;
   border: 1px solid #ffeaa7;
   border-radius: 4px;
 }
 
 .verification-prompt p {
-  margin: 0 0 8px 0;
+  margin: 0 0 clamp(6px, 1.5vw, 8px) 0;
   color: #856404;
-  font-size: 0.85rem;
+  font-size: clamp(0.8rem, 2.5vw, 0.85rem);
+  line-height: 1.4;
 }
 
 .resend-btn {
-  padding: 8px 16px;
+  padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px);
   background: #e67e22;
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  min-height: 44px;
+  width: 100%;
+  font-weight: 500;
 }
 
 .resend-btn:hover:not(:disabled) {
   background: #d35400;
+  transform: translateY(-1px);
 }
 
 .resend-btn:disabled {
   background: #95a5a6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .signup-link {
   text-align: center;
-  margin-top: 20px;
-  padding-top: 20px;
+  margin-top: clamp(16px, 3vw, 20px);
+  padding-top: clamp(16px, 3vw, 20px);
   border-top: 1px solid #ecf0f1;
   color: #7f8c8d;
+  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+  line-height: 1.4;
 }
 
 .signup-link a {
   color: #27ae60;
   text-decoration: none;
   font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
 }
 
 .signup-link a:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  background-color: #f8f9fa;
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 8px;
+    align-items: flex-start;
+    padding-top: 10vh;
+  }
+
+  .login-card {
+    padding: 20px 16px;
+    border-radius: 10px;
+  }
+
+  .password-toggle {
+    min-width: 36px;
+    min-height: 36px;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) {
+  .login-container {
+    padding: 24px;
+  }
+
+  .login-card {
+    padding: 32px;
+  }
+}
+
+/* Large desktop enhancements */
+@media (min-width: 1200px) {
+  .login-card {
+    padding: 48px;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  input,
+  .login-btn,
+  .password-toggle,
+  .forgot-password,
+  .resend-btn,
+  .signup-link a {
+    transition: none;
+  }
+
+  .login-btn:hover:not(:disabled),
+  .resend-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .login-card {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+
+  .logo-section p,
+  .signup-link {
+    color: #cccccc;
+  }
+
+  label {
+    color: #ffffff;
+  }
+
+  input {
+    background: #2d2d2d;
+    border-color: #444;
+    color: #ffffff;
+  }
+
+  input:focus {
+    border-color: #27ae60;
+    background: #2d2d2d;
+  }
+
+  .forgot-password {
+    color: #aaaaaa;
+  }
+
+  .forgot-password:hover {
+    color: #27ae60;
+    background-color: #2d2d2d;
+  }
+
+  .signup-link a:hover {
+    background-color: #2d2d2d;
+  }
+
+  .session-expired-message {
+    background: #332b00;
+    border-color: #665800;
+    color: #ffd700;
+  }
+
+  .verification-prompt {
+    background: #332b00;
+    border-color: #665800;
+  }
+
+  .verification-prompt p {
+    color: #ffd700;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .login-card {
+    border: 2px solid #000;
+  }
+
+  input {
+    border-width: 2px;
+  }
+
+  .login-btn,
+  .resend-btn {
+    border: 2px solid #000;
+  }
 }
 </style>

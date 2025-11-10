@@ -16,8 +16,15 @@
               placeholder="Enter new password"
               required
               class="password-input"
+              :disabled="loading"
             />
-            <button type="button" @click="toggleNewPasswordVisibility" class="password-toggle">
+            <button
+              type="button"
+              @click="toggleNewPasswordVisibility"
+              class="password-toggle"
+              :disabled="loading"
+              aria-label="Toggle new password visibility"
+            >
               <span v-if="showNewPassword">👁️</span>
               <span v-else>👁️‍🗨️</span>
             </button>
@@ -33,8 +40,15 @@
               placeholder="Confirm new password"
               required
               class="password-input"
+              :disabled="loading"
             />
-            <button type="button" @click="toggleConfirmPasswordVisibility" class="password-toggle">
+            <button
+              type="button"
+              @click="toggleConfirmPasswordVisibility"
+              class="password-toggle"
+              :disabled="loading"
+              aria-label="Toggle confirm password visibility"
+            >
               <span v-if="showConfirmPassword">👁️</span>
               <span v-else>👁️‍🗨️</span>
             </button>
@@ -170,44 +184,47 @@ const toggleConfirmPasswordVisibility = () => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 20px;
+  padding: clamp(12px, 4vw, 20px);
 }
 
 .password-reset-confirm-card {
   background: white;
-  padding: 40px;
+  padding: clamp(24px, 5vw, 40px);
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 450px;
+  max-width: min(450px, 92vw);
+  margin: 0 auto;
 }
 
 .logo-section {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: clamp(20px, 4vw, 30px);
 }
 
 .logo-section h1 {
   color: #27ae60;
-  font-size: 2.5rem;
+  font-size: clamp(2rem, 6vw, 2.5rem);
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  line-height: 1.2;
 }
 
 .logo-section p {
   color: #7f8c8d;
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 3vw, 0.9rem);
 }
 
 .input-group {
-  margin-bottom: 20px;
+  margin-bottom: clamp(16px, 3vw, 20px);
 }
 
 label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: clamp(6px, 1.5vw, 8px);
   color: #2c3e50;
   font-weight: 500;
+  font-size: clamp(0.9rem, 3vw, 1rem);
 }
 
 .password-input-container {
@@ -218,11 +235,12 @@ label {
 
 .password-input {
   width: 100%;
-  padding: 12px 45px 12px 16px;
+  padding: clamp(10px, 2.5vw, 12px) clamp(40px, 8vw, 45px) clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
   border: 2px solid #ecf0f1;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 3vw, 1rem);
   transition: all 0.3s ease;
+  min-height: 48px;
 }
 
 .password-input:focus {
@@ -231,41 +249,54 @@ label {
   box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
 }
 
+.password-input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
 .password-toggle {
   position: absolute;
-  right: 12px;
+  right: clamp(8px, 2vw, 12px);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   border-radius: 4px;
   transition: background-color 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
 }
 
-.password-toggle:hover {
+.password-toggle:hover:not(:disabled) {
   background-color: #f8f9fa;
+}
+
+.password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .confirm-btn {
   width: 100%;
-  padding: 14px;
+  padding: clamp(12px, 3vw, 14px);
   background: #27ae60;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: clamp(1rem, 3.5vw, 1.1rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 10px;
+  margin-top: clamp(8px, 2vw, 10px);
+  min-height: 54px;
 }
 
 .confirm-btn:hover:not(:disabled) {
   background: #219a52;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
 
@@ -277,47 +308,175 @@ label {
 }
 
 .error-message {
-  margin-top: 16px;
-  padding: 12px;
+  margin-top: clamp(12px, 3vw, 16px);
+  padding: clamp(10px, 2.5vw, 12px);
   background: #ffeaea;
   color: #e74c3c;
   border: 1px solid #ffcdd2;
   border-radius: 6px;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+  line-height: 1.4;
 }
 
 .success-message {
-  margin-top: 16px;
-  padding: 12px;
+  margin-top: clamp(12px, 3vw, 16px);
+  padding: clamp(12px, 3vw, 16px);
   background: #e8f6ef;
   color: #27ae60;
   border: 1px solid #a3e4d7;
   border-radius: 6px;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+  line-height: 1.4;
 }
 
 .success-help {
-  font-size: 0.85rem;
-  margin-top: 8px;
+  font-size: clamp(0.8rem, 2.5vw, 0.85rem);
+  margin-top: clamp(6px, 1.5vw, 8px);
   color: #27ae60;
   opacity: 0.8;
+  line-height: 1.4;
 }
 
 .login-link {
   display: inline-block;
-  margin-top: 10px;
-  padding: 8px 16px;
+  margin-top: clamp(8px, 2vw, 10px);
+  padding: clamp(10px, 2.5vw, 12px) clamp(16px, 3vw, 20px);
   background: #27ae60;
   color: white;
   text-decoration: none;
   border-radius: 6px;
   font-weight: 500;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  font-size: clamp(0.9rem, 3vw, 1rem);
+  min-height: 44px;
+  min-width: 120px;
+  text-align: center;
 }
 
 .login-link:hover {
   background: #219a52;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 480px) {
+  .password-reset-confirm-container {
+    padding: 8px;
+    align-items: flex-start;
+    padding-top: 10vh;
+  }
+
+  .password-reset-confirm-card {
+    padding: 20px 16px;
+    border-radius: 10px;
+  }
+
+  .password-toggle {
+    min-width: 36px;
+    min-height: 36px;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) {
+  .password-reset-confirm-container {
+    padding: 24px;
+  }
+
+  .password-reset-confirm-card {
+    padding: 32px;
+  }
+}
+
+/* Large desktop enhancements */
+@media (min-width: 1200px) {
+  .password-reset-confirm-card {
+    padding: 48px;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .password-input,
+  .confirm-btn,
+  .password-toggle,
+  .login-link {
+    transition: none;
+  }
+
+  .confirm-btn:hover:not(:disabled),
+  .login-link:hover {
+    transform: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .password-reset-confirm-card {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+
+  .logo-section p {
+    color: #cccccc;
+  }
+
+  label {
+    color: #ffffff;
+  }
+
+  .password-input {
+    background: #2d2d2d;
+    border-color: #444;
+    color: #ffffff;
+  }
+
+  .password-input:focus {
+    border-color: #27ae60;
+    background: #2d2d2d;
+  }
+
+  .password-input:disabled {
+    background: #3d3d3d;
+  }
+
+  .password-toggle:hover:not(:disabled) {
+    background-color: #2d2d2d;
+  }
+
+  .error-message {
+    background: #442222;
+    border-color: #663333;
+    color: #ff6b6b;
+  }
+
+  .success-message {
+    background: #224422;
+    border-color: #336633;
+    color: #6bff6b;
+  }
+
+  .success-help {
+    color: #6bff6b;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .password-reset-confirm-card {
+    border: 2px solid #000;
+  }
+
+  .password-input {
+    border-width: 2px;
+  }
+
+  .confirm-btn,
+  .login-link {
+    border: 2px solid #000;
+  }
 }
 </style>

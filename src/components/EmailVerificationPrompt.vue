@@ -114,33 +114,35 @@ const resendVerification = async () => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 20px;
+  padding: clamp(12px, 4vw, 20px);
 }
 
 .verification-card {
   background: white;
-  padding: 40px;
+  padding: clamp(20px, 5vw, 40px);
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 500px;
+  max-width: min(500px, 92vw);
+  margin: 0 auto;
 }
 
 .logo-section {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: clamp(20px, 4vw, 30px);
 }
 
 .logo-section h1 {
   color: #27ae60;
-  font-size: 2.5rem;
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  line-height: 1.2;
 }
 
 .logo-section p {
   color: #7f8c8d;
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 3vw, 0.9rem);
 }
 
 .verification-content {
@@ -148,27 +150,33 @@ const resendVerification = async () => {
 }
 
 .icon {
-  font-size: 4rem;
-  margin-bottom: 20px;
+  font-size: clamp(3rem, 12vw, 4rem);
+  margin-bottom: clamp(16px, 4vw, 20px);
 }
 
 .verification-content h2 {
   color: #2c3e50;
-  margin-bottom: 15px;
+  margin-bottom: clamp(12px, 3vw, 15px);
+  font-size: clamp(1.4rem, 5vw, 1.6rem);
+  line-height: 1.3;
 }
 
 .verification-content p {
   color: #5a6c7d;
-  margin-bottom: 15px;
+  margin-bottom: clamp(10px, 2.5vw, 15px);
   line-height: 1.6;
+  font-size: clamp(0.9rem, 3vw, 1rem);
 }
 
 .verification-actions {
-  margin: 30px 0;
+  margin: clamp(20px, 5vw, 30px) 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 3vw, 15px);
 }
 
 .resend-btn {
-  padding: 12px 24px;
+  padding: clamp(12px, 3vw, 14px) clamp(16px, 4vw, 24px);
   background: #27ae60;
   color: white;
   border: none;
@@ -176,69 +184,177 @@ const resendVerification = async () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-bottom: 15px;
+  font-size: clamp(0.9rem, 3vw, 1rem);
+  min-height: 48px;
+  width: 100%;
 }
 
 .resend-btn:hover:not(:disabled) {
   background: #219a52;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
 
 .resend-btn:disabled {
   background: #95a5a6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .login-link {
   color: #27ae60;
   text-decoration: none;
   font-weight: 500;
+  font-size: clamp(0.9rem, 3vw, 1rem);
+  padding: clamp(10px, 2vw, 12px);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  display: inline-block;
+  min-height: 44px;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .login-link:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  background: rgba(39, 174, 96, 0.1);
+  transform: translateY(-1px);
 }
 
 .error-message {
-  margin-top: 16px;
-  padding: 12px;
+  margin-top: clamp(12px, 3vw, 16px);
+  padding: clamp(10px, 2.5vw, 12px);
   background: #ffeaea;
   color: #e74c3c;
   border: 1px solid #ffcdd2;
   border-radius: 6px;
   text-align: center;
+  font-size: clamp(0.85rem, 3vw, 0.9rem);
 }
 
 .success-message {
-  margin-top: 16px;
-  padding: 12px;
+  margin-top: clamp(12px, 3vw, 16px);
+  padding: clamp(10px, 2.5vw, 12px);
   background: #e8f6ef;
   color: #27ae60;
   border: 1px solid #a3e4d7;
   border-radius: 6px;
   text-align: center;
+  font-size: clamp(0.85rem, 3vw, 0.9rem);
 }
 
 .help-text {
-  margin-top: 30px;
-  padding: 20px;
+  margin-top: clamp(20px, 5vw, 30px);
+  padding: clamp(16px, 4vw, 20px);
   background: #f8f9fa;
   border-radius: 8px;
   text-align: left;
 }
 
 .help-text p {
-  margin-bottom: 10px;
+  margin-bottom: clamp(8px, 2vw, 10px);
   font-weight: 600;
+  font-size: clamp(0.9rem, 3vw, 1rem);
 }
 
 .help-text ul {
   margin: 0;
-  padding-left: 20px;
+  padding-left: clamp(16px, 4vw, 20px);
   color: #5a6c7d;
 }
 
 .help-text li {
-  margin-bottom: 5px;
+  margin-bottom: clamp(4px, 1vw, 5px);
+  font-size: clamp(0.85rem, 3vw, 0.9rem);
+  line-height: 1.5;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 480px) {
+  .verification-container {
+    padding: 8px;
+    align-items: flex-start;
+    padding-top: 10vh;
+  }
+
+  .verification-card {
+    padding: 20px 16px;
+    border-radius: 10px;
+  }
+
+  .verification-actions {
+    margin: 24px 0;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) {
+  .verification-container {
+    padding: 24px;
+  }
+
+  .verification-actions {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .resend-btn {
+    width: auto;
+    min-width: 200px;
+  }
+
+  .login-link {
+    min-width: 120px;
+  }
+}
+
+/* Large desktop enhancements */
+@media (min-width: 1200px) {
+  .verification-card {
+    padding: 48px;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .resend-btn,
+  .login-link {
+    transition: none;
+  }
+
+  .resend-btn:hover:not(:disabled),
+  .login-link:hover {
+    transform: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .verification-card {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+
+  .logo-section p,
+  .verification-content p,
+  .help-text {
+    color: #cccccc;
+  }
+
+  .help-text {
+    background: #2d2d2d;
+  }
+
+  .verification-content h2 {
+    color: #ffffff;
+  }
+
+  .help-text ul {
+    color: #aaaaaa;
+  }
 }
 </style>
