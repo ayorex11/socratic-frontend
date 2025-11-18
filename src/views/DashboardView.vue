@@ -82,7 +82,7 @@
                 <button
                   class="download-btn pdf-btn"
                   @click="downloadPDF(doc.id)"
-                  :disabled="downloadingPDF[doc.id]"
+                  :disabled="!doc.pdf_generated"
                   title="Download PDF Report"
                 >
                   <span v-if="!downloadingPDF[doc.id]">📄 PDF</span>
@@ -91,7 +91,7 @@
                 <button
                   class="download-btn audio-btn"
                   @click="downloadAudio(doc.id)"
-                  :disabled="downloadingAudio[doc.id]"
+                  :disabled="!doc.audio_generated"
                   title="Download Audio Summary"
                 >
                   <span v-if="!downloadingAudio[doc.id]">🎵 Audio</span>
