@@ -99,18 +99,25 @@
               <span class="document-date">{{ formatDate(doc.created_at) }}</span>
             </div>
             <div class="status-badges">
-              <span v-if="doc.quiz_generated" class="badge badge-success" title="Quiz generated">
-                🎯 Quiz Ready
+              <span v-if="doc.status === 'PROCESSING'" class="badge badge-processing" title="Processing in progress">
+                ⏳ Processing
               </span>
-              <span v-else class="badge badge-warning" title="Quiz not generated">
-                ⏳ No Quiz
+              <span v-else-if="doc.status === 'FAILED'" class="badge badge-failed" title="Processing failed">
+                ❌ Failed
               </span>
-              <span
-                v-if="doc.used_past_questions"
-                class="badge badge-info"
-                title="Used past questions"
-              >
-                📚 Past Questions
+              <span v-else-if="doc.status === 'PENDING'" class="badge badge-pending" title="Waiting to start">
+                ⏱️ Pending
+              </span>
+              <span v-else-if="doc.status === 'COMPLETED'" class="badge badge-success" title="Processing completed">
+                ✅ Ready
+              </span>
+
+              <span v-if="doc.quiz_generated && doc.status === 'COMPLETED'" class="badge badge-success" title="Quiz generated">
+                🎯 Quiz
+              </span>
+
+              <span v-if="doc.used_past_questions" class="badge badge-info" title="Used past questions">
+                ❓ Past Qs
               </span>
             </div>
           </div>
@@ -147,7 +154,7 @@
               <button
                 class="download-btn pdf-btn"
                 @click="downloadPDF(doc.id)"
-                :disabled="!doc.pdf_generated"
+                :disabled="!doc.pdf_generated || doc.status !== 'COMPLETED'"
                 title="Download PDF Report"
               >
                 <span class="btn-icon">📄</span>
@@ -159,7 +166,7 @@
               <button
                 class="download-btn audio-btn"
                 @click="downloadAudio(doc.id)"
-                :disabled="!doc.audio_generated"
+                :disabled="!doc.audio_generated || doc.status !== 'COMPLETED'"
                 title="Download Audio Summary"
               >
                 <span class="btn-icon">🎵</span>
@@ -172,14 +179,18 @@
 
             <div class="action-buttons">
               <button
-                class="action-btn quiz-btn"
+                class="card-btn quiz-btn"
                 @click="viewQuiz(doc.id)"
-                :disabled="!doc.quiz_generated"
-                :class="{ disabled: !doc.quiz_generated }"
-                title="Take generated quiz"
+                :disabled="!doc.quiz_generated || doc.status !== 'COMPLETED'"
+                :class="{
+                  disabled: !doc.quiz_generated || doc.status !== 'COMPLETED',
+                  processing: doc.status === 'PROCESSING'
+                }"
+                :title="doc.status !== 'COMPLETED' ? `Document is ${doc.status.toLowerCase()}` : 'Take quiz'"
               >
-                <span class="btn-icon">🎯</span>
-                <span class="btn-text">Take Quiz</span>
+                <span v-if="doc.status === 'PROCESSING'">⏳</span>
+                <span v-else>🎯</span>
+                Take Quiz
               </button>
               <button
                 class="action-btn delete-btn"
@@ -252,7 +263,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -267,6 +278,7 @@ const deleteConfirmId = ref(null)
 const sortBy = ref('newest')
 const searchQuery = ref('')
 const activeTab = ref('all')
+const pollingInterval = ref(null)
 
 // Tabs for filtering
 const tabs = [
@@ -289,6 +301,12 @@ const avgProcessingTime = computed(() => {
   if (documents.value.length === 0) return 0
   const total = documents.value.reduce((sum, doc) => sum + doc.processing_time, 0)
   return Math.round(total / documents.value.length)
+})
+
+const processingDocumentsCount = computed(() => {
+  return documents.value.filter(doc =>
+    doc.status === 'PROCESSING' || doc.status === 'PENDING'
+  ).length
 })
 
 const sortedDocuments = computed(() => {
@@ -378,6 +396,53 @@ const fetchDocuments = async () => {
   }
 }
 
+// Polling function for status updates
+const checkForUpdates = async () => {
+  try {
+    // Only poll if we have documents that are still processing
+    if (processingDocumentsCount.value === 0) return
+
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+
+    const response = await fetch(
+      'https://socratic-f2kh.onrender.com/socratic/check_processing_status/',
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    if (response.ok) {
+      const updates = await response.json()
+      const previousProcessingCount = processingDocumentsCount.value
+
+      // Update documents with new status
+      documents.value = documents.value.map(doc => {
+        const update = updates.find(u => u.id === doc.id)
+        if (update) {
+          return { ...doc, ...update }
+        }
+        return doc
+      })
+
+      // Auto-refresh if processing just finished
+      const currentProcessingCount = processingDocumentsCount.value
+      if (previousProcessingCount > 0 && currentProcessingCount === 0) {
+        // All processing done, refresh to get final data
+        setTimeout(() => {
+          fetchDocuments()
+        }, 1000)
+      }
+    }
+  } catch (err) {
+    console.log('Status check failed:', err)
+  }
+}
+
 const formatDate = (dateString) => {
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', {
@@ -423,9 +488,15 @@ const viewQuiz = (documentId) => {
   router.push(`/quiz/${documentId}`)
 }
 
-// Download PDF function - Using direct public URL
+// Download PDF function
 const downloadPDF = async (documentId) => {
   try {
+    const doc = documents.value.find(d => d.id === documentId)
+    if (doc && doc.status !== 'COMPLETED') {
+      showDownloadError(`Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`)
+      return
+    }
+
     downloadingPDF.value[documentId] = true
     const token = localStorage.getItem('accessToken')
 
@@ -473,6 +544,12 @@ const downloadPDF = async (documentId) => {
 
 const downloadAudio = async (documentId) => {
   try {
+    const doc = documents.value.find(d => d.id === documentId)
+    if (doc && doc.status !== 'COMPLETED') {
+      showDownloadError(`Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`)
+      return
+    }
+
     downloadingAudio.value[documentId] = true
     const token = localStorage.getItem('accessToken')
 
@@ -578,6 +655,15 @@ const deleteDocument = async (documentId) => {
 
 onMounted(() => {
   fetchDocuments()
+
+  // Start polling for status updates every 3 seconds
+  pollingInterval.value = setInterval(checkForUpdates, 3000)
+})
+
+onUnmounted(() => {
+  if (pollingInterval.value) {
+    clearInterval(pollingInterval.value)
+  }
 })
 </script>
 
@@ -944,6 +1030,25 @@ onMounted(() => {
   border-color: #90cdf4;
 }
 
+/* New status badge styles */
+.badge-processing {
+  background: #fff3cd;
+  color: #856404;
+  border-color: #ffeaa7;
+}
+
+.badge-failed {
+  background: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
+}
+
+.badge-pending {
+  background: #d1ecf1;
+  color: #0c5460;
+  border-color: #bee5eb;
+}
+
 /* Card Metadata */
 .card-metadata {
   margin-bottom: clamp(16px, 3vw, 20px);
@@ -1078,7 +1183,7 @@ onMounted(() => {
   gap: clamp(8px, 2vw, 12px);
 }
 
-.action-btn {
+.card-btn {
   padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
   border-radius: 10px;
   font-size: clamp(0.8rem, 2.5vw, 0.9rem);
@@ -1110,6 +1215,25 @@ onMounted(() => {
   border-color: #a0aec0;
   cursor: not-allowed;
   transform: none;
+}
+
+.quiz-btn.processing {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+}
+
+.action-btn {
+  padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
+  border-radius: 10px;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 1.5vw, 8px);
+  min-height: 44px;
 }
 
 .delete-btn {
