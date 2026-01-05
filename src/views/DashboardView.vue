@@ -4,6 +4,16 @@
       <h1>Welcome to Your Dashboard</h1>
       <p>Start by uploading a PDF to get AI-powered summaries and quizzes.</p>
 
+      <!-- SSE Connection Status Indicator -->
+      <div v-if="sseConnected" class="sse-status connected">
+        <span class="status-dot"></span>
+        Live updates connected
+      </div>
+      <div v-else-if="documents.length > 0 && processingCount > 0" class="sse-status disconnected">
+        <span class="status-dot"></span>
+        Reconnecting...
+      </div>
+
       <!-- Quick Stats -->
       <div v-if="!loading && documents.length > 0" class="quick-stats">
         <div class="stat-card">
@@ -27,6 +37,13 @@
             <div class="stat-label">Avg. Processing</div>
           </div>
         </div>
+        <div class="stat-card processing" :class="{ active: processingCount > 0 }">
+          <div class="stat-icon">{{ processingCount > 0 ? '🔄' : '✅' }}</div>
+          <div class="stat-info">
+            <div class="stat-number">{{ processingCount }}</div>
+            <div class="stat-label">Processing Now</div>
+          </div>
+        </div>
       </div>
 
       <div class="dashboard-actions">
@@ -41,102 +58,18 @@
         </div>
 
         <div class="documents-grid">
-          <div v-for="doc in recentDocuments" :key="doc.id" class="document-card">
-            <!-- Header with title and badges -->
-            <div class="card-header">
-              <h3 class="document-title">{{ doc.document_title }}</h3>
-              <div class="status-badges">
-                <span v-if="doc.status === 'PROCESSING'" class="badge badge-processing" title="Processing in progress">
-                  ⏳ Processing
-                </span>
-                <span v-else-if="doc.status === 'FAILED'" class="badge badge-failed" title="Processing failed">
-                  ❌ Failed
-                </span>
-                <span v-else-if="doc.status === 'PENDING'" class="badge badge-pending" title="Waiting to start">
-                  ⏱️ Pending
-                </span>
-                <span v-else-if="doc.status === 'COMPLETED'" class="badge badge-success" title="Processing completed">
-                  ✅ Ready
-                </span>
-
-                <span v-if="doc.quiz_generated && doc.status === 'COMPLETED'" class="badge badge-success" title="Quiz generated">
-                  🎯 Quiz
-                </span>
-
-                <span v-if="doc.used_past_questions" class="badge badge-info" title="Used past questions">
-                  ❓ Past Qs
-                </span>
-              </div>
-            </div>
-
-            <!-- Document metadata -->
-            <div class="card-metadata">
-              <div class="metadata-column">
-                <div class="metadata-item">
-                  <span class="metadata-label">Created:</span>
-                  <span class="metadata-value">{{ formatDate(doc.created_at) }}</span>
-                </div>
-                <div class="metadata-item">
-                  <span class="metadata-label">Processing Time:</span>
-                  <span class="metadata-value">{{ Math.round(doc.processing_time) }}s</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Download section -->
-            <div class="download-section">
-              <div class="download-header">
-                <span class="download-label">📥 Downloads</span>
-              </div>
-              <div class="download-buttons">
-                <button
-                  class="download-btn pdf-btn"
-                  @click="downloadPDF(doc.id)"
-                  :disabled="!doc.pdf_generated || doc.status !== 'COMPLETED'"
-                  title="Download PDF Report"
-                >
-                  <span v-if="!downloadingPDF[doc.id]">📄 PDF</span>
-                  <span v-else class="loading-spinner"></span>
-                </button>
-                <button
-                  class="download-btn audio-btn"
-                  @click="downloadAudio(doc.id)"
-                  :disabled="!doc.audio_generated || doc.status !== 'COMPLETED'"
-                  title="Download Audio Summary"
-                >
-                  <span v-if="!downloadingAudio[doc.id]">🎵 Audio</span>
-                  <span v-else class="loading-spinner"></span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Action buttons -->
-            <div class="card-actions">
-              <button
-                class="card-btn quiz-btn"
-                @click="viewQuiz(doc.id)"
-                :disabled="!doc.quiz_generated || doc.status !== 'COMPLETED'"
-                :class="{
-                  disabled: !doc.quiz_generated || doc.status !== 'COMPLETED',
-                  processing: doc.status === 'PROCESSING'
-                }"
-                :title="doc.status !== 'COMPLETED' ? `Document is ${doc.status.toLowerCase()}` : 'Take quiz'"
-              >
-                <span v-if="doc.status === 'PROCESSING'">⏳</span>
-                <span v-else>🎯</span>
-                Quiz
-              </button>
-              <button
-                class="card-btn delete-btn"
-                @click="confirmDelete(doc.id)"
-                :disabled="deleting[doc.id]"
-                title="Delete this document"
-              >
-                <span v-if="!deleting[doc.id]">🗑️</span>
-                <span v-else class="loading-spinner-delete"></span>
-              </button>
-            </div>
-          </div>
+          <ProcessingCard
+            v-for="doc in recentDocuments"
+            :key="doc.id"
+            :document="doc"
+            :downloading-p-d-f="downloadingPDF[doc.id]"
+            :downloading-audio="downloadingAudio[doc.id]"
+            :deleting="deleting[doc.id]"
+            @download-pdf="downloadPDF"
+            @download-audio="downloadAudio"
+            @view-quiz="viewQuiz"
+            @delete="confirmDelete"
+          />
         </div>
       </div>
 
@@ -154,9 +87,11 @@
         <p>Loading your documents...</p>
       </div>
 
-      <!-- Download Error Toast -->
-      <div v-if="downloadError" class="error-toast">
-        {{ downloadError }}
+      <!-- Toast Notifications -->
+      <div v-if="toastMessage" class="toast" :class="toastType">
+        <span class="toast-icon">{{ toastType === 'success' ? '✅' : '⚠️' }}</span>
+        <span class="toast-message">{{ toastMessage }}</span>
+        <button class="toast-close" @click="toastMessage = ''">×</button>
       </div>
 
       <!-- Delete Confirmation Modal -->
@@ -187,17 +122,26 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import ProcessingCard from '../components/ProcessingCard.vue'
+import { useProcessingSSE } from '../composables/useProcessingSSE'
 
 const router = useRouter()
 const documents = ref([])
 const loading = ref(true)
 const error = ref('')
-const downloadError = ref('')
+const toastMessage = ref('')
+const toastType = ref('info') // 'success', 'error', 'info'
 const downloadingPDF = ref({})
 const downloadingAudio = ref({})
 const deleting = ref({})
 const deleteConfirmId = ref(null)
-const pollingInterval = ref(null)
+
+// SSE composable
+const {
+  isConnected: sseConnected,
+  connectToAllDocuments,
+  disconnect: disconnectSSE,
+} = useProcessingSSE()
 
 // Computed properties
 const recentDocuments = computed(() => {
@@ -210,14 +154,13 @@ const quizCount = computed(() => {
 
 const avgProcessingTime = computed(() => {
   if (documents.value.length === 0) return 0
-  const total = documents.value.reduce((sum, doc) => sum + doc.processing_time, 0)
+  const total = documents.value.reduce((sum, doc) => sum + (doc.processing_time || 0), 0)
   return Math.round(total / documents.value.length)
 })
 
-const processingDocumentsCount = computed(() => {
-  return documents.value.filter(doc =>
-    doc.status === 'PROCESSING' || doc.status === 'PENDING'
-  ).length
+const processingCount = computed(() => {
+  return documents.value.filter((doc) => doc.status === 'PROCESSING' || doc.status === 'PENDING')
+    .length
 })
 
 // Methods
@@ -245,6 +188,11 @@ const fetchDocuments = async () => {
     if (response.ok) {
       const data = await response.json()
       documents.value = data
+
+      // Connect to SSE if there are processing documents
+      if (processingCount.value > 0) {
+        setupSSE()
+      }
     } else if (response.status === 401) {
       router.push('/login')
     } else {
@@ -253,18 +201,67 @@ const fetchDocuments = async () => {
   } catch (err) {
     console.error('Error fetching documents:', err)
     error.value = 'Failed to load documents. Please try again.'
+    showToast('Failed to load documents', 'error')
   } finally {
     loading.value = false
   }
 }
 
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+// Setup SSE connection
+const setupSSE = () => {
+  const token = localStorage.getItem('accessToken')
+  if (!token) return
+
+  connectToAllDocuments(
+    token,
+    // onUpdate callback
+    (data) => {
+      console.log('SSE Update received:', data)
+
+      if (data.updates && Array.isArray(data.updates)) {
+        // Update each document in the list
+        data.updates.forEach((update) => {
+          const docIndex = documents.value.findIndex((d) => d.id === update.id)
+          if (docIndex !== -1) {
+            // Merge update with existing document
+            documents.value[docIndex] = {
+              ...documents.value[docIndex],
+              ...update,
+            }
+          }
+        })
+
+        // Check if any document just completed
+        data.updates.forEach((update) => {
+          if (update.status === 'COMPLETED') {
+            const doc = documents.value.find((d) => d.id === update.id)
+            if (doc) {
+              showToast(`"${doc.document_title}" processing completed!`, 'success')
+            }
+          }
+        })
+      }
+    },
+    // onComplete callback
+    (data) => {
+      console.log('SSE Complete:', data)
+      showToast('All documents processed successfully!', 'success')
+      // Refresh the document list
+      fetchDocuments()
+    },
+    // onError callback
+    (error) => {
+      console.error('SSE Error:', error)
+      showToast('Connection error. Retrying...', 'error')
+
+      // Attempt to reconnect after 5 seconds
+      setTimeout(() => {
+        if (processingCount.value > 0) {
+          setupSSE()
+        }
+      }, 5000)
+    },
+  )
 }
 
 const viewQuiz = (documentId) => {
@@ -274,9 +271,12 @@ const viewQuiz = (documentId) => {
 // Download PDF function
 const downloadPDF = async (documentId) => {
   try {
-    const doc = documents.value.find(d => d.id === documentId)
+    const doc = documents.value.find((d) => d.id === documentId)
     if (doc && doc.status !== 'COMPLETED') {
-      showDownloadError(`Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`)
+      showToast(
+        `Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`,
+        'error',
+      )
       return
     }
 
@@ -312,14 +312,16 @@ const downloadPDF = async (documentId) => {
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
+
+      showToast('PDF downloaded successfully!', 'success')
     } else if (response.status === 401) {
       router.push('/login')
     } else {
-      showDownloadError('Failed to download PDF')
+      showToast('Failed to download PDF', 'error')
     }
   } catch (err) {
     console.error('Error downloading PDF:', err)
-    showDownloadError('Network error. Please try again.')
+    showToast('Network error. Please try again.', 'error')
   } finally {
     downloadingPDF.value[documentId] = false
   }
@@ -327,9 +329,12 @@ const downloadPDF = async (documentId) => {
 
 const downloadAudio = async (documentId) => {
   try {
-    const doc = documents.value.find(d => d.id === documentId)
+    const doc = documents.value.find((d) => d.id === documentId)
     if (doc && doc.status !== 'COMPLETED') {
-      showDownloadError(`Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`)
+      showToast(
+        `Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`,
+        'error',
+      )
       return
     }
 
@@ -365,72 +370,28 @@ const downloadAudio = async (documentId) => {
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
+
+      showToast('Audio downloaded successfully!', 'success')
     } else if (response.status === 401) {
       router.push('/login')
     } else {
-      showDownloadError('Failed to download audio')
+      showToast('Failed to download audio', 'error')
     }
   } catch (err) {
     console.error('Error downloading audio:', err)
-    showDownloadError('Network error. Please try again.')
+    showToast('Network error. Please try again.', 'error')
   } finally {
     downloadingAudio.value[documentId] = false
   }
 }
 
-// Polling function for status updates
-const checkForUpdates = async () => {
-  try {
-    // Only poll if we have documents that are still processing
-    if (processingDocumentsCount.value === 0) return
-
-    const token = localStorage.getItem('accessToken')
-    if (!token) return
-
-    const response = await fetch(
-      'https://socratic-f2kh.onrender.com/socratic/check_processing_status/',
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-
-    if (response.ok) {
-      const updates = await response.json()
-      const previousProcessingCount = processingDocumentsCount.value
-
-      // Update documents with new status
-      documents.value = documents.value.map(doc => {
-        const update = updates.find(u => u.id === doc.id)
-        if (update) {
-          return { ...doc, ...update }
-        }
-        return doc
-      })
-
-      // Auto-refresh if processing just finished
-      const currentProcessingCount = processingDocumentsCount.value
-      if (previousProcessingCount > 0 && currentProcessingCount === 0) {
-        // All processing done, refresh to get final data
-        setTimeout(() => {
-          fetchDocuments()
-        }, 1000)
-      }
-    }
-  } catch (err) {
-    console.log('Status check failed:', err)
-  }
-}
-
-// Show error toast
-const showDownloadError = (message) => {
-  downloadError.value = message
+// Show toast notification
+const showToast = (message, type = 'info') => {
+  toastMessage.value = message
+  toastType.value = type
   setTimeout(() => {
-    downloadError.value = ''
-  }, 3000)
+    toastMessage.value = ''
+  }, 4000)
 }
 
 // Delete confirmation
@@ -446,7 +407,7 @@ const cancelDelete = () => {
 const deleteDocument = async (documentId) => {
   try {
     deleting.value[documentId] = true
-    deleteConfirmId.value = null // Close modal
+    deleteConfirmId.value = null
 
     const token = localStorage.getItem('accessToken')
 
@@ -467,24 +428,20 @@ const deleteDocument = async (documentId) => {
     )
 
     if (response.ok || response.status === 204) {
-      // Remove document from local list
       documents.value = documents.value.filter((doc) => doc.id !== documentId)
-
-      // Show success message
-      showDownloadError('✅ Document deleted successfully')
+      showToast('Document deleted successfully', 'success')
     } else if (response.status === 401) {
       router.push('/login')
     } else if (response.status === 404) {
-      showDownloadError('Document not found')
-      // Refresh the list
+      showToast('Document not found', 'error')
       await fetchDocuments()
     } else {
       const errorData = await response.json().catch(() => ({}))
-      showDownloadError(errorData.error || 'Failed to delete document')
+      showToast(errorData.error || 'Failed to delete document', 'error')
     }
   } catch (err) {
     console.error('Error deleting document:', err)
-    showDownloadError('Network error. Please try again.')
+    showToast('Network error. Please try again.', 'error')
   } finally {
     deleting.value[documentId] = false
   }
@@ -492,15 +449,10 @@ const deleteDocument = async (documentId) => {
 
 onMounted(() => {
   fetchDocuments()
-
-  // Start polling for status updates every 3 seconds
-  pollingInterval.value = setInterval(checkForUpdates, 3000)
 })
 
 onUnmounted(() => {
-  if (pollingInterval.value) {
-    clearInterval(pollingInterval.value)
-  }
+  disconnectSSE()
 })
 </script>
 
@@ -532,6 +484,60 @@ onUnmounted(() => {
   line-height: 1.4;
 }
 
+/* SSE Status Indicator */
+.sse-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sse-status.connected {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.sse-status.disconnected {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sse-status.connected .status-dot {
+  background: #28a745;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.sse-status.disconnected .status-dot {
+  background: #ffc107;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 /* Quick Stats */
 .quick-stats {
   display: grid;
@@ -554,6 +560,24 @@ onUnmounted(() => {
 
 .stat-card:hover {
   transform: translateY(-4px);
+}
+
+.stat-card.processing.active {
+  background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
+  border: 2px solid #ffa500;
+}
+
+.stat-card.processing.active .stat-icon {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .stat-icon {
@@ -643,302 +667,11 @@ onUnmounted(() => {
   color: #219a52;
 }
 
-/* Equal height document cards */
+/* Documents Grid */
 .documents-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr));
   gap: clamp(16px, 3vw, 24px);
-  grid-auto-rows: 1fr;
-}
-
-.document-card {
-  background: white;
-  border-radius: 12px;
-  padding: clamp(16px, 3vw, 24px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 320px;
-}
-
-.document-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  border-color: #27ae60;
-}
-
-/* Card Header */
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: clamp(16px, 3vw, 20px);
-  gap: clamp(8px, 2vw, 12px);
-}
-
-.document-title {
-  color: #2c3e50;
-  font-size: clamp(1.1rem, 3vw, 1.3rem);
-  font-weight: 600;
-  margin: 0;
-  flex: 1;
-  line-height: 1.3;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.status-badges {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.badge {
-  padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px);
-  border-radius: 20px;
-  font-size: clamp(0.7rem, 2vw, 0.75rem);
-  font-weight: 600;
-  white-space: nowrap;
-  border: 1px solid transparent;
-}
-
-.badge-success {
-  background: #e8f6ef;
-  color: #27ae60;
-  border-color: #27ae60;
-}
-
-.badge-info {
-  background: #e8f4fd;
-  color: #3498db;
-  border-color: #3498db;
-}
-
-/* New status badge styles */
-.badge-processing {
-  background: #fff3cd;
-  color: #856404;
-  border-color: #ffeaa7;
-}
-
-.badge-failed {
-  background: #f8d7da;
-  color: #721c24;
-  border-color: #f5c6cb;
-}
-
-.badge-pending {
-  background: #d1ecf1;
-  color: #0c5460;
-  border-color: #bee5eb;
-}
-
-/* Card Metadata */
-.card-metadata {
-  margin-bottom: clamp(16px, 3vw, 20px);
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.metadata-column {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(8px, 2vw, 12px);
-}
-
-.metadata-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: clamp(6px, 1.5vw, 8px) 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.metadata-item:last-child {
-  border-bottom: none;
-}
-
-.metadata-label {
-  color: #5a6c7d;
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-  font-weight: 500;
-  min-width: 100px;
-}
-
-.metadata-value {
-  color: #2c3e50;
-  font-weight: 600;
-  font-size: clamp(0.85rem, 2.5vw, 0.95rem);
-  text-align: right;
-}
-
-/* Download Section */
-.download-section {
-  background: #f8f9fa;
-  padding: clamp(12px, 2.5vw, 16px);
-  border-radius: 8px;
-  margin-bottom: clamp(12px, 2.5vw, 16px);
-}
-
-.download-header {
-  margin-bottom: clamp(8px, 2vw, 12px);
-}
-
-.download-label {
-  color: #2c3e50;
-  font-weight: 600;
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-}
-
-.download-buttons {
-  display: flex;
-  gap: clamp(8px, 2vw, 10px);
-}
-
-.download-btn {
-  flex: 1;
-  padding: clamp(8px, 2vw, 10px) clamp(12px, 2.5vw, 16px);
-  border-radius: 6px;
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 42px;
-}
-
-.pdf-btn {
-  background: #e74c3c;
-  color: white;
-}
-
-.pdf-btn:hover:not(:disabled) {
-  background: #c0392b;
-  transform: translateY(-1px);
-}
-
-.audio-btn {
-  background: #3498db;
-  color: white;
-}
-
-.audio-btn:hover:not(:disabled) {
-  background: #2980b9;
-  transform: translateY(-1px);
-}
-
-.download-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Card Actions */
-.card-actions {
-  display: flex;
-  gap: clamp(8px, 2vw, 12px);
-  margin-top: auto;
-  align-items: stretch;
-}
-
-.card-btn {
-  padding: clamp(10px, 2.5vw, 12px) clamp(16px, 3vw, 20px);
-  border-radius: 10px;
-  font-size: clamp(0.85rem, 2.5vw, 0.95rem);
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  flex: 1;
-  min-height: 48px;
-}
-
-.quiz-btn {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  color: white;
-}
-
-.quiz-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.quiz-btn:not(:disabled):hover {
-  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(52, 152, 219, 0.4);
-}
-
-.quiz-btn.processing {
-  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-}
-
-.delete-btn {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-  color: white;
-  width: clamp(48px, 8vw, 56px);
-  flex: 0 0 auto;
-  padding: 0;
-  font-size: clamp(1.1rem, 3vw, 1.3rem);
-}
-
-.delete-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
-}
-
-.delete-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.loading-spinner-delete {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top: 3px solid white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
 }
 
 /* Empty State */
@@ -980,10 +713,6 @@ onUnmounted(() => {
   font-weight: 600;
   font-size: clamp(0.9rem, 3vw, 1rem);
   transition: all 0.3s ease;
-  min-height: 54px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .upload-cta-btn:hover {
@@ -1013,23 +742,69 @@ onUnmounted(() => {
   font-size: clamp(1rem, 3vw, 1.1rem);
 }
 
-/* Error Toast */
-.error-toast {
+/* Toast */
+.toast {
   position: fixed;
   bottom: clamp(16px, 4vw, 30px);
   right: clamp(16px, 4vw, 30px);
-  left: clamp(16px, 4vw, 30px);
-  background: #e74c3c;
-  color: white;
   padding: clamp(12px, 3vw, 16px) clamp(16px, 3vw, 24px);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   animation: slideIn 0.3s ease;
-  text-align: center;
-  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
   max-width: 400px;
-  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toast.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.toast.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.toast.info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.toast-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  flex: 1;
+  font-weight: 600;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.toast-close:hover {
+  opacity: 1;
 }
 
 @keyframes slideIn {
@@ -1043,7 +818,7 @@ onUnmounted(() => {
   }
 }
 
-/* Delete Confirmation Modal */
+/* Delete Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1056,56 +831,27 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  animation: fadeIn 0.2s ease;
   padding: clamp(12px, 3vw, 20px);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 .modal-content {
   background: white;
   border-radius: 20px;
-  padding: 0;
   max-width: min(480px, 100%);
   width: 100%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(100px) scale(0.9);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-}
-
 .modal-header {
-  padding: clamp(24px, 5vw, 32px) clamp(24px, 5vw, 32px) clamp(20px, 4vw, 24px);
+  padding: clamp(24px, 5vw, 32px);
   background: linear-gradient(135deg, #ff6b6b 0%, #e74c3c 100%);
-  position: relative;
 }
 
 .modal-header h3 {
   margin: 0;
   color: white;
   font-size: clamp(1.3rem, 4vw, 1.5rem);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 700;
-  line-height: 1.2;
 }
 
 .modal-body {
@@ -1116,269 +862,50 @@ onUnmounted(() => {
   margin: 0 0 clamp(12px, 3vw, 16px) 0;
   color: #2c3e50;
   font-size: clamp(1rem, 3vw, 1.05rem);
-  line-height: 1.6;
 }
 
 .warning-text {
   color: #c0392b;
   font-size: clamp(0.9rem, 2.5vw, 0.95rem);
   font-weight: 600;
-  background: linear-gradient(135deg, #ffe8e8 0%, #ffd4d4 100%);
+  background: #ffe8e8;
   padding: clamp(12px, 3vw, 16px);
   border-radius: 12px;
   border-left: 4px solid #e74c3c;
-  margin-top: 8px;
-  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.1);
 }
 
 .modal-actions {
   padding: 0 clamp(24px, 5vw, 32px) clamp(24px, 5vw, 32px);
   display: flex;
   gap: clamp(8px, 2vw, 12px);
-  justify-content: flex-end;
-  flex-wrap: wrap;
 }
 
 .modal-btn {
-  padding: clamp(12px, 3vw, 14px) clamp(20px, 4vw, 28px);
+  flex: 1;
+  padding: clamp(12px, 3vw, 14px);
   border-radius: 12px;
   font-size: clamp(0.9rem, 2.5vw, 1rem);
   font-weight: 700;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  min-height: 54px;
-  flex: 1;
-  min-width: 120px;
 }
 
 .cancel-btn {
-  background: white;
+  background: #ecf0f1;
   color: #7f8c8d;
-  border: 2px solid #ecf0f1;
-  box-shadow: none;
 }
 
 .cancel-btn:hover {
-  background: #f8f9fa;
-  border-color: #bdc3c7;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #bdc3c7;
 }
 
 .confirm-btn {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  background: #e74c3c;
   color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.confirm-btn::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  transform: translate(-50%, -50%);
-  transition:
-    width 0.6s,
-    height 0.6s;
-}
-
-.confirm-btn:hover::before {
-  width: 300px;
-  height: 300px;
 }
 
 .confirm-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(231, 76, 60, 0.4);
-}
-
-.confirm-btn:active {
-  transform: translateY(0);
-}
-
-/* Mobile-specific optimizations */
-@media (max-width: 480px) {
-  .dashboard {
-    padding: 16px 12px;
-  }
-
-  .document-card {
-    padding: 16px;
-    min-height: 300px;
-  }
-
-  .card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .status-badges {
-    align-self: flex-start;
-  }
-
-  .metadata-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .metadata-value {
-    text-align: left;
-  }
-
-  .download-buttons {
-    flex-direction: column;
-  }
-
-  .card-actions {
-    flex-direction: column;
-  }
-
-  .delete-btn {
-    width: 100%;
-    height: 48px;
-  }
-
-  .modal-actions {
-    flex-direction: column-reverse;
-  }
-
-  .modal-btn {
-    width: 100%;
-  }
-}
-
-/* Tablet optimizations */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .documents-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
-  }
-}
-
-/* Large desktop enhancements */
-@media (min-width: 1200px) {
-  .documents-grid {
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  }
-}
-
-/* Reduced motion for accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .stat-card,
-  .document-card,
-  .action-button,
-  .card-btn,
-  .download-btn,
-  .modal-btn,
-  .upload-cta-btn {
-    transition: none;
-  }
-
-  .stat-card:hover,
-  .document-card:hover,
-  .action-button.primary:hover,
-  .card-btn:hover:not(:disabled),
-  .download-btn:hover:not(:disabled),
-  .modal-btn:hover,
-  .upload-cta-btn:hover {
-    transform: none;
-  }
-
-  .confirm-btn::before {
-    display: none;
-  }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .dashboard {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
-  }
-
-  .stat-card,
-  .document-card,
-  .empty-state,
-  .modal-content {
-    background: #2d2d2d;
-    color: #ffffff;
-  }
-
-  .dashboard-content h1,
-  .section-header h2,
-  .document-title,
-  .metadata-value,
-  .download-label {
-    color: #ffffff;
-  }
-
-  .dashboard-content > p,
-  .stat-label,
-  .metadata-label,
-  .empty-state p {
-    color: #cccccc;
-  }
-
-  .download-section {
-    background: #3d3d3d;
-  }
-
-  .cancel-btn {
-    background: #3d3d3d;
-    color: #cccccc;
-    border-color: #555;
-  }
-
-  .cancel-btn:hover {
-    background: #4d4d4d;
-  }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .stat-card,
-  .document-card,
-  .empty-state,
-  .modal-content {
-    border: 2px solid #000;
-  }
-
-  .action-button,
-  .card-btn,
-  .download-btn,
-  .modal-btn,
-  .upload-cta-btn {
-    border: 2px solid #000;
-  }
-}
-
-/* Touch device optimizations */
-@media (hover: none) and (pointer: coarse) {
-  .stat-card:hover,
-  .document-card:hover,
-  .action-button.primary:hover,
-  .card-btn:hover:not(:disabled),
-  .download-btn:hover:not(:disabled),
-  .modal-btn:hover,
-  .upload-cta-btn:hover {
-    transform: none;
-  }
-
-  .action-button.primary:active,
-  .card-btn:active:not(:disabled),
-  .download-btn:active:not(:disabled),
-  .modal-btn:active,
-  .upload-cta-btn:active {
-    transform: scale(0.98);
-  }
+  background: #c0392b;
 }
 </style>

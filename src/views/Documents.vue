@@ -11,6 +11,16 @@
       </div>
     </div>
 
+    <!-- SSE Connection Status -->
+    <div v-if="sseConnected" class="sse-status connected">
+      <span class="status-dot"></span>
+      Live updates connected
+    </div>
+    <div v-else-if="documents.length > 0 && processingDocumentsCount > 0" class="sse-status disconnected">
+      <span class="status-dot"></span>
+      Reconnecting...
+    </div>
+
     <!-- Quick Stats -->
     <div v-if="!loading && documents.length > 0" class="quick-stats">
       <div class="stat-card">
@@ -34,8 +44,8 @@
           <div class="stat-label">Avg. Processing</div>
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon">📊</div>
+      <div class="stat-card processing" :class="{ active: processingDocumentsCount > 0 }">
+        <div class="stat-icon">{{ processingDocumentsCount > 0 ? '🔄' : '✅' }}</div>
         <div class="stat-info">
           <div class="stat-number">{{ processedCount }}</div>
           <div class="stat-label">Processed</div>
@@ -84,128 +94,18 @@
       </div>
 
       <div class="documents-container">
-        <div
+        <ProcessingCard
           v-for="doc in filteredDocuments"
           :key="doc.id"
-          class="document-card"
-          :class="{ 'has-quiz': doc.quiz_generated }"
-        >
-          <!-- Header with title and status -->
-          <div class="card-header">
-            <div class="title-section">
-              <h3 class="document-title" :title="doc.document_title">
-                {{ truncateTitle(doc.document_title) }}
-              </h3>
-              <span class="document-date">{{ formatDate(doc.created_at) }}</span>
-            </div>
-            <div class="status-badges">
-              <span v-if="doc.status === 'PROCESSING'" class="badge badge-processing" title="Processing in progress">
-                ⏳ Processing
-              </span>
-              <span v-else-if="doc.status === 'FAILED'" class="badge badge-failed" title="Processing failed">
-                ❌ Failed
-              </span>
-              <span v-else-if="doc.status === 'PENDING'" class="badge badge-pending" title="Waiting to start">
-                ⏱️ Pending
-              </span>
-              <span v-else-if="doc.status === 'COMPLETED'" class="badge badge-success" title="Processing completed">
-                ✅ Ready
-              </span>
-
-              <span v-if="doc.quiz_generated && doc.status === 'COMPLETED'" class="badge badge-success" title="Quiz generated">
-                🎯 Quiz
-              </span>
-
-              <span v-if="doc.used_past_questions" class="badge badge-info" title="Used past questions">
-                ❓ Past Qs
-              </span>
-            </div>
-          </div>
-
-          <!-- Document metadata -->
-          <div class="card-metadata">
-            <div class="metadata-item">
-              <span class="metadata-label">Processing Time:</span>
-              <span class="metadata-value">{{ Math.round(doc.processing_time) }} seconds</span>
-            </div>
-          </div>
-
-          <!-- Progress and status -->
-          <div class="progress-section">
-            <div class="status-indicators">
-              <div class="status-item" :class="{ completed: doc.quiz_generated }">
-                <span class="status-icon">{{ doc.quiz_generated ? '✅' : '⏳' }}</span>
-                <span class="status-text">Quiz Generated</span>
-              </div>
-              <div class="status-item" :class="{ completed: doc.pdf_generated }">
-                <span class="status-icon">{{ doc.pdf_generated ? '✅' : '⏳' }}</span>
-                <span class="status-text">PDF Ready</span>
-              </div>
-              <div class="status-item" :class="{ completed: doc.audio_generated }">
-                <span class="status-icon">{{ doc.audio_generated ? '✅' : '⏳' }}</span>
-                <span class="status-text">Audio Ready</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Action buttons -->
-          <div class="action-section">
-            <div class="download-buttons">
-              <button
-                class="download-btn pdf-btn"
-                @click="downloadPDF(doc.id)"
-                :disabled="!doc.pdf_generated || doc.status !== 'COMPLETED'"
-                title="Download PDF Report"
-              >
-                <span class="btn-icon">📄</span>
-                <span class="btn-text">
-                  <span v-if="!downloadingPDF[doc.id]">PDF</span>
-                  <span v-else class="loading-spinner"></span>
-                </span>
-              </button>
-              <button
-                class="download-btn audio-btn"
-                @click="downloadAudio(doc.id)"
-                :disabled="!doc.audio_generated || doc.status !== 'COMPLETED'"
-                title="Download Audio Summary"
-              >
-                <span class="btn-icon">🎵</span>
-                <span class="btn-text">
-                  <span v-if="!downloadingAudio[doc.id]">Audio</span>
-                  <span v-else class="loading-spinner"></span>
-                </span>
-              </button>
-            </div>
-
-            <div class="action-buttons">
-              <button
-                class="card-btn quiz-btn"
-                @click="viewQuiz(doc.id)"
-                :disabled="!doc.quiz_generated || doc.status !== 'COMPLETED'"
-                :class="{
-                  disabled: !doc.quiz_generated || doc.status !== 'COMPLETED',
-                  processing: doc.status === 'PROCESSING'
-                }"
-                :title="doc.status !== 'COMPLETED' ? `Document is ${doc.status.toLowerCase()}` : 'Take quiz'"
-              >
-                <span v-if="doc.status === 'PROCESSING'">⏳</span>
-                <span v-else>🎯</span>
-                Take Quiz
-              </button>
-              <button
-                class="action-btn delete-btn"
-                @click="confirmDelete(doc.id)"
-                :disabled="deleting[doc.id]"
-                title="Delete this document"
-              >
-                <span class="btn-icon">
-                  <span v-if="!deleting[doc.id]">🗑️</span>
-                  <span v-else class="loading-spinner-delete"></span>
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
+          :document="doc"
+          :downloading-p-d-f="downloadingPDF[doc.id]"
+          :downloading-audio="downloadingAudio[doc.id]"
+          :deleting="deleting[doc.id]"
+          @download-pdf="downloadPDF"
+          @download-audio="downloadAudio"
+          @view-quiz="viewQuiz"
+          @delete="confirmDelete"
+        />
       </div>
 
       <!-- No results state -->
@@ -231,11 +131,11 @@
       <p>Loading your documents...</p>
     </div>
 
-    <!-- Download Error Toast -->
-    <div v-if="downloadError" class="error-toast">
-      <span class="toast-icon">⚠️</span>
-      <span class="toast-message">{{ downloadError }}</span>
-      <button class="toast-close" @click="downloadError = ''">×</button>
+    <!-- Toast Notifications -->
+    <div v-if="toastMessage" class="toast" :class="toastType">
+      <span class="toast-icon">{{ toastType === 'success' ? '✅' : '⚠️' }}</span>
+      <span class="toast-message">{{ toastMessage }}</span>
+      <button class="toast-close" @click="toastMessage = ''">×</button>
     </div>
 
     <!-- Delete Confirmation Modal -->
@@ -265,12 +165,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import ProcessingCard from '../components/ProcessingCard.vue'
+import { useProcessingSSE } from '../composables/useProcessingSSE'
 
 const router = useRouter()
 const documents = ref([])
 const loading = ref(true)
 const error = ref('')
-const downloadError = ref('')
+const toastMessage = ref('')
+const toastType = ref('info')
 const downloadingPDF = ref({})
 const downloadingAudio = ref({})
 const deleting = ref({})
@@ -278,13 +181,17 @@ const deleteConfirmId = ref(null)
 const sortBy = ref('newest')
 const searchQuery = ref('')
 const activeTab = ref('all')
-const pollingInterval = ref(null)
+
+// SSE composable
+const { isConnected: sseConnected, connectToAllDocuments, disconnect: disconnectSSE } = useProcessingSSE()
 
 // Tabs for filtering
 const tabs = [
   { label: 'All Documents', value: 'all' },
   { label: 'With Quiz', value: 'with_quiz' },
   { label: 'Without Quiz', value: 'without_quiz' },
+  { label: 'Processing', value: 'processing' },
+  { label: 'Completed', value: 'completed' },
   { label: 'Recent', value: 'recent' },
 ]
 
@@ -294,18 +201,19 @@ const quizCount = computed(() => {
 })
 
 const processedCount = computed(() => {
-  return documents.value.length
+  return documents.value.filter((doc) => doc.status === 'COMPLETED').length
 })
 
 const avgProcessingTime = computed(() => {
-  if (documents.value.length === 0) return 0
-  const total = documents.value.reduce((sum, doc) => sum + doc.processing_time, 0)
-  return Math.round(total / documents.value.length)
+  const completedDocs = documents.value.filter((doc) => doc.processing_time)
+  if (completedDocs.length === 0) return 0
+  const total = completedDocs.reduce((sum, doc) => sum + doc.processing_time, 0)
+  return Math.round(total / completedDocs.length)
 })
 
 const processingDocumentsCount = computed(() => {
-  return documents.value.filter(doc =>
-    doc.status === 'PROCESSING' || doc.status === 'PENDING'
+  return documents.value.filter(
+    (doc) => doc.status === 'PROCESSING' || doc.status === 'PENDING'
   ).length
 })
 
@@ -319,7 +227,7 @@ const sortedDocuments = computed(() => {
     case 'title':
       return docs.sort((a, b) => a.document_title.localeCompare(b.document_title))
     case 'processing':
-      return docs.sort((a, b) => b.processing_time - a.processing_time)
+      return docs.sort((a, b) => (b.processing_time || 0) - (a.processing_time || 0))
     default:
       return docs
   }
@@ -333,7 +241,8 @@ const filteredDocuments = computed(() => {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(
       (doc) =>
-        doc.document_title.toLowerCase().includes(query) || doc.id.toString().includes(query),
+        doc.document_title.toLowerCase().includes(query) ||
+        doc.id.toString().toLowerCase().includes(query)
     )
   }
 
@@ -344,6 +253,12 @@ const filteredDocuments = computed(() => {
       break
     case 'without_quiz':
       filtered = filtered.filter((doc) => !doc.quiz_generated)
+      break
+    case 'processing':
+      filtered = filtered.filter((doc) => doc.status === 'PROCESSING' || doc.status === 'PENDING')
+      break
+    case 'completed':
+      filtered = filtered.filter((doc) => doc.status === 'COMPLETED')
       break
     case 'recent':
       const oneWeekAgo = new Date()
@@ -377,12 +292,17 @@ const fetchDocuments = async () => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      },
+      }
     )
 
     if (response.ok) {
       const data = await response.json()
       documents.value = data
+
+      // Connect to SSE if there are processing documents
+      if (processingDocumentsCount.value > 0) {
+        setupSSE()
+      }
     } else if (response.status === 401) {
       router.push('/login')
     } else {
@@ -391,70 +311,67 @@ const fetchDocuments = async () => {
   } catch (err) {
     console.error('Error fetching documents:', err)
     error.value = 'Failed to load documents. Please try again.'
+    showToast('Failed to load documents', 'error')
   } finally {
     loading.value = false
   }
 }
 
-// Polling function for status updates
-const checkForUpdates = async () => {
-  try {
-    // Only poll if we have documents that are still processing
-    if (processingDocumentsCount.value === 0) return
+// Setup SSE connection
+const setupSSE = () => {
+  const token = localStorage.getItem('accessToken')
+  if (!token) return
 
-    const token = localStorage.getItem('accessToken')
-    if (!token) return
+  connectToAllDocuments(
+    token,
+    // onUpdate callback
+    (data) => {
+      console.log('SSE Update received:', data)
 
-    const response = await fetch(
-      'https://socratic-f2kh.onrender.com/socratic/check_processing_status/',
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+      if (data.updates && Array.isArray(data.updates)) {
+        // Update each document in the list
+        data.updates.forEach(update => {
+          const docIndex = documents.value.findIndex(d => d.id === update.id)
+          if (docIndex !== -1) {
+            // Merge update with existing document
+            documents.value[docIndex] = {
+              ...documents.value[docIndex],
+              ...update
+            }
+          }
+        })
+
+        // Check if any document just completed
+        data.updates.forEach(update => {
+          if (update.status === 'COMPLETED') {
+            const doc = documents.value.find(d => d.id === update.id)
+            if (doc) {
+              showToast(`"${doc.document_title}" processing completed!`, 'success')
+            }
+          }
+        })
       }
-    )
+    },
+    // onComplete callback
+    (data) => {
+      console.log('SSE Complete:', data)
+      showToast('All documents processed successfully!', 'success')
+      // Refresh the document list
+      fetchDocuments()
+    },
+    // onError callback
+    (error) => {
+      console.error('SSE Error:', error)
+      showToast('Connection error. Retrying...', 'error')
 
-    if (response.ok) {
-      const updates = await response.json()
-      const previousProcessingCount = processingDocumentsCount.value
-
-      // Update documents with new status
-      documents.value = documents.value.map(doc => {
-        const update = updates.find(u => u.id === doc.id)
-        if (update) {
-          return { ...doc, ...update }
+      // Attempt to reconnect after 5 seconds
+      setTimeout(() => {
+        if (processingDocumentsCount.value > 0) {
+          setupSSE()
         }
-        return doc
-      })
-
-      // Auto-refresh if processing just finished
-      const currentProcessingCount = processingDocumentsCount.value
-      if (previousProcessingCount > 0 && currentProcessingCount === 0) {
-        // All processing done, refresh to get final data
-        setTimeout(() => {
-          fetchDocuments()
-        }, 1000)
-      }
+      }, 5000)
     }
-  } catch (err) {
-    console.log('Status check failed:', err)
-  }
-}
-
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
-const truncateTitle = (title) => {
-  const maxLength = 60
-  return title.length > maxLength ? title.substring(0, maxLength) + '...' : title
+  )
 }
 
 const getTabCount = (tabValue) => {
@@ -465,6 +382,12 @@ const getTabCount = (tabValue) => {
       return documents.value.filter((doc) => doc.quiz_generated).length
     case 'without_quiz':
       return documents.value.filter((doc) => !doc.quiz_generated).length
+    case 'processing':
+      return documents.value.filter(
+        (doc) => doc.status === 'PROCESSING' || doc.status === 'PENDING'
+      ).length
+    case 'completed':
+      return documents.value.filter((doc) => doc.status === 'COMPLETED').length
     case 'recent':
       const oneWeekAgo = new Date()
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
@@ -491,9 +414,12 @@ const viewQuiz = (documentId) => {
 // Download PDF function
 const downloadPDF = async (documentId) => {
   try {
-    const doc = documents.value.find(d => d.id === documentId)
+    const doc = documents.value.find((d) => d.id === documentId)
     if (doc && doc.status !== 'COMPLETED') {
-      showDownloadError(`Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`)
+      showToast(
+        `Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`,
+        'error'
+      )
       return
     }
 
@@ -512,14 +438,16 @@ const downloadPDF = async (documentId) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      },
+      }
     )
 
     if (response.ok) {
       const blob = await response.blob()
       const filename =
-        response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') ||
-        `document_${documentId}.pdf`
+        response.headers
+          .get('Content-Disposition')
+          ?.split('filename=')[1]
+          ?.replace(/"/g, '') || `document_${documentId}.pdf`
 
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -529,14 +457,16 @@ const downloadPDF = async (documentId) => {
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
+
+      showToast('PDF downloaded successfully!', 'success')
     } else if (response.status === 401) {
       router.push('/login')
     } else {
-      showDownloadError('Failed to download PDF')
+      showToast('Failed to download PDF', 'error')
     }
   } catch (err) {
     console.error('Error downloading PDF:', err)
-    showDownloadError('Network error. Please try again.')
+    showToast('Network error. Please try again.', 'error')
   } finally {
     downloadingPDF.value[documentId] = false
   }
@@ -544,9 +474,12 @@ const downloadPDF = async (documentId) => {
 
 const downloadAudio = async (documentId) => {
   try {
-    const doc = documents.value.find(d => d.id === documentId)
+    const doc = documents.value.find((d) => d.id === documentId)
     if (doc && doc.status !== 'COMPLETED') {
-      showDownloadError(`Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`)
+      showToast(
+        `Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`,
+        'error'
+      )
       return
     }
 
@@ -565,14 +498,16 @@ const downloadAudio = async (documentId) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      },
+      }
     )
 
     if (response.ok) {
       const blob = await response.blob()
       const filename =
-        response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') ||
-        `audio_${documentId}.mp3`
+        response.headers
+          .get('Content-Disposition')
+          ?.split('filename=')[1]
+          ?.replace(/"/g, '') || `audio_${documentId}.mp3`
 
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -582,22 +517,28 @@ const downloadAudio = async (documentId) => {
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
+
+      showToast('Audio downloaded successfully!', 'success')
     } else if (response.status === 401) {
       router.push('/login')
     } else {
-      showDownloadError('Failed to download audio')
+      showToast('Failed to download audio', 'error')
     }
   } catch (err) {
     console.error('Error downloading audio:', err)
-    showDownloadError('Network error. Please try again.')
+    showToast('Network error. Please try again.', 'error')
   } finally {
     downloadingAudio.value[documentId] = false
   }
 }
 
-// Show error toast
-const showDownloadError = (message) => {
-  downloadError.value = message
+// Show toast notification
+const showToast = (message, type = 'info') => {
+  toastMessage.value = message
+  toastType.value = type
+  setTimeout(() => {
+    toastMessage.value = ''
+  }, 4000)
 }
 
 // Delete confirmation
@@ -630,24 +571,24 @@ const deleteDocument = async (documentId) => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      },
+      }
     )
 
     if (response.ok || response.status === 204) {
       documents.value = documents.value.filter((doc) => doc.id !== documentId)
-      showDownloadError('✅ Document deleted successfully')
+      showToast('Document deleted successfully', 'success')
     } else if (response.status === 401) {
       router.push('/login')
     } else if (response.status === 404) {
-      showDownloadError('Document not found')
+      showToast('Document not found', 'error')
       await fetchDocuments()
     } else {
       const errorData = await response.json().catch(() => ({}))
-      showDownloadError(errorData.error || 'Failed to delete document')
+      showToast(errorData.error || 'Failed to delete document', 'error')
     }
   } catch (err) {
     console.error('Error deleting document:', err)
-    showDownloadError('Network error. Please try again.')
+    showToast('Network error. Please try again.', 'error')
   } finally {
     deleting.value[documentId] = false
   }
@@ -655,15 +596,10 @@ const deleteDocument = async (documentId) => {
 
 onMounted(() => {
   fetchDocuments()
-
-  // Start polling for status updates every 3 seconds
-  pollingInterval.value = setInterval(checkForUpdates, 3000)
 })
 
 onUnmounted(() => {
-  if (pollingInterval.value) {
-    clearInterval(pollingInterval.value)
-  }
+  disconnectSSE()
 })
 </script>
 
@@ -678,7 +614,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: clamp(24px, 5vw, 40px);
+  margin-bottom: clamp(20px, 4vw, 30px);
   flex-wrap: wrap;
   gap: clamp(16px, 3vw, 20px);
 }
@@ -704,21 +640,26 @@ onUnmounted(() => {
   flex-wrap: wrap;
 }
 
-.back-button {
+.back-button,
+.upload-button {
   padding: clamp(10px, 2.5vw, 12px) clamp(16px, 3vw, 24px);
-  background: white;
-  color: #4a5568;
-  text-decoration: none;
   border-radius: 10px;
   font-weight: 600;
   transition: all 0.3s ease;
-  border: 2px solid #e2e8f0;
+  border: 2px solid;
   white-space: nowrap;
   font-size: clamp(0.9rem, 2.5vw, 1rem);
   min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
+}
+
+.back-button {
+  background: white;
+  color: #4a5568;
+  border-color: #e2e8f0;
 }
 
 .back-button:hover {
@@ -729,20 +670,9 @@ onUnmounted(() => {
 }
 
 .upload-button {
-  padding: clamp(10px, 2.5vw, 12px) clamp(16px, 3vw, 24px);
   background: #48bb78;
   color: white;
-  text-decoration: none;
-  border-radius: 10px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  border: 2px solid #48bb78;
-  white-space: nowrap;
-  font-size: clamp(0.9rem, 2.5vw, 1rem);
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-color: #48bb78;
 }
 
 .upload-button:hover {
@@ -750,6 +680,53 @@ onUnmounted(() => {
   border-color: #38a169;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+}
+
+/* SSE Status Indicator */
+.sse-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  width: fit-content;
+}
+
+.sse-status.connected {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.sse-status.disconnected {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sse-status.connected .status-dot {
+  background: #28a745;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.sse-status.disconnected .status-dot {
+  background: #ffc107;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* Quick Stats */
@@ -776,6 +753,20 @@ onUnmounted(() => {
 .stat-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card.processing.active {
+  background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
+  border: 2px solid #ffa500;
+}
+
+.stat-card.processing.active .stat-icon {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .stat-icon {
@@ -842,7 +833,8 @@ onUnmounted(() => {
 }
 
 .search-input {
-  padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px) clamp(10px, 2.5vw, 12px) clamp(32px, 6vw, 40px);
+  padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px) clamp(10px, 2.5vw, 12px)
+    clamp(32px, 6vw, 40px);
   border: 2px solid #e2e8f0;
   border-radius: 10px;
   background: white;
@@ -917,8 +909,6 @@ onUnmounted(() => {
   transition: all 0.3s ease;
   font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   min-height: 44px;
-  flex: 1;
-  min-width: 120px;
 }
 
 .tab-button:hover {
@@ -937,358 +927,6 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr));
   gap: clamp(16px, 3vw, 24px);
-}
-
-/* Document Card */
-.document-card {
-  background: #f7fafc;
-  border-radius: 16px;
-  padding: clamp(16px, 3vw, 24px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-  display: flex;
-  flex-direction: column;
-  height: fit-content;
-  min-height: 320px;
-}
-
-.document-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-  border-color: #4299e1;
-  background: white;
-}
-
-.document-card.has-quiz {
-  border-left: 4px solid #48bb78;
-}
-
-/* Card Header */
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: clamp(16px, 3vw, 20px);
-  gap: clamp(12px, 3vw, 16px);
-}
-
-.title-section {
-  flex: 1;
-}
-
-.document-title {
-  color: #1a202c;
-  font-size: clamp(1.1rem, 3vw, 1.3rem);
-  font-weight: 700;
-  margin: 0 0 clamp(6px, 1.5vw, 8px) 0;
-  line-height: 1.4;
-  word-wrap: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.document-date {
-  color: #718096;
-  font-size: clamp(0.8rem, 2.5vw, 0.85rem);
-  font-weight: 500;
-}
-
-.status-badges {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(6px, 1.5vw, 8px);
-  flex-shrink: 0;
-}
-
-.badge {
-  padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
-  border-radius: 20px;
-  font-size: clamp(0.7rem, 2vw, 0.75rem);
-  font-weight: 700;
-  white-space: nowrap;
-  border: 1px solid transparent;
-}
-
-.badge-success {
-  background: #c6f6d5;
-  color: #22543d;
-  border-color: #9ae6b4;
-}
-
-.badge-warning {
-  background: #feebc8;
-  color: #744210;
-  border-color: #fbd38d;
-}
-
-.badge-info {
-  background: #bee3f8;
-  color: #1a365d;
-  border-color: #90cdf4;
-}
-
-/* New status badge styles */
-.badge-processing {
-  background: #fff3cd;
-  color: #856404;
-  border-color: #ffeaa7;
-}
-
-.badge-failed {
-  background: #f8d7da;
-  color: #721c24;
-  border-color: #f5c6cb;
-}
-
-.badge-pending {
-  background: #d1ecf1;
-  color: #0c5460;
-  border-color: #bee5eb;
-}
-
-/* Card Metadata */
-.card-metadata {
-  margin-bottom: clamp(16px, 3vw, 20px);
-}
-
-.metadata-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: clamp(10px, 2.5vw, 12px) 0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.metadata-item:last-child {
-  border-bottom: none;
-}
-
-.metadata-label {
-  color: #4a5568;
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-  font-weight: 500;
-}
-
-.metadata-value {
-  color: #1a202c;
-  font-weight: 600;
-  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
-}
-
-/* Progress Section */
-.progress-section {
-  margin-bottom: clamp(16px, 3vw, 20px);
-}
-
-.status-indicators {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(6px, 1.5vw, 8px);
-}
-
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: clamp(6px, 1.5vw, 8px);
-  padding: clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px);
-  background: #edf2f7;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  min-height: 40px;
-}
-
-.status-item.completed {
-  background: #c6f6d5;
-}
-
-.status-icon {
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-}
-
-.status-text {
-  color: #4a5568;
-  font-size: clamp(0.8rem, 2.5vw, 0.85rem);
-  font-weight: 500;
-}
-
-.status-item.completed .status-text {
-  color: #22543d;
-}
-
-/* Action Section */
-.action-section {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(12px, 3vw, 16px);
-  margin-top: auto;
-}
-
-.download-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(8px, 2vw, 12px);
-}
-
-.download-btn {
-  padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
-  border-radius: 10px;
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(6px, 1.5vw, 8px);
-  min-height: 44px;
-}
-
-.pdf-btn {
-  background: #fed7d7;
-  color: #c53030;
-  border: 2px solid #fed7d7;
-}
-
-.pdf-btn:hover:not(:disabled) {
-  background: #feb2b2;
-  border-color: #feb2b2;
-  transform: translateY(-1px);
-}
-
-.audio-btn {
-  background: #c6f6d5;
-  color: #22543d;
-  border: 2px solid #c6f6d5;
-}
-
-.audio-btn:hover:not(:disabled) {
-  background: #9ae6b4;
-  border-color: #9ae6b4;
-  transform: translateY(-1px);
-}
-
-.download-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.action-buttons {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: clamp(8px, 2vw, 12px);
-}
-
-.card-btn {
-  padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
-  border-radius: 10px;
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(6px, 1.5vw, 8px);
-  min-height: 44px;
-}
-
-.quiz-btn {
-  background: #4299e1;
-  color: white;
-  border: 2px solid #4299e1;
-}
-
-.quiz-btn:hover:not(:disabled) {
-  background: #3182ce;
-  border-color: #3182ce;
-  transform: translateY(-1px);
-}
-
-.quiz-btn.disabled {
-  background: #a0aec0;
-  border-color: #a0aec0;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.quiz-btn.processing {
-  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-}
-
-.action-btn {
-  padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
-  border-radius: 10px;
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(6px, 1.5vw, 8px);
-  min-height: 44px;
-}
-
-.delete-btn {
-  background: #fed7d7;
-  color: #c53030;
-  border: 2px solid #fed7d7;
-  width: clamp(40px, 8vw, 44px);
-  padding: 0;
-}
-
-.delete-btn:hover:not(:disabled) {
-  background: #feb2b2;
-  border-color: #feb2b2;
-  transform: translateY(-1px);
-}
-
-.delete-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-icon {
-  font-size: clamp(0.9rem, 2.5vw, 1rem);
-}
-
-.btn-text {
-  font-size: clamp(0.8rem, 2.5vw, 0.85rem);
-}
-
-.loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.loading-spinner-delete {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(197, 48, 48, 0.3);
-  border-top: 2px solid #c53030;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
 }
 
 /* No Results State */
@@ -1376,10 +1014,6 @@ onUnmounted(() => {
   font-weight: 600;
   font-size: clamp(1rem, 3vw, 1.1rem);
   transition: all 0.3s ease;
-  min-height: 54px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .upload-cta-btn:hover {
@@ -1403,8 +1037,13 @@ onUnmounted(() => {
   border: 4px solid #e2e8f0;
   border-top: 4px solid #4299e1;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin-loader 1s linear infinite;
   margin: 0 auto clamp(20px, 4vw, 24px);
+}
+
+@keyframes spin-loader {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .loading-state p {
@@ -1412,29 +1051,43 @@ onUnmounted(() => {
   font-size: clamp(1rem, 3vw, 1.2rem);
 }
 
-/* Error Toast */
-.error-toast {
+/* Toast */
+.toast {
   position: fixed;
   bottom: clamp(16px, 4vw, 30px);
   right: clamp(16px, 4vw, 30px);
-  left: clamp(16px, 4vw, 30px);
-  background: #fed7d7;
-  color: #c53030;
   padding: clamp(12px, 3vw, 16px) clamp(16px, 3vw, 20px);
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   animation: slideIn 0.3s ease;
   display: flex;
   align-items: center;
   gap: clamp(8px, 2vw, 12px);
-  border-left: 4px solid #feb2b2;
   max-width: 400px;
-  margin: 0 auto;
+}
+
+.toast.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.toast.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.toast.info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
 }
 
 .toast-icon {
   font-size: clamp(1rem, 3vw, 1.2rem);
+  flex-shrink: 0;
 }
 
 .toast-message {
@@ -1446,7 +1099,7 @@ onUnmounted(() => {
 .toast-close {
   background: none;
   border: none;
-  color: #c53030;
+  color: inherit;
   font-size: clamp(1.2rem, 3vw, 1.5rem);
   cursor: pointer;
   padding: 0;
@@ -1455,6 +1108,14 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  opacity: 0.7;
+}
+
+.toast-close:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 @keyframes slideIn {
@@ -1468,7 +1129,7 @@ onUnmounted(() => {
   }
 }
 
-/* Delete Confirmation Modal */
+/* Delete Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1481,56 +1142,27 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  animation: fadeIn 0.2s ease;
   padding: clamp(12px, 3vw, 20px);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 .modal-content {
   background: white;
   border-radius: 20px;
-  padding: 0;
   max-width: min(480px, 100%);
   width: 100%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(100px) scale(0.9);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-}
-
 .modal-header {
-  padding: clamp(24px, 5vw, 32px) clamp(24px, 5vw, 32px) clamp(20px, 4vw, 24px);
+  padding: clamp(24px, 5vw, 32px);
   background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
-  position: relative;
 }
 
 .modal-header h3 {
   margin: 0;
   color: #c53030;
   font-size: clamp(1.3rem, 4vw, 1.5rem);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 700;
-  line-height: 1.2;
 }
 
 .modal-body {
@@ -1541,7 +1173,6 @@ onUnmounted(() => {
   margin: 0 0 clamp(12px, 3vw, 16px) 0;
   color: #1a202c;
   font-size: clamp(1rem, 3vw, 1.05rem);
-  line-height: 1.6;
 }
 
 .warning-text {
@@ -1552,90 +1183,45 @@ onUnmounted(() => {
   padding: clamp(12px, 3vw, 16px);
   border-radius: 12px;
   border-left: 4px solid #feb2b2;
-  margin-top: 8px;
-  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.1);
 }
 
 .modal-actions {
   padding: 0 clamp(24px, 5vw, 32px) clamp(24px, 5vw, 32px);
   display: flex;
   gap: clamp(8px, 2vw, 12px);
-  justify-content: flex-end;
-  flex-wrap: wrap;
 }
 
 .modal-btn {
-  padding: clamp(12px, 3vw, 14px) clamp(20px, 4vw, 28px);
+  flex: 1;
+  padding: clamp(12px, 3vw, 14px);
   border-radius: 12px;
   font-size: clamp(0.9rem, 2.5vw, 1rem);
   font-weight: 700;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  min-height: 54px;
-  flex: 1;
-  min-width: 120px;
 }
 
 .cancel-btn {
-  background: white;
+  background: #e2e8f0;
   color: #718096;
-  border: 2px solid #e2e8f0;
-  box-shadow: none;
 }
 
 .cancel-btn:hover {
-  background: #f7fafc;
-  border-color: #cbd5e0;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #cbd5e0;
 }
 
 .confirm-btn {
-  background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
-  color: #c53030;
-  position: relative;
-  overflow: hidden;
-}
-
-.confirm-btn::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  transform: translate(-50%, -50%);
-  transition:
-    width 0.6s,
-    height 0.6s;
-}
-
-.confirm-btn:hover::before {
-  width: 300px;
-  height: 300px;
+  background: #fc8181;
+  color: white;
 }
 
 .confirm-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(254, 178, 178, 0.4);
+  background: #f56565;
 }
 
-.confirm-btn:active {
-  transform: translateY(0);
-}
-
-/* Mobile-specific optimizations */
-@media (max-width: 480px) {
-  .documents-page {
-    padding: 16px 12px;
-  }
-
+/* Responsive */
+@media (max-width: 768px) {
   .page-header {
     flex-direction: column;
     align-items: stretch;
@@ -1645,24 +1231,9 @@ onUnmounted(() => {
     flex-direction: column;
   }
 
-  .back-button,
-  .upload-button {
-    width: 100%;
-    text-align: center;
-  }
-
-  .documents-list {
-    padding: 16px;
-    border-radius: 16px;
-  }
-
-  .list-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
   .controls {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .search-box {
@@ -1675,40 +1246,17 @@ onUnmounted(() => {
   }
 
   .filter-tabs {
-    flex-direction: column;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
   }
 
   .tab-button {
-    width: 100%;
-    text-align: center;
+    flex-shrink: 0;
   }
 
   .documents-container {
     grid-template-columns: 1fr;
-  }
-
-  .document-card {
-    padding: 16px;
-    min-height: 300px;
-  }
-
-  .card-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .status-badges {
-    flex-direction: row;
-    justify-content: flex-start;
-  }
-
-  .download-buttons {
-    grid-template-columns: 1fr;
-  }
-
-  .action-buttons {
-    grid-template-columns: 1fr auto;
   }
 
   .modal-actions {
@@ -1717,186 +1265,6 @@ onUnmounted(() => {
 
   .modal-btn {
     width: 100%;
-  }
-}
-
-/* Tablet optimizations */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .documents-container {
-    grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
-  }
-}
-
-/* Large desktop enhancements */
-@media (min-width: 1200px) {
-  .documents-container {
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  }
-}
-
-/* Reduced motion for accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .stat-card,
-  .document-card,
-  .back-button,
-  .upload-button,
-  .tab-button,
-  .download-btn,
-  .action-btn,
-  .modal-btn,
-  .upload-cta-btn,
-  .clear-filters-btn {
-    transition: none;
-  }
-
-  .stat-card:hover,
-  .document-card:hover,
-  .back-button:hover,
-  .upload-button:hover,
-  .tab-button:hover,
-  .download-btn:hover:not(:disabled),
-  .action-btn:hover:not(:disabled),
-  .modal-btn:hover,
-  .upload-cta-btn:hover,
-  .clear-filters-btn:hover {
-    transform: none;
-  }
-
-  .confirm-btn::before {
-    display: none;
-  }
-
-  .spinner,
-  .loading-spinner,
-  .loading-spinner-delete {
-    animation: none;
-  }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .documents-page {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
-  }
-
-  .stat-card,
-  .documents-list,
-  .document-card,
-  .empty-state,
-  .loading-state,
-  .modal-content {
-    background: #2d2d2d;
-    color: #ffffff;
-    border-color: #444;
-  }
-
-  .header-content h1,
-  .list-header h2,
-  .document-title,
-  .metadata-value,
-  .status-text {
-    color: #ffffff;
-  }
-
-  .header-content p,
-  .stat-label,
-  .metadata-label,
-  .document-date,
-  .empty-state p,
-  .loading-state p,
-  .no-results p {
-    color: #cccccc;
-  }
-
-  .search-input,
-  .sort-controls select {
-    background: #3d3d3d;
-    border-color: #555;
-    color: #ffffff;
-  }
-
-  .search-input:focus,
-  .sort-controls select:focus {
-    border-color: #4299e1;
-  }
-
-  .tab-button {
-    background: #3d3d3d;
-    color: #cccccc;
-    border-color: #555;
-  }
-
-  .tab-button.active {
-    background: #4299e1;
-    color: white;
-  }
-
-  .status-item {
-    background: #3d3d3d;
-  }
-
-  .status-item.completed {
-    background: #22543d;
-  }
-
-  .cancel-btn {
-    background: #3d3d3d;
-    color: #cccccc;
-    border-color: #555;
-  }
-
-  .cancel-btn:hover {
-    background: #4d4d4d;
-  }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .stat-card,
-  .documents-list,
-  .document-card,
-  .empty-state,
-  .loading-state,
-  .modal-content {
-    border: 2px solid #000;
-  }
-
-  .back-button,
-  .upload-button,
-  .tab-button,
-  .download-btn,
-  .action-btn,
-  .modal-btn,
-  .upload-cta-btn,
-  .clear-filters-btn {
-    border: 2px solid #000;
-  }
-}
-
-/* Touch device optimizations */
-@media (hover: none) and (pointer: coarse) {
-  .stat-card:hover,
-  .document-card:hover,
-  .back-button:hover,
-  .upload-button:hover,
-  .tab-button:hover,
-  .download-btn:hover:not(:disabled),
-  .action-btn:hover:not(:disabled),
-  .modal-btn:hover,
-  .upload-cta-btn:hover,
-  .clear-filters-btn:hover {
-    transform: none;
-  }
-
-  .back-button:active,
-  .upload-button:active,
-  .tab-button:active,
-  .download-btn:active:not(:disabled),
-  .action-btn:active:not(:disabled),
-  .modal-btn:active,
-  .upload-cta-btn:active,
-  .clear-filters-btn:active {
-    transform: scale(0.98);
   }
 }
 </style>
