@@ -71,7 +71,7 @@
           </div>
           <div class="sort-controls">
             <label for="sort-select">Sort by:</label>
-            <select id="sort-select" v-model="sortBy" @change="sortDocuments">
+            <select id="sort-select" v-model="sortBy">
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
               <option value="title">Title A-Z</option>
@@ -163,7 +163,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ProcessingCard from '../components/ProcessingCard.vue'
 import { useProcessingSSE } from '../composables/useProcessingSSE'
@@ -183,7 +183,11 @@ const searchQuery = ref('')
 const activeTab = ref('all')
 
 // SSE composable
-const { isConnected: sseConnected, connectToAllDocuments, disconnect: disconnectSSE } = useProcessingSSE()
+const {
+  isConnected: sseConnected,
+  connectToAllDocuments,
+  disconnect: disconnectSSE
+} = useProcessingSSE()
 
 // Tabs for filtering
 const tabs = [
@@ -273,6 +277,15 @@ const filteredDocuments = computed(() => {
   return filtered
 })
 
+// Watch for processing count changes
+watch(processingDocumentsCount, (newCount, oldCount) => {
+  if (newCount > 0 && !sseConnected.value) {
+    setupSSE()
+  } else if (newCount === 0 && oldCount > 0 && sseConnected.value) {
+    disconnectSSE()
+  }
+})
+
 // Methods
 const fetchDocuments = async () => {
   try {
@@ -324,54 +337,99 @@ const setupSSE = () => {
 
   connectToAllDocuments(
     token,
-    // onUpdate callback
     (data) => {
-      console.log('SSE Update received:', data)
+      console.log('SSE UPDATE RECEIVED:', data) // Keep this
 
       if (data.updates && Array.isArray(data.updates)) {
-        // Update each document in the list
-        data.updates.forEach(update => {
-          const docIndex = documents.value.findIndex(d => d.id === update.id)
-          if (docIndex !== -1) {
-            // Merge update with existing document
-            documents.value[docIndex] = {
-              ...documents.value[docIndex],
-              ...update
-            }
-          }
-        })
+        // Create NEW array - 100% triggers Vue reactivity
+        documents.value = documents.value.map(doc => {
+          const update = data.updates.find(u => u.id === doc.id)
+          if (update) {
+            console.log('UPDATING DOC:', doc.id, update) // Keep this
 
-        // Check if any document just completed
-        data.updates.forEach(update => {
-          if (update.status === 'COMPLETED') {
-            const doc = documents.value.find(d => d.id === update.id)
-            if (doc) {
-              showToast(`"${doc.document_title}" processing completed!`, 'success')
+            const wasProcessing = doc.status !== 'COMPLETED'
+            if (update.status === 'COMPLETED' && wasProcessing) {
+              showToast(`"${update.document_title}" completed!`, 'success')
             }
+            return { ...doc, ...update }
           }
+          return doc
         })
       }
     },
-    // onComplete callback
     (data) => {
-      console.log('SSE Complete:', data)
-      showToast('All documents processed successfully!', 'success')
-      // Refresh the document list
+      showToast('All documents processed!', 'success')
+      disconnectSSE()
       fetchDocuments()
     },
-    // onError callback
-    (error) => {
-      console.error('SSE Error:', error)
-      showToast('Connection error. Retrying...', 'error')
-
-      // Attempt to reconnect after 5 seconds
-      setTimeout(() => {
-        if (processingDocumentsCount.value > 0) {
-          setupSSE()
-        }
-      }, 5000)
+    (err) => {
+      if (err?.error) {
+        showToast('Connection issue', 'error')
+      }
     }
   )
+}
+
+// Fallback polling
+let pollingInterval = null
+const startPolling = () => {
+  stopPolling()
+  pollingInterval = setInterval(async () => {
+    if (processingDocumentsCount.value === 0) {
+      stopPolling()
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('accessToken')
+      if (!token) return
+
+      const response = await fetch(
+        'https://socratic-f2kh.onrender.com/socratic/list_processing_results/',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+
+        const completedIds = new Set()
+        data.forEach((newDoc) => {
+          const oldDoc = documents.value.find((d) => d.id === newDoc.id)
+          if (oldDoc && oldDoc.status !== 'COMPLETED' && newDoc.status === 'COMPLETED') {
+            completedIds.add(newDoc.id)
+          }
+        })
+
+        documents.value = data
+
+        completedIds.forEach((docId) => {
+          const doc = documents.value.find((d) => d.id === docId)
+          if (doc) {
+            showToast(`"${doc.document_title}" processing completed!`, 'success')
+          }
+        })
+
+        if (processingDocumentsCount.value === 0) {
+          stopPolling()
+        }
+      }
+    } catch (err) {
+      console.error('Polling error:', err)
+    }
+  }, 5000)
+}
+
+const stopPolling = () => {
+  if (pollingInterval) {
+    clearInterval(pollingInterval)
+    pollingInterval = null
+  }
 }
 
 const getTabCount = (tabValue) => {
@@ -403,15 +461,10 @@ const clearFilters = () => {
   sortBy.value = 'newest'
 }
 
-const sortDocuments = () => {
-  console.log('Sorting by:', sortBy.value)
-}
-
 const viewQuiz = (documentId) => {
   router.push(`/quiz/${documentId}`)
 }
 
-// Download PDF function
 const downloadPDF = async (documentId) => {
   try {
     const doc = documents.value.find((d) => d.id === documentId)
@@ -423,7 +476,7 @@ const downloadPDF = async (documentId) => {
       return
     }
 
-    downloadingPDF.value[documentId] = true
+    downloadingPDF.value = { ...downloadingPDF.value, [documentId]: true }
     const token = localStorage.getItem('accessToken')
 
     if (!token) {
@@ -468,7 +521,7 @@ const downloadPDF = async (documentId) => {
     console.error('Error downloading PDF:', err)
     showToast('Network error. Please try again.', 'error')
   } finally {
-    downloadingPDF.value[documentId] = false
+    downloadingPDF.value = { ...downloadingPDF.value, [documentId]: false }
   }
 }
 
@@ -483,7 +536,7 @@ const downloadAudio = async (documentId) => {
       return
     }
 
-    downloadingAudio.value[documentId] = true
+    downloadingAudio.value = { ...downloadingAudio.value, [documentId]: true }
     const token = localStorage.getItem('accessToken')
 
     if (!token) {
@@ -528,11 +581,10 @@ const downloadAudio = async (documentId) => {
     console.error('Error downloading audio:', err)
     showToast('Network error. Please try again.', 'error')
   } finally {
-    downloadingAudio.value[documentId] = false
+    downloadingAudio.value = { ...downloadingAudio.value, [documentId]: false }
   }
 }
 
-// Show toast notification
 const showToast = (message, type = 'info') => {
   toastMessage.value = message
   toastType.value = type
@@ -541,7 +593,6 @@ const showToast = (message, type = 'info') => {
   }, 4000)
 }
 
-// Delete confirmation
 const confirmDelete = (documentId) => {
   deleteConfirmId.value = documentId
 }
@@ -550,10 +601,9 @@ const cancelDelete = () => {
   deleteConfirmId.value = null
 }
 
-// Delete document
 const deleteDocument = async (documentId) => {
   try {
-    deleting.value[documentId] = true
+    deleting.value = { ...deleting.value, [documentId]: true }
     deleteConfirmId.value = null
 
     const token = localStorage.getItem('accessToken')
@@ -590,7 +640,7 @@ const deleteDocument = async (documentId) => {
     console.error('Error deleting document:', err)
     showToast('Network error. Please try again.', 'error')
   } finally {
-    deleting.value[documentId] = false
+    deleting.value = { ...deleting.value, [documentId]: false }
   }
 }
 
@@ -600,6 +650,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   disconnectSSE()
+  stopPolling()
 })
 </script>
 

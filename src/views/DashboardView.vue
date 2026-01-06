@@ -130,7 +130,7 @@ const documents = ref([])
 const loading = ref(true)
 const error = ref('')
 const toastMessage = ref('')
-const toastType = ref('info') // 'success', 'error', 'info'
+const toastType = ref('info')
 const downloadingPDF = ref({})
 const downloadingAudio = ref({})
 const deleting = ref({})
@@ -141,6 +141,7 @@ const {
   isConnected: sseConnected,
   connectToAllDocuments,
   disconnect: disconnectSSE,
+  error: sseError
 } = useProcessingSSE()
 
 // Computed properties
@@ -214,54 +215,75 @@ const setupSSE = () => {
 
   connectToAllDocuments(
     token,
-    // onUpdate callback
     (data) => {
-      console.log('SSE Update received:', data)
+      console.log('SSE UPDATE RECEIVED:', data) // Keep this
 
       if (data.updates && Array.isArray(data.updates)) {
-        // Update each document in the list
-        data.updates.forEach((update) => {
-          const docIndex = documents.value.findIndex((d) => d.id === update.id)
-          if (docIndex !== -1) {
-            // Merge update with existing document
-            documents.value[docIndex] = {
-              ...documents.value[docIndex],
-              ...update,
-            }
-          }
-        })
+        // Create NEW array - 100% triggers Vue reactivity
+        documents.value = documents.value.map(doc => {
+          const update = data.updates.find(u => u.id === doc.id)
+          if (update) {
+            console.log('UPDATING DOC:', doc.id, update) // Keep this
 
-        // Check if any document just completed
-        data.updates.forEach((update) => {
-          if (update.status === 'COMPLETED') {
-            const doc = documents.value.find((d) => d.id === update.id)
-            if (doc) {
-              showToast(`"${doc.document_title}" processing completed!`, 'success')
+            const wasProcessing = doc.status !== 'COMPLETED'
+            if (update.status === 'COMPLETED' && wasProcessing) {
+              showToast(`"${update.document_title}" completed!`, 'success')
             }
+            return { ...doc, ...update }
           }
+          return doc
         })
       }
     },
-    // onComplete callback
     (data) => {
-      console.log('SSE Complete:', data)
-      showToast('All documents processed successfully!', 'success')
-      // Refresh the document list
+      showToast('All documents processed!', 'success')
+      disconnectSSE()
       fetchDocuments()
     },
-    // onError callback
-    (error) => {
-      console.error('SSE Error:', error)
-      showToast('Connection error. Retrying...', 'error')
-
-      // Attempt to reconnect after 5 seconds
-      setTimeout(() => {
-        if (processingCount.value > 0) {
-          setupSSE()
-        }
-      }, 5000)
-    },
+    (err) => {
+      if (err?.error) {
+        showToast('Connection issue', 'error')
+        setupPolling()
+      }
+    }
   )
+}
+
+
+let pollingInterval = null
+const setupPolling = () => {
+  if (pollingInterval) return // Already polling
+
+  pollingInterval = setInterval(async () => {
+    if (processingCount.value === 0) {
+      stopPolling()
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('accessToken')
+      if (!token) return
+
+      const response = await fetch(
+        'https://socratic-f2kh.onrender.com/socratic/list_processing_results/',
+        { method: 'GET', headers: { Authorization: `Bearer ${token}` } }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        documents.value = data
+      }
+    } catch (err) {
+      console.error('Polling error:', err)
+    }
+  }, 5000)
+}
+
+const stopPolling = () => {
+  if (pollingInterval) {
+    clearInterval(pollingInterval)
+    pollingInterval = null
+  }
 }
 
 const viewQuiz = (documentId) => {
@@ -453,6 +475,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   disconnectSSE()
+  stopPolling()
 })
 </script>
 
