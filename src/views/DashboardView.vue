@@ -48,7 +48,9 @@
 
       <div class="dashboard-actions">
         <router-link to="/upload" class="action-button primary"> 📄 Upload Document </router-link>
+        <router-link to="/browse" class="action-button secondary">🌐 Browse Community </router-link>
       </div>
+
 
       <!-- Recent Documents Section -->
       <div v-if="!loading && documents.length > 0" class="recent-documents">
@@ -216,14 +218,14 @@ const setupSSE = () => {
   connectToAllDocuments(
     token,
     (data) => {
-      console.log('SSE UPDATE RECEIVED:', data) // Keep this
+      console.log('SSE UPDATE RECEIVED:', data)
 
       if (data.updates && Array.isArray(data.updates)) {
-        // Create NEW array - 100% triggers Vue reactivity
+
         documents.value = documents.value.map(doc => {
           const update = data.updates.find(u => u.id === doc.id)
           if (update) {
-            console.log('UPDATING DOC:', doc.id, update) // Keep this
+            console.log('UPDATING DOC:', doc.id, update)
 
             const wasProcessing = doc.status !== 'COMPLETED'
             if (update.status === 'COMPLETED' && wasProcessing) {
@@ -654,6 +656,17 @@ onUnmounted(() => {
   background: #219a52;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(39, 174, 96, 0.3);
+}
+
+.action-button.secondary {
+  background: #4299e1;
+  color: white;
+}
+
+.action-button.secondary:hover {
+  background: #3182ce;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(66, 153, 225, 0.3);
 }
 
 /* Recent Documents */

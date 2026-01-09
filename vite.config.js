@@ -19,7 +19,7 @@ export default defineConfig({
       open: true,
       proxy: {
         '/api': {
-          target: 'https://socratic-f2kh.onrender.com/', // Local Django for development
+          target: 'https://socratic-f2kh.onrender.com/', 
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),
         },

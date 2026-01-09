@@ -95,6 +95,12 @@ const routes = [
     component: () => import('@/views/PaymentSuccess.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/browse',
+    name: 'Browse',
+    component: () => import('@/views/BrowseDocumentsView.vue'),
+    meta: { requiresAuth: true }
+  },
 
 
 ]

@@ -7,7 +7,9 @@
       </div>
       <div class="header-actions">
         <router-link to="/dashboard" class="back-button"> ← Back to Dashboard </router-link>
+        <router-link to="/browse" class="browse-button"> 🌐 Browse </router-link>
         <router-link to="/upload" class="upload-button"> 📄 Upload New </router-link>
+
       </div>
     </div>
 
@@ -705,6 +707,31 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   text-decoration: none;
+}
+
+.browse-button {
+  padding: clamp(10px, 2.5vw, 12px) clamp(16px, 3vw, 24px);
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 2px solid;
+  white-space: nowrap;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.browse-button:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #65408a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 .back-button {

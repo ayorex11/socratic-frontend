@@ -12,6 +12,13 @@
         Your session has expired. Please log in again.
       </div>
 
+      <!-- Google Login Button -->
+      <div id="google-signin-button" class="google-signin-wrapper"></div>
+
+      <div class="divider">
+        <span>OR</span>
+      </div>
+
       <!-- Login Form -->
       <form @submit.prevent="handleSubmit" class="login-form">
         <div class="input-group">
@@ -95,7 +102,6 @@ const form = ref({
   password: ''
 })
 
-// Check if we should show the resend verification option
 const showResendVerification = computed(() => {
   return error.value.toLowerCase().includes('verify') ||
          error.value.toLowerCase().includes('verification') ||
@@ -106,6 +112,52 @@ const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value
 }
 
+// Handle Google Login Callback
+const handleGoogleCallback = async (response) => {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const result = await authStore.googleAuth(response.credential)
+
+    if (result.success) {
+      console.log('Google login successful!')
+      router.push({ name: 'home' })
+    } else {
+      error.value = result.error?.detail || result.error?.error || 'Google login failed. Please try again.'
+    }
+  } catch (err) {
+    console.error('Google login error:', err)
+    error.value = 'Google login failed. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Initialize Google Sign-In
+const initializeGoogleSignIn = () => {
+  if (window.google) {
+    window.google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: handleGoogleCallback,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    })
+
+    window.google.accounts.id.renderButton(
+      document.getElementById('google-signin-button'),
+      {
+        theme: 'outline',
+        size: 'large',
+        width: '100%',
+        text: 'continue_with',
+        shape: 'rectangular',
+      }
+    )
+  }
+}
+
+// Handle Regular Login
 const handleSubmit = async () => {
   loading.value = true
   error.value = ''
@@ -114,21 +166,15 @@ const handleSubmit = async () => {
 
   if (result.success) {
     console.log('Login successful!', authStore.user)
-    // The welcome animation and redirect will be handled by the Layout component
   } else {
-    // Handle different types of login errors
     if (result.error?.detail?.toLowerCase().includes('verified') ||
         result.error?.non_field_errors?.some(msg => msg.toLowerCase().includes('verified')) ||
         result.error?.detail?.toLowerCase().includes('confirm') ||
         result.error?.non_field_errors?.some(msg => msg.toLowerCase().includes('confirm'))) {
-
       error.value = 'Please verify your email address before logging in. Check your email for the verification link.'
-
     } else if (result.error?.detail?.toLowerCase().includes('invalid') ||
                result.error?.non_field_errors?.some(msg => msg.toLowerCase().includes('invalid'))) {
-
       error.value = 'Invalid username or password. Please try again.'
-
     } else if (result.error?.detail) {
       error.value = result.error.detail
     } else if (result.error?.non_field_errors) {
@@ -146,8 +192,6 @@ const resendVerification = async () => {
   error.value = ''
 
   try {
-    // Since we only have username in login form, we need to get the email
-    // For now, we'll redirect to verification prompt where user can enter email
     router.push('/verify-email-prompt')
   } catch (err) {
     error.value = 'Please go to the verification page to resend the email.'
@@ -157,12 +201,18 @@ const resendVerification = async () => {
   }
 }
 
-// Clear session expired message when component mounts
 onMounted(() => {
   if (route.query.session_expired) {
-    // You can optionally clear the query parameter here
     console.log('Session expired - user needs to login again')
   }
+
+  // Load Google Sign-In script
+  const script = document.createElement('script')
+  script.src = 'https://accounts.google.com/gsi/client'
+  script.async = true
+  script.defer = true
+  script.onload = initializeGoogleSignIn
+  document.head.appendChild(script)
 })
 </script>
 
@@ -204,7 +254,6 @@ onMounted(() => {
   font-size: clamp(0.8rem, 3vw, 0.9rem);
 }
 
-/* Session expired message */
 .session-expired-message {
   background: #fff3cd;
   border: 1px solid #ffeaa7;
@@ -215,6 +264,39 @@ onMounted(() => {
   text-align: center;
   font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   line-height: 1.4;
+}
+
+.google-signin-wrapper {
+  margin-bottom: clamp(16px, 3vw, 20px);
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.divider {
+  margin: clamp(16px, 3vw, 20px) 0;
+  text-align: center;
+  position: relative;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 42%;
+  height: 1px;
+  background: #ecf0f1;
+}
+
+.divider::before { left: 0; }
+.divider::after { right: 0; }
+
+.divider span {
+  background: white;
+  padding: 0 15px;
+  color: #7f8c8d;
+  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
 }
 
 .input-group {
@@ -257,7 +339,7 @@ input:disabled {
 }
 
 .password-input {
-  padding: clamp(10px, 2.5vw, 12px) clamp(40px, 8vw, 45px) clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
+  padding-right: clamp(40px, 8vw, 45px);
 }
 
 .password-toggle {
@@ -415,7 +497,6 @@ input:disabled {
   background-color: #f8f9fa;
 }
 
-/* Mobile-specific optimizations */
 @media (max-width: 480px) {
   .login-container {
     padding: 8px;
@@ -434,7 +515,6 @@ input:disabled {
   }
 }
 
-/* Tablet optimizations */
 @media (min-width: 768px) {
   .login-container {
     padding: 24px;
@@ -445,14 +525,12 @@ input:disabled {
   }
 }
 
-/* Large desktop enhancements */
 @media (min-width: 1200px) {
   .login-card {
     padding: 48px;
   }
 }
 
-/* Reduced motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   input,
   .login-btn,
@@ -469,7 +547,6 @@ input:disabled {
   }
 }
 
-/* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .login-card {
     background: #1a1a1a;
@@ -494,6 +571,16 @@ input:disabled {
   input:focus {
     border-color: #27ae60;
     background: #2d2d2d;
+  }
+
+  .divider::before,
+  .divider::after {
+    background: #444;
+  }
+
+  .divider span {
+    background: #1a1a1a;
+    color: #cccccc;
   }
 
   .forgot-password {
@@ -525,7 +612,6 @@ input:disabled {
   }
 }
 
-/* High contrast mode */
 @media (prefers-contrast: high) {
   .login-card {
     border: 2px solid #000;

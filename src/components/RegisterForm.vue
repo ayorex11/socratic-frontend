@@ -6,6 +6,13 @@
         <p>Create your account</p>
       </div>
 
+      <!-- Google Sign Up Button -->
+      <div id="google-signup-button" class="google-signin-wrapper"></div>
+
+      <div class="divider">
+        <span>OR</span>
+      </div>
+
       <form @submit.prevent="handleSubmit" class="register-form">
         <div class="name-fields">
           <div class="input-group">
@@ -109,10 +116,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
@@ -131,12 +140,69 @@ const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value
 }
 
+// Handle Google Signup Callback
+const handleGoogleCallback = async (response) => {
+  loading.value = true
+  error.value = ''
+  success.value = ''
+
+  try {
+    const result = await authStore.googleAuth(response.credential)
+
+    if (result.success) {
+      success.value = 'Google signup successful!'
+      setTimeout(() => {
+        router.push({ name: 'home' })
+      }, 1500)
+    } else {
+      if (result.error?.detail) {
+        error.value = result.error.detail
+      } else if (result.error?.email) {
+        error.value = `Email: ${result.error.email[0]}`
+      } else if (result.error?.non_field_errors) {
+        error.value = result.error.non_field_errors[0]
+      } else if (result.error?.error) {
+        error.value = result.error.error
+      } else {
+        error.value = 'Google signup failed. Please try again.'
+      }
+    }
+  } catch (err) {
+    console.error('Google signup error:', err)
+    error.value = 'Failed to sign up with Google. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Initialize Google Sign-In
+const initializeGoogleSignIn = () => {
+  if (window.google) {
+    window.google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: handleGoogleCallback,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    })
+
+    window.google.accounts.id.renderButton(
+      document.getElementById('google-signup-button'),
+      {
+        theme: 'outline',
+        size: 'large',
+        width: '100%',
+        text: 'signup_with',
+        shape: 'rectangular',
+      }
+    )
+  }
+}
+
 const handleSubmit = async () => {
   loading.value = true
   error.value = ''
   success.value = ''
 
-  // Basic validation
   if (form.value.password1 !== form.value.password2) {
     error.value = 'Passwords do not match'
     loading.value = false
@@ -162,11 +228,8 @@ const handleSubmit = async () => {
 
     if (response.ok) {
       success.value = 'Registration successful! Please check your email to verify your account.'
-
-      // Store email for verification prompt
       const userEmail = form.value.email
 
-      // Clear form
       form.value = {
         first_name: '',
         last_name: '',
@@ -176,12 +239,10 @@ const handleSubmit = async () => {
         password2: '',
       }
 
-      // Redirect to verification prompt after a short delay
       setTimeout(() => {
         router.push(`/verify-email-prompt?email=${encodeURIComponent(userEmail)}`)
       }, 2000)
     } else {
-      // Handle registration errors
       if (data.username) {
         error.value = `Username: ${data.username[0]}`
       } else if (data.email) {
@@ -201,6 +262,15 @@ const handleSubmit = async () => {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  const script = document.createElement('script')
+  script.src = 'https://accounts.google.com/gsi/client'
+  script.async = true
+  script.defer = true
+  script.onload = initializeGoogleSignIn
+  document.head.appendChild(script)
+})
 </script>
 
 <style scoped>
@@ -239,6 +309,39 @@ const handleSubmit = async () => {
 .logo-section p {
   color: #7f8c8d;
   font-size: clamp(0.8rem, 3vw, 0.9rem);
+}
+
+.google-signin-wrapper {
+  margin-bottom: clamp(16px, 3vw, 20px);
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.divider {
+  margin: clamp(16px, 3vw, 20px) 0;
+  text-align: center;
+  position: relative;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 42%;
+  height: 1px;
+  background: #ecf0f1;
+}
+
+.divider::before { left: 0; }
+.divider::after { right: 0; }
+
+.divider span {
+  background: white;
+  padding: 0 15px;
+  color: #7f8c8d;
+  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
 }
 
 .name-fields {
@@ -389,7 +492,6 @@ input:disabled {
   background-color: #f8f9fa;
 }
 
-/* Mobile-specific optimizations */
 @media (max-width: 480px) {
   .register-container {
     padding: 8px;
@@ -408,7 +510,6 @@ input:disabled {
   }
 }
 
-/* Tablet optimizations */
 @media (min-width: 768px) {
   .register-container {
     padding: 24px;
@@ -424,14 +525,12 @@ input:disabled {
   }
 }
 
-/* Large desktop enhancements */
 @media (min-width: 1200px) {
   .register-card {
     padding: 48px;
   }
 }
 
-/* Reduced motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   input,
   .register-btn,
@@ -445,7 +544,6 @@ input:disabled {
   }
 }
 
-/* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .register-card {
     background: #1a1a1a;
@@ -476,6 +574,16 @@ input:disabled {
     background: #3d3d3d;
   }
 
+  .divider::before,
+  .divider::after {
+    background: #444;
+  }
+
+  .divider span {
+    background: #1a1a1a;
+    color: #cccccc;
+  }
+
   .password-toggle:hover:not(:disabled) {
     background-color: #2d2d2d;
   }
@@ -497,7 +605,6 @@ input:disabled {
   }
 }
 
-/* High contrast mode */
 @media (prefers-contrast: high) {
   .register-card {
     border: 2px solid #000;
