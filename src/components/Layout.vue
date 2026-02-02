@@ -5,6 +5,7 @@
         <!-- Logo -->
         <div class="nav-logo">
           <router-link to="/" class="logo-link">
+            <img src="/logo.png" alt="SocraSeek Logo" class="logo-image" />
             <h2>SocraSeek</h2>
           </router-link>
         </div>
@@ -183,6 +184,15 @@ onUnmounted(() => {
 
 .logo-link {
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2vw, 12px);
+}
+
+.logo-image {
+  height: clamp(32px, 6vw, 40px);
+  width: auto;
+  object-fit: contain;
 }
 
 .logo-link h2 {
