@@ -19,7 +19,7 @@ export default defineConfig({
       open: true,
       proxy: {
         '/api': {
-          target: 'https://socratic-f2kh.onrender.com/', 
+          target: 'https://socratic-production-e023.up.railway.app/',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),
         },

@@ -2,7 +2,7 @@
   <div class="register-container">
     <div class="register-card">
       <div class="logo-section">
-        <h1>Socratic</h1>
+        <h1>SocraSeek</h1>
         <p>Create your account</p>
       </div>
 
@@ -185,16 +185,13 @@ const initializeGoogleSignIn = () => {
       cancel_on_tap_outside: true,
     })
 
-    window.google.accounts.id.renderButton(
-      document.getElementById('google-signup-button'),
-      {
-        theme: 'outline',
-        size: 'large',
-        width: '100%',
-        text: 'signup_with',
-        shape: 'rectangular',
-      }
-    )
+    window.google.accounts.id.renderButton(document.getElementById('google-signup-button'), {
+      theme: 'outline',
+      size: 'large',
+      width: '100%',
+      text: 'signup_with',
+      shape: 'rectangular',
+    })
   }
 }
 
@@ -216,7 +213,7 @@ const handleSubmit = async () => {
   }
 
   try {
-    const response = await fetch('https://socratic-f2kh.onrender.com/registration/', {
+    const response = await fetch('https://socratic-production-e023.up.railway.app/registration/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -264,12 +261,21 @@ const handleSubmit = async () => {
 }
 
 onMounted(() => {
-  const script = document.createElement('script')
-  script.src = 'https://accounts.google.com/gsi/client'
-  script.async = true
-  script.defer = true
-  script.onload = initializeGoogleSignIn
-  document.head.appendChild(script)
+  // Use preloaded Google Sign-In script
+  if (window.google) {
+    initializeGoogleSignIn()
+  } else {
+    // Wait for script to load (already in HTML)
+    const checkGoogle = setInterval(() => {
+      if (window.google) {
+        clearInterval(checkGoogle)
+        initializeGoogleSignIn()
+      }
+    }, 100)
+
+    // Timeout after 5 seconds
+    setTimeout(() => clearInterval(checkGoogle), 5000)
+  }
 })
 </script>
 
@@ -334,8 +340,12 @@ onMounted(() => {
   background: #ecf0f1;
 }
 
-.divider::before { left: 0; }
-.divider::after { right: 0; }
+.divider::before {
+  left: 0;
+}
+.divider::after {
+  right: 0;
+}
 
 .divider span {
   background: white;
@@ -390,7 +400,8 @@ input:disabled {
 }
 
 .password-input {
-  padding: clamp(10px, 2.5vw, 12px) clamp(40px, 8vw, 45px) clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
+  padding: clamp(10px, 2.5vw, 12px) clamp(40px, 8vw, 45px) clamp(10px, 2.5vw, 12px)
+    clamp(12px, 3vw, 16px);
 }
 
 .password-toggle {

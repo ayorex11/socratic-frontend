@@ -458,7 +458,7 @@ const fetchQuizQuestions = async () => {
     }
 
     const response = await fetch(
-      `https://socratic-f2kh.onrender.com/quiz/quizzes/${documentId}/start/`,
+      `https://socratic-production-e023.up.railway.app/quiz/quizzes/${documentId}/start/`,
       {
         method: 'GET',
         headers: {
@@ -626,7 +626,7 @@ const submitAllAnswers = async () => {
 
     // Proper JSON parsing and submission
     const response = await fetch(
-      `https://socratic-f2kh.onrender.com/quiz/quizzes/${documentId}/submit/`,
+      `https://socratic-production-e023.up.railway.app/quiz/quizzes/${documentId}/submit/`,
       {
         method: 'POST',
         headers: {

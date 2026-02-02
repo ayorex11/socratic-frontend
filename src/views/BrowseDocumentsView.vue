@@ -363,13 +363,16 @@ const fetchDocuments = async () => {
       return
     }
 
-    const response = await fetch('https://socratic-f2kh.onrender.com/socratic/get_all_documents/', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      'https://socratic-production-e023.up.railway.app/socratic/get_all_documents/',
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       },
-    })
+    )
 
     if (response.ok) {
       const data = await response.json()
@@ -400,7 +403,7 @@ const downloadPDF = async (documentId) => {
     const token = localStorage.getItem('accessToken')
 
     const response = await fetch(
-      `https://socratic-f2kh.onrender.com/socratic/download_pdf/${documentId}/`,
+      `https://socratic-production-e023.up.railway.app/socratic/download_pdf/${documentId}/`,
       {
         method: 'GET',
         headers: {
@@ -442,7 +445,7 @@ const downloadAudio = async (documentId) => {
     const token = localStorage.getItem('accessToken')
 
     const response = await fetch(
-      `https://socratic-f2kh.onrender.com/socratic/download_audio/${documentId}/`,
+      `https://socratic-production-e023.up.railway.app/socratic/download_audio/${documentId}/`,
       {
         method: 'GET',
         headers: {

@@ -9,7 +9,6 @@
         <router-link to="/dashboard" class="back-button"> ← Back to Dashboard </router-link>
         <router-link to="/browse" class="browse-button"> 🌐 Browse </router-link>
         <router-link to="/upload" class="upload-button"> 📄 Upload New </router-link>
-
       </div>
     </div>
 
@@ -18,7 +17,10 @@
       <span class="status-dot"></span>
       Live updates connected
     </div>
-    <div v-else-if="documents.length > 0 && processingDocumentsCount > 0" class="sse-status disconnected">
+    <div
+      v-else-if="documents.length > 0 && processingDocumentsCount > 0"
+      class="sse-status disconnected"
+    >
       <span class="status-dot"></span>
       Reconnecting...
     </div>
@@ -188,7 +190,7 @@ const activeTab = ref('all')
 const {
   isConnected: sseConnected,
   connectToAllDocuments,
-  disconnect: disconnectSSE
+  disconnect: disconnectSSE,
 } = useProcessingSSE()
 
 // Tabs for filtering
@@ -218,9 +220,8 @@ const avgProcessingTime = computed(() => {
 })
 
 const processingDocumentsCount = computed(() => {
-  return documents.value.filter(
-    (doc) => doc.status === 'PROCESSING' || doc.status === 'PENDING'
-  ).length
+  return documents.value.filter((doc) => doc.status === 'PROCESSING' || doc.status === 'PENDING')
+    .length
 })
 
 const sortedDocuments = computed(() => {
@@ -248,7 +249,7 @@ const filteredDocuments = computed(() => {
     filtered = filtered.filter(
       (doc) =>
         doc.document_title.toLowerCase().includes(query) ||
-        doc.id.toString().toLowerCase().includes(query)
+        doc.id.toString().toLowerCase().includes(query),
     )
   }
 
@@ -300,14 +301,14 @@ const fetchDocuments = async () => {
     }
 
     const response = await fetch(
-      'https://socratic-f2kh.onrender.com/socratic/list_processing_results/',
+      'https://socratic-production-e023.up.railway.app/socratic/list_processing_results/',
       {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      }
+      },
     )
 
     if (response.ok) {
@@ -344,8 +345,8 @@ const setupSSE = () => {
 
       if (data.updates && Array.isArray(data.updates)) {
         // Create NEW array - 100% triggers Vue reactivity
-        documents.value = documents.value.map(doc => {
-          const update = data.updates.find(u => u.id === doc.id)
+        documents.value = documents.value.map((doc) => {
+          const update = data.updates.find((u) => u.id === doc.id)
           if (update) {
             console.log('UPDATING DOC:', doc.id, update) // Keep this
 
@@ -368,7 +369,7 @@ const setupSSE = () => {
       if (err?.error) {
         showToast('Connection issue', 'error')
       }
-    }
+    },
   )
 }
 
@@ -387,14 +388,14 @@ const startPolling = () => {
       if (!token) return
 
       const response = await fetch(
-        'https://socratic-f2kh.onrender.com/socratic/list_processing_results/',
+        'https://socratic-production-e023.up.railway.app/socratic/list_processing_results/',
         {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
 
       if (response.ok) {
@@ -444,7 +445,7 @@ const getTabCount = (tabValue) => {
       return documents.value.filter((doc) => !doc.quiz_generated).length
     case 'processing':
       return documents.value.filter(
-        (doc) => doc.status === 'PROCESSING' || doc.status === 'PENDING'
+        (doc) => doc.status === 'PROCESSING' || doc.status === 'PENDING',
       ).length
     case 'completed':
       return documents.value.filter((doc) => doc.status === 'COMPLETED').length
@@ -473,7 +474,7 @@ const downloadPDF = async (documentId) => {
     if (doc && doc.status !== 'COMPLETED') {
       showToast(
         `Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`,
-        'error'
+        'error',
       )
       return
     }
@@ -487,22 +488,20 @@ const downloadPDF = async (documentId) => {
     }
 
     const response = await fetch(
-      `https://socratic-f2kh.onrender.com/socratic/download_pdf/${documentId}/`,
+      `https://socratic-production-e023.up.railway.app/socratic/download_pdf/${documentId}/`,
       {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     )
 
     if (response.ok) {
       const blob = await response.blob()
       const filename =
-        response.headers
-          .get('Content-Disposition')
-          ?.split('filename=')[1]
-          ?.replace(/"/g, '') || `document_${documentId}.pdf`
+        response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') ||
+        `document_${documentId}.pdf`
 
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -533,7 +532,7 @@ const downloadAudio = async (documentId) => {
     if (doc && doc.status !== 'COMPLETED') {
       showToast(
         `Document is ${doc.status.toLowerCase()}. Please wait for processing to complete.`,
-        'error'
+        'error',
       )
       return
     }
@@ -547,22 +546,20 @@ const downloadAudio = async (documentId) => {
     }
 
     const response = await fetch(
-      `https://socratic-f2kh.onrender.com/socratic/download_audio/${documentId}/`,
+      `https://socratic-production-e023.up.railway.app/socratic/download_audio/${documentId}/`,
       {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     )
 
     if (response.ok) {
       const blob = await response.blob()
       const filename =
-        response.headers
-          .get('Content-Disposition')
-          ?.split('filename=')[1]
-          ?.replace(/"/g, '') || `audio_${documentId}.mp3`
+        response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') ||
+        `audio_${documentId}.mp3`
 
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -616,14 +613,14 @@ const deleteDocument = async (documentId) => {
     }
 
     const response = await fetch(
-      `https://socratic-f2kh.onrender.com/socratic/delete/${documentId}/`,
+      `https://socratic-production-e023.up.railway.app/socratic/delete/${documentId}/`,
       {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      }
+      },
     )
 
     if (response.ok || response.status === 204) {
@@ -803,8 +800,13 @@ onUnmounted(() => {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Quick Stats */
@@ -843,8 +845,12 @@ onUnmounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .stat-icon {
@@ -1120,8 +1126,12 @@ onUnmounted(() => {
 }
 
 @keyframes spin-loader {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-state p {

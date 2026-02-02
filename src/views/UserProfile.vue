@@ -55,9 +55,7 @@
           </button>
 
           <div v-if="showTransactions" class="transactions-container">
-            <div v-if="loadingTransactions" class="loading-message">
-              Loading transactions...
-            </div>
+            <div v-if="loadingTransactions" class="loading-message">Loading transactions...</div>
 
             <div v-else-if="transactionError" class="error-message">
               {{ transactionError }}
@@ -86,7 +84,9 @@
                 <div class="transaction-details">
                   <div class="transaction-detail">
                     <span class="detail-label">Amount:</span>
-                    <span class="detail-value amount">₦{{ transaction.amount_paid.toLocaleString() }}</span>
+                    <span class="detail-value amount"
+                      >₦{{ transaction.amount_paid.toLocaleString() }}</span
+                    >
                   </div>
 
                   <div class="transaction-detail">
@@ -96,12 +96,19 @@
 
                   <div class="transaction-detail">
                     <span class="detail-label">Created:</span>
-                    <span class="detail-value">{{ formatTransactionDate(transaction.date_created) }}</span>
+                    <span class="detail-value">{{
+                      formatTransactionDate(transaction.date_created)
+                    }}</span>
                   </div>
 
-                  <div v-if="transaction.completed && transaction.date_completed" class="transaction-detail">
+                  <div
+                    v-if="transaction.completed && transaction.date_completed"
+                    class="transaction-detail"
+                  >
                     <span class="detail-label">Completed:</span>
-                    <span class="detail-value">{{ formatTransactionDate(transaction.date_completed) }}</span>
+                    <span class="detail-value">{{
+                      formatTransactionDate(transaction.date_completed)
+                    }}</span>
                   </div>
                 </div>
               </div>
@@ -208,7 +215,7 @@ const transactionError = ref('')
 const fetchUserData = async () => {
   try {
     const accessToken = localStorage.getItem('accessToken')
-    const response = await fetch('https://socratic-f2kh.onrender.com/auth/user/', {
+    const response = await fetch('https://socratic-production-e023.up.railway.app/auth/user/', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -252,17 +259,20 @@ const handlePasswordChange = async () => {
 
   try {
     const accessToken = localStorage.getItem('accessToken')
-    const response = await fetch('https://socratic-f2kh.onrender.com/auth/password/change/', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      'https://socratic-production-e023.up.railway.app/auth/password/change/',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          new_password1: passwordForm.value.new_password1,
+          new_password2: passwordForm.value.new_password2,
+        }),
       },
-      body: JSON.stringify({
-        new_password1: passwordForm.value.new_password1,
-        new_password2: passwordForm.value.new_password2,
-      }),
-    })
+    )
 
     const data = await response.json()
 
@@ -319,13 +329,16 @@ const fetchTransactions = async () => {
 
   try {
     const accessToken = localStorage.getItem('accessToken')
-    const response = await fetch('https://socratic-f2kh.onrender.com/payment/transaction_history/', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      'https://socratic-production-e023.up.railway.app/payment/transaction_history/',
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
       },
-    })
+    )
 
     if (response.ok) {
       const data = await response.json()

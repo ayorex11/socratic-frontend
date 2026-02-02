@@ -32,12 +32,12 @@ class CustomEventSource {
       const response = await fetch(this.url, {
         method: 'GET',
         headers: {
-          'Accept': 'text/event-stream',
+          Accept: 'text/event-stream',
           'Cache-Control': 'no-cache',
-          ...(this.options.headers || {})
+          ...(this.options.headers || {}),
         },
         credentials: this.options.withCredentials ? 'include' : 'same-origin',
-        signal: this.abortController.signal
+        signal: this.abortController.signal,
       })
 
       if (!response.ok) {
@@ -108,7 +108,6 @@ class CustomEventSource {
 
       // Stream ended normally - don't reconnect
       this.shouldReconnect = false
-
     } catch (error) {
       if (error.name === 'AbortError') {
         console.log('SSE connection aborted intentionally')
@@ -143,13 +142,13 @@ class CustomEventSource {
 
   removeEventListener(type, callback) {
     if (this.listeners[type]) {
-      this.listeners[type] = this.listeners[type].filter(cb => cb !== callback)
+      this.listeners[type] = this.listeners[type].filter((cb) => cb !== callback)
     }
   }
 
   dispatchEvent(type, event) {
     if (this.listeners[type]) {
-      this.listeners[type].forEach(callback => callback(event))
+      this.listeners[type].forEach((callback) => callback(event))
     }
   }
 
@@ -175,14 +174,14 @@ export function useProcessingSSE() {
   const connectToDocument = (documentId, token, onUpdate, onComplete, onError) => {
     disconnect()
 
-    const url = `https://socratic-f2kh.onrender.com/socratic/processing-status-stream/${documentId}/`
+    const url = `https://socratic-production-e023.up.railway.app/socratic/processing-status-stream/${documentId}/`
 
     try {
       eventSource.value = new CustomEventSource(url, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        withCredentials: true
+        withCredentials: true,
       })
 
       eventSource.value.onopen = () => {
@@ -242,9 +241,7 @@ export function useProcessingSSE() {
         if (onError) onError({ error: 'Connection timeout' })
       })
 
-
       eventSource.value.onerror = (err) => {
-       
         if (eventSource.value.hasError) {
           console.error('SSE connection error:', err)
           error.value = 'Connection error'
@@ -254,7 +251,6 @@ export function useProcessingSSE() {
           if (onError) onError(err)
         }
       }
-
     } catch (err) {
       console.error('Failed to create EventSource:', err)
       error.value = err.message
@@ -268,14 +264,14 @@ export function useProcessingSSE() {
   const connectToAllDocuments = (token, onUpdate, onComplete, onError) => {
     disconnect()
 
-    const url = `https://socratic-f2kh.onrender.com/socratic/all-processing-status-stream/`
+    const url = `https://socratic-production-e023.up.railway.app/socratic/all-processing-status-stream/`
 
     try {
       eventSource.value = new CustomEventSource(url, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        withCredentials: true
+        withCredentials: true,
       })
 
       eventSource.value.onopen = () => {
@@ -335,7 +331,6 @@ export function useProcessingSSE() {
         if (onError) onError({ error: 'Connection timeout' })
       })
 
-
       eventSource.value.onerror = (err) => {
         if (eventSource.value.hasError) {
           console.error('SSE connection error:', err)
@@ -346,7 +341,6 @@ export function useProcessingSSE() {
           if (onError) onError(err)
         }
       }
-
     } catch (err) {
       console.error('Failed to create EventSource:', err)
       error.value = err.message
@@ -377,6 +371,6 @@ export function useProcessingSSE() {
     reconnectAttempts,
     connectToDocument,
     connectToAllDocuments,
-    disconnect
+    disconnect,
   }
 }

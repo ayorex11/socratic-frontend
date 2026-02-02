@@ -3,7 +3,7 @@
     <div class="login-card">
       <!-- Logo/Header -->
       <div class="logo-section">
-        <h1>Socratic</h1>
+        <h1>SocraSeek</h1>
         <p>Welcome back</p>
       </div>
 
@@ -29,7 +29,7 @@
             placeholder="Enter your username"
             required
             :disabled="loading"
-          >
+          />
         </div>
 
         <div class="input-group">
@@ -42,7 +42,7 @@
               required
               class="password-input"
               :disabled="loading"
-            >
+            />
             <button
               type="button"
               @click="togglePasswordVisibility"
@@ -99,13 +99,15 @@ const showPassword = ref(false)
 
 const form = ref({
   username: '',
-  password: ''
+  password: '',
 })
 
 const showResendVerification = computed(() => {
-  return error.value.toLowerCase().includes('verify') ||
-         error.value.toLowerCase().includes('verification') ||
-         error.value.toLowerCase().includes('confirmed')
+  return (
+    error.value.toLowerCase().includes('verify') ||
+    error.value.toLowerCase().includes('verification') ||
+    error.value.toLowerCase().includes('confirmed')
+  )
 })
 
 const togglePasswordVisibility = () => {
@@ -124,7 +126,8 @@ const handleGoogleCallback = async (response) => {
       console.log('Google login successful!')
       router.push({ name: 'home' })
     } else {
-      error.value = result.error?.detail || result.error?.error || 'Google login failed. Please try again.'
+      error.value =
+        result.error?.detail || result.error?.error || 'Google login failed. Please try again.'
     }
   } catch (err) {
     console.error('Google login error:', err)
@@ -144,16 +147,13 @@ const initializeGoogleSignIn = () => {
       cancel_on_tap_outside: true,
     })
 
-    window.google.accounts.id.renderButton(
-      document.getElementById('google-signin-button'),
-      {
-        theme: 'outline',
-        size: 'large',
-        width: '100%',
-        text: 'continue_with',
-        shape: 'rectangular',
-      }
-    )
+    window.google.accounts.id.renderButton(document.getElementById('google-signin-button'), {
+      theme: 'outline',
+      size: 'large',
+      width: '100%',
+      text: 'continue_with',
+      shape: 'rectangular',
+    })
   }
 }
 
@@ -167,13 +167,18 @@ const handleSubmit = async () => {
   if (result.success) {
     console.log('Login successful!', authStore.user)
   } else {
-    if (result.error?.detail?.toLowerCase().includes('verified') ||
-        result.error?.non_field_errors?.some(msg => msg.toLowerCase().includes('verified')) ||
-        result.error?.detail?.toLowerCase().includes('confirm') ||
-        result.error?.non_field_errors?.some(msg => msg.toLowerCase().includes('confirm'))) {
-      error.value = 'Please verify your email address before logging in. Check your email for the verification link.'
-    } else if (result.error?.detail?.toLowerCase().includes('invalid') ||
-               result.error?.non_field_errors?.some(msg => msg.toLowerCase().includes('invalid'))) {
+    if (
+      result.error?.detail?.toLowerCase().includes('verified') ||
+      result.error?.non_field_errors?.some((msg) => msg.toLowerCase().includes('verified')) ||
+      result.error?.detail?.toLowerCase().includes('confirm') ||
+      result.error?.non_field_errors?.some((msg) => msg.toLowerCase().includes('confirm'))
+    ) {
+      error.value =
+        'Please verify your email address before logging in. Check your email for the verification link.'
+    } else if (
+      result.error?.detail?.toLowerCase().includes('invalid') ||
+      result.error?.non_field_errors?.some((msg) => msg.toLowerCase().includes('invalid'))
+    ) {
       error.value = 'Invalid username or password. Please try again.'
     } else if (result.error?.detail) {
       error.value = result.error.detail
@@ -206,13 +211,21 @@ onMounted(() => {
     console.log('Session expired - user needs to login again')
   }
 
-  // Load Google Sign-In script
-  const script = document.createElement('script')
-  script.src = 'https://accounts.google.com/gsi/client'
-  script.async = true
-  script.defer = true
-  script.onload = initializeGoogleSignIn
-  document.head.appendChild(script)
+  // Use preloaded Google Sign-In script
+  if (window.google) {
+    initializeGoogleSignIn()
+  } else {
+    // Wait for script to load (already in HTML)
+    const checkGoogle = setInterval(() => {
+      if (window.google) {
+        clearInterval(checkGoogle)
+        initializeGoogleSignIn()
+      }
+    }, 100)
+
+    // Timeout after 5 seconds
+    setTimeout(() => clearInterval(checkGoogle), 5000)
+  }
 })
 </script>
 
@@ -289,8 +302,12 @@ onMounted(() => {
   background: #ecf0f1;
 }
 
-.divider::before { left: 0; }
-.divider::after { right: 0; }
+.divider::before {
+  left: 0;
+}
+.divider::after {
+  right: 0;
+}
 
 .divider span {
   background: white;

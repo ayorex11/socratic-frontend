@@ -5,7 +5,7 @@
         <!-- Logo -->
         <div class="nav-logo">
           <router-link to="/" class="logo-link">
-            <h2>Socratic</h2>
+            <h2>SocraSeek</h2>
           </router-link>
         </div>
 
@@ -23,11 +23,7 @@
 
         <!-- Navigation Links -->
         <div class="nav-links" :class="{ 'mobile-open': isMobileMenuOpen }">
-          <router-link
-            to="/pricing"
-            class="nav-link"
-            @click="closeMobileMenu"
-          >
+          <router-link to="/pricing" class="nav-link" @click="closeMobileMenu">
             Pricing
           </router-link>
           <router-link
@@ -55,11 +51,7 @@
             Get Started
           </router-link>
           <div class="user-menu" v-else>
-            <router-link
-              to="/profile"
-              class="username-link"
-              @click="closeMobileMenu"
-            >
+            <router-link to="/profile" class="username-link" @click="closeMobileMenu">
               Welcome, {{ authStore.user?.username || authStore.user?.first_name || 'User' }}
             </router-link>
             <button @click="handleLogout" class="logout-btn">Logout</button>
@@ -67,16 +59,15 @@
         </div>
 
         <!-- Mobile Menu Overlay -->
-        <div
-          v-if="isMobileMenuOpen"
-          class="mobile-overlay"
-          @click="closeMobileMenu"
-        ></div>
+        <div v-if="isMobileMenuOpen" class="mobile-overlay" @click="closeMobileMenu"></div>
       </div>
     </nav>
 
     <!-- Welcome Animation -->
     <WelcomeAnimation v-if="showWelcome" @close="showWelcome = false" />
+
+    <!-- Toast Notifications -->
+    <ToastContainer />
 
     <!-- Main Content -->
     <main class="main-content">
@@ -90,6 +81,7 @@ import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import WelcomeAnimation from './WelcomeAnimation.vue'
+import ToastContainer from './ToastContainer.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -97,15 +89,21 @@ const showWelcome = ref(false)
 const isMobileMenuOpen = ref(false)
 
 // Watch for authentication changes to show welcome animation
-watch(() => authStore.isAuthenticated, (newVal, oldVal) => {
-  if (newVal && !oldVal) {
-    showWelcome.value = true
-    // Redirect to dashboard after login (for both login and registration)
-    if (router.currentRoute.value.path === '/login' || router.currentRoute.value.path === '/register') {
-      router.push('/dashboard')
+watch(
+  () => authStore.isAuthenticated,
+  (newVal, oldVal) => {
+    if (newVal && !oldVal) {
+      showWelcome.value = true
+      // Redirect to dashboard after login (for both login and registration)
+      if (
+        router.currentRoute.value.path === '/login' ||
+        router.currentRoute.value.path === '/register'
+      ) {
+        router.push('/dashboard')
+      }
     }
-  }
-})
+  },
+)
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
@@ -124,7 +122,11 @@ const handleLogout = () => {
 
 // Close mobile menu when clicking outside or on escape key
 const handleClickOutside = (event) => {
-  if (isMobileMenuOpen.value && !event.target.closest('.nav-links') && !event.target.closest('.mobile-menu-btn')) {
+  if (
+    isMobileMenuOpen.value &&
+    !event.target.closest('.nav-links') &&
+    !event.target.closest('.mobile-menu-btn')
+  ) {
     closeMobileMenu()
   }
 }
@@ -210,15 +212,15 @@ onUnmounted(() => {
   transform-origin: center;
 }
 
-.mobile-menu-btn[aria-expanded="true"] .hamburger-line:nth-child(1) {
+.mobile-menu-btn[aria-expanded='true'] .hamburger-line:nth-child(1) {
   transform: rotate(45deg) translate(6px, 6px);
 }
 
-.mobile-menu-btn[aria-expanded="true"] .hamburger-line:nth-child(2) {
+.mobile-menu-btn[aria-expanded='true'] .hamburger-line:nth-child(2) {
   opacity: 0;
 }
 
-.mobile-menu-btn[aria-expanded="true"] .hamburger-line:nth-child(3) {
+.mobile-menu-btn[aria-expanded='true'] .hamburger-line:nth-child(3) {
   transform: rotate(-45deg) translate(6px, -6px);
 }
 

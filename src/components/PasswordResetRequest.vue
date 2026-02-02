@@ -2,7 +2,7 @@
   <div class="password-reset-container">
     <div class="password-reset-card">
       <div class="logo-section">
-        <h1>Socratic</h1>
+        <h1>SocraSeek</h1>
         <p>Reset your password</p>
       </div>
 
@@ -62,7 +62,7 @@ const handleResetRequest = async () => {
 
   try {
     const response = await fetch(
-      'https://socratic-f2kh.onrender.com/resetpassword/password/reset/',
+      'https://socratic-production-e023.up.railway.app/resetpassword/password/reset/',
       {
         method: 'POST',
         headers: {

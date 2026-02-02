@@ -2,7 +2,7 @@
   <div class="verification-container">
     <div class="verification-card">
       <div class="logo-section">
-        <h1>Socratic</h1>
+        <h1>SocraSeek</h1>
         <p>Verify your email</p>
       </div>
 
@@ -16,7 +16,7 @@
           <div class="icon">✅</div>
           <h2>Email Verified Successfully!</h2>
           <p>Your email has been successfully verified.</p>
-          <p>You can now login to your account and start using Socratic.</p>
+          <p>You can now login to your account and start using SocraSeek.</p>
           <router-link to="/login" class="login-btn">Go to Login</router-link>
         </div>
 
@@ -58,15 +58,18 @@ onMounted(async () => {
   try {
     console.log('Verifying email with key:', key)
 
-    const response = await fetch('https://socratic-f2kh.onrender.com/registration/verify-email/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      'https://socratic-production-e023.up.railway.app/registration/verify-email/',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key: key,
+        }),
       },
-      body: JSON.stringify({
-        key: key,
-      }),
-    })
+    )
 
     console.log('Verification response status:', response.status)
 
@@ -346,7 +349,8 @@ onMounted(async () => {
     color: #cccccc;
   }
 
-  input, .password-input {
+  input,
+  .password-input {
     background: #2d2d2d;
     border-color: #444;
     color: #ffffff;

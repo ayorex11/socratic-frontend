@@ -4,8 +4,9 @@
       <!-- Location Indicator -->
       <div class="location-indicator" v-if="!locationStore.isLoading">
         <span class="location-badge">
-          🌍 Detected: {{ locationStore.isNigeria ? 'Nigeria' : 'International' }}
-          ({{ locationStore.isNigeria ? '₦' : '$' }})
+          🌍 Detected: {{ locationStore.isNigeria ? 'Nigeria' : 'International' }} ({{
+            locationStore.isNigeria ? '₦' : '$'
+          }})
         </span>
         <button @click="toggleLocation" class="location-toggle">
           Switch to {{ locationStore.isNigeria ? 'International' : 'Nigeria' }}
@@ -28,9 +29,7 @@
           <div class="plan-badge">Free</div>
           <div class="plan-header">
             <h3>Starter</h3>
-            <div class="price">
-              {{ locationStore.isNigeria ? '₦0' : '$0' }}<span>/month</span>
-            </div>
+            <div class="price">{{ locationStore.isNigeria ? '₦0' : '$0' }}<span>/month</span></div>
           </div>
           <ul class="features-list">
             <li>✓ Audio Generation</li>
@@ -54,6 +53,46 @@
           </router-link>
         </div>
 
+        <!-- Student Plan -->
+        <div class="pricing-card student-card">
+          <div class="plan-badge student-badge">Student Discount</div>
+          <div class="plan-header">
+            <h3>Student</h3>
+            <div class="price">
+              {{ locationStore.isNigeria ? '₦3,000' : '$4' }}<span>/month</span>
+            </div>
+            <div v-if="!locationStore.isNigeria" class="coming-soon-badge">Coming Soon</div>
+            <div v-else class="student-requirement">📚 Requires student email</div>
+          </div>
+          <ul class="features-list">
+            <li>✓ Audio Generation</li>
+            <li>✓ Summary Generation</li>
+            <li>✓ <strong>20+ questions</strong> per summary & quiz</li>
+            <li>✓ <strong>Unlimited generations</strong> at a time</li>
+            <li>✓ No need to delete - generate freely</li>
+            <li>✓ Priority support</li>
+            <li>✓ Export capabilities</li>
+            <li>✓ Community support</li>
+          </ul>
+          <button
+            v-if="isLoggedIn && locationStore.isNigeria"
+            @click="handleStudentPlan"
+            class="plan-button student"
+            :disabled="isProcessing"
+          >
+            <span v-if="isProcessing">Processing...</span>
+            <span v-else>Get Student Plan</span>
+          </button>
+          <router-link
+            v-else-if="!isLoggedIn && locationStore.isNigeria"
+            to="/register?plan=student-ng"
+            class="plan-button student"
+          >
+            Get Student Plan
+          </router-link>
+          <button v-else class="plan-button student disabled" disabled>Coming Soon</button>
+        </div>
+
         <!-- Premium Plan -->
         <div class="pricing-card featured">
           <div class="plan-badge featured-badge">Most Popular</div>
@@ -62,9 +101,7 @@
             <div class="price">
               {{ locationStore.isNigeria ? '₦7,500' : '$9' }}<span>/month</span>
             </div>
-            <div v-if="!locationStore.isNigeria" class="coming-soon-badge">
-              Coming Soon
-            </div>
+            <div v-if="!locationStore.isNigeria" class="coming-soon-badge">Coming Soon</div>
           </div>
           <ul class="features-list">
             <li>✓ Audio Generation</li>
@@ -92,13 +129,7 @@
           >
             Get Premium
           </router-link>
-          <button
-            v-else
-            class="plan-button primary disabled"
-            disabled
-          >
-            Coming Soon
-          </button>
+          <button v-else class="plan-button primary disabled" disabled>Coming Soon</button>
         </div>
       </div>
 
@@ -135,6 +166,38 @@
             <div class="comparison-item">
               <span class="feature-label">Export Capabilities</span>
               <span class="feature-value">-</span>
+            </div>
+          </div>
+
+          <div class="comparison-card student-comparison-card">
+            <div class="comparison-card-header">Student Plan</div>
+            <div class="comparison-item">
+              <span class="feature-label">Audio Generation</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Summary Generation</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Questions per Summary</span>
+              <span class="feature-value">20+</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Simultaneous Generations</span>
+              <span class="feature-value">Unlimited</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Delete to Generate New</span>
+              <span class="feature-value">Not Required</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Priority Support</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Export Capabilities</span>
+              <span class="feature-value">✓</span>
             </div>
           </div>
 
@@ -176,11 +239,13 @@
           <div class="comparison-header">
             <div class="feature-name">Feature</div>
             <div class="plan-type">Starter</div>
+            <div class="plan-type">Student</div>
             <div class="plan-type">Premium</div>
           </div>
 
           <div class="comparison-row">
             <div class="feature-name">Audio Generation</div>
+            <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
           </div>
@@ -189,11 +254,13 @@
             <div class="feature-name">Summary Generation</div>
             <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
+            <div class="plan-feature">✓</div>
           </div>
 
           <div class="comparison-row">
             <div class="feature-name">Questions per Summary</div>
             <div class="plan-feature">5</div>
+            <div class="plan-feature">20+</div>
             <div class="plan-feature">20+</div>
           </div>
 
@@ -201,11 +268,13 @@
             <div class="feature-name">Simultaneous Generations</div>
             <div class="plan-feature">3</div>
             <div class="plan-feature">Unlimited</div>
+            <div class="plan-feature">Unlimited</div>
           </div>
 
           <div class="comparison-row">
             <div class="feature-name">Delete to Generate New</div>
             <div class="plan-feature">Required</div>
+            <div class="plan-feature">Not Required</div>
             <div class="plan-feature">Not Required</div>
           </div>
 
@@ -213,11 +282,13 @@
             <div class="feature-name">Priority Support</div>
             <div class="plan-feature">-</div>
             <div class="plan-feature">✓</div>
+            <div class="plan-feature">✓</div>
           </div>
 
           <div class="comparison-row">
             <div class="feature-name">Export Capabilities</div>
             <div class="plan-feature">-</div>
+            <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
           </div>
         </div>
@@ -240,143 +311,267 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { useLocationStore } from '@/stores/locationStore';
-import { useAuthStore } from '@/stores/auth';
+import { onMounted, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useLocationStore } from '@/stores/locationStore'
+import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 
-const locationStore = useLocationStore();
-const authStore = useAuthStore();
-const router = useRouter();
+const locationStore = useLocationStore()
+const authStore = useAuthStore()
+const router = useRouter()
+const { showToast } = useToast()
 
-const isProcessing = ref(false);
+const isProcessing = ref(false)
 
 // Check if user is logged in
 const isLoggedIn = computed(() => {
-  return authStore.isAuthenticated;
-});
+  return authStore.isAuthenticated
+})
 
 // Get user email safely
 const getUserEmail = () => {
   if (!authStore.user) {
-    console.error('No user found in auth store');
-    return null;
+    console.error('No user found in auth store')
+    return null
   }
 
-  console.log('Full user object:', authStore.user);
+  console.log('Full user object:', authStore.user)
 
   // Try different possible email fields
-  const email = authStore.user.email || authStore.user.user_email || authStore.user.user_email;
+  const email = authStore.user.email || authStore.user.user_email || authStore.user.user_email
 
   if (!email) {
-    console.error('No email found in user object. Available keys:', Object.keys(authStore.user));
+    console.error('No email found in user object. Available keys:', Object.keys(authStore.user))
   } else {
-    console.log('Found email:', email);
+    console.log('Found email:', email)
   }
 
-  return email;
-};
+  return email
+}
 
 // Toggle location for testing
 const toggleLocation = () => {
-  locationStore.setManualLocation(locationStore.isNigeria ? 'US' : 'NG');
-};
+  locationStore.setManualLocation(locationStore.isNigeria ? 'US' : 'NG')
+}
+
+// Check if email is a student/educational email
+const isStudentEmail = (email) => {
+  if (!email || !email.includes('@')) {
+    return false
+  }
+
+  const emailLower = email.toLowerCase()
+  const domain = emailLower.split('@')[1]
+
+  // Keywords that indicate educational institutions
+  const studentKeywords = ['university', 'college', 'school', 'edu', 'ac', 'student']
+
+  // Check if domain contains any student keywords
+  return studentKeywords.some((keyword) => domain.includes(keyword))
+}
 
 // Handle free plan selection for logged-in users
 const handleFreePlan = async () => {
   if (!isLoggedIn.value) {
-    router.push('/register');
-    return;
+    router.push('/register')
+    return
   }
 
-  isProcessing.value = true;
+  isProcessing.value = true
 
   try {
-    router.push('/dashboard');
+    router.push('/dashboard')
   } catch (error) {
-    console.error('Error handling free plan:', error);
+    console.error('Error handling free plan:', error)
   } finally {
-    isProcessing.value = false;
+    isProcessing.value = false
   }
-};
+}
+
+// Handle student plan selection for logged-in users
+const handleStudentPlan = async () => {
+  if (!isLoggedIn.value) {
+    router.push('/register?plan=student-ng')
+    return
+  }
+
+  if (!locationStore.isNigeria) {
+    return
+  }
+
+  isProcessing.value = true
+
+  try {
+    // Get user email safely
+    const userEmail = getUserEmail()
+
+    if (!userEmail) {
+      showToast(
+        'Unable to retrieve your email. Please ensure your account has a valid email address.',
+        'error',
+      )
+      isProcessing.value = false
+      return
+    }
+
+    // Validate student email
+    if (!isStudentEmail(userEmail)) {
+      showToast(
+        'Student plan requires a student or educational email address. Your email must contain one of: university, college, school, edu, ac, or student.',
+        'warning',
+        6000,
+      )
+      isProcessing.value = false
+      return
+    }
+
+    console.log('Initiating student plan payment for email:', userEmail)
+
+    // Get the access token for authorization
+    const accessToken = localStorage.getItem('accessToken')
+    if (!accessToken) {
+      throw new Error('No authentication token found')
+    }
+
+    // Call your payment endpoint with authorization
+    const response = await fetch(
+      'https://socratic-production-e023.up.railway.app/payment/initialize_deposit/',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          amount: 3000, // ₦3,000 for Student plan
+          email: userEmail,
+        }),
+      },
+    )
+
+    console.log('Payment response status:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Payment error response:', errorText)
+      throw new Error(`Payment initialization failed: ${response.status} - ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('Payment response data:', data)
+
+    // Handle multiple possible response structures from Paystack
+    const authUrl =
+      data.data?.data?.authorization_url || data.data?.authorization_url || data.authorization_url
+
+    if (authUrl) {
+      // Redirect to Paystack payment page
+      window.location.href = authUrl
+    } else {
+      console.error('Invalid payment response structure:', data)
+      showToast(
+        'Payment server did not return authorization URL. Please contact support if this persists.',
+        'error',
+        6000,
+      )
+    }
+  } catch (error) {
+    console.error('Payment error:', error)
+    showToast(`Payment initialization failed: ${error.message}. Please try again.`, 'error')
+  } finally {
+    isProcessing.value = false
+  }
+}
 
 // Handle premium plan selection for logged-in users
 const handlePremiumPlan = async () => {
   if (!isLoggedIn.value) {
-    router.push('/register?plan=premium-ng');
-    return;
+    router.push('/register?plan=premium-ng')
+    return
   }
 
   if (!locationStore.isNigeria) {
-    return;
+    return
   }
 
-  isProcessing.value = true;
+  isProcessing.value = true
 
   try {
     // Get user email safely
-    const userEmail = getUserEmail();
+    const userEmail = getUserEmail()
 
     if (!userEmail) {
-      alert('Unable to retrieve your email. Please ensure your account has a valid email address.');
-      return;
+      alert('Unable to retrieve your email. Please ensure your account has a valid email address.')
+      return
     }
 
-    console.log('Initiating payment for email:', userEmail);
+    console.log('Initiating payment for email:', userEmail)
 
     // Get the access token for authorization
-    const accessToken = localStorage.getItem('accessToken');
+    const accessToken = localStorage.getItem('accessToken')
     if (!accessToken) {
-      throw new Error('No authentication token found');
+      throw new Error('No authentication token found')
     }
 
     // Call your payment endpoint with authorization
-    const response = await fetch('https://socratic-f2kh.onrender.com/payment/initialize_deposit/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
+    const response = await fetch(
+      'https://socratic-production-e023.up.railway.app/payment/initialize_deposit/',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          amount: 7500, // ₦7,500 for Nigeria
+          email: userEmail,
+        }),
       },
-      body: JSON.stringify({
-        amount: 7500, // ₦7,500 for Nigeria
-        email: userEmail
-      })
-    });
+    )
 
-    console.log('Payment response status:', response.status);
+    console.log('Payment response status:', response.status)
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Payment error response:', errorText);
-      throw new Error(`Payment initialization failed: ${response.status} - ${errorText}`);
+      const errorText = await response.text()
+      console.error('Payment error response:', errorText)
+      throw new Error(`Payment initialization failed: ${response.status} - ${errorText}`)
     }
 
-    const data = await response.json();
-    console.log('Payment response data:', data);
+    const data = await response.json()
+    console.log('Payment response data:', data)
 
-    if (data.data?.status && data.data.data?.authorization_url) {
+    // Handle multiple possible response structures from Paystack
+    const authUrl =
+      data.data?.data?.authorization_url || data.data?.authorization_url || data.authorization_url
+
+    if (authUrl) {
       // Redirect to Paystack payment page
-      window.location.href = data.data.data.authorization_url;
+      window.location.href = authUrl
     } else {
-      console.error('Invalid payment response structure:', data);
-      throw new Error('Invalid response from payment server');
+      console.error('Invalid payment response structure:', data)
+      showToast(
+        'Payment server did not return authorization URL. Please contact support if this persists.',
+        'error',
+        6000,
+      )
     }
   } catch (error) {
-    console.error('Payment error:', error);
-    alert(`Payment initialization failed: ${error.message}. Please try again.`);
+    console.error('Payment error:', error)
+    showToast(`Payment initialization failed: ${error.message}. Please try again.`, 'error')
   } finally {
-    isProcessing.value = false;
+    isProcessing.value = false
   }
-};
+}
 
 onMounted(() => {
-  locationStore.detectUserLocation();
+  locationStore.detectUserLocation()
   // Debug: log auth state
   console.log('Auth state on mount:', {
     isAuthenticated: authStore.isAuthenticated,
-    user: authStore.user
-  });
-});
+    user: authStore.user,
+  })
+})
 </script>
 
 <style scoped>
@@ -459,8 +654,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-state p {
@@ -540,6 +739,10 @@ onMounted(() => {
   background: #e67e22;
 }
 
+.plan-badge.student-badge {
+  background: #3498db;
+}
+
 .plan-header {
   margin-bottom: clamp(20px, 4vw, 30px);
   margin-top: 10px;
@@ -574,6 +777,18 @@ onMounted(() => {
   font-size: clamp(0.75rem, 2vw, 0.85rem);
   margin-top: 8px;
   font-weight: 500;
+}
+
+.student-requirement {
+  display: inline-block;
+  background: #e8f4f8;
+  color: #2980b9;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: clamp(0.75rem, 2vw, 0.85rem);
+  margin-top: 8px;
+  font-weight: 500;
+  border: 1px solid #3498db;
 }
 
 .features-list {
@@ -648,6 +863,27 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
+.plan-button.student {
+  background: #3498db;
+  color: white;
+}
+
+.plan-button.student:hover:not(.disabled):not(:disabled) {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+}
+
+.plan-button.student.disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.pricing-card.student-card {
+  border: 2px solid #3498db;
+}
+
 /* Feature Comparison Table */
 .feature-comparison {
   margin-top: clamp(50px, 8vw, 80px);
@@ -681,6 +917,10 @@ onMounted(() => {
   border: 2px solid #27ae60;
 }
 
+.comparison-card.student-comparison-card {
+  border: 2px solid #3498db;
+}
+
 .comparison-card-header {
   background: #34495e;
   color: white;
@@ -691,6 +931,10 @@ onMounted(() => {
 
 .comparison-card.featured-card .comparison-card-header {
   background: #27ae60;
+}
+
+.comparison-card.student-comparison-card .comparison-card-header {
+  background: #3498db;
 }
 
 .comparison-item {
@@ -735,7 +979,7 @@ onMounted(() => {
 
 .comparison-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   background: #34495e;
   color: white;
   font-weight: 600;
@@ -745,7 +989,7 @@ onMounted(() => {
 
 .comparison-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   padding: clamp(12px, 2.5vw, 15px) clamp(16px, 3vw, 20px);
   border-bottom: 1px solid #ecf0f1;
   align-items: center;
@@ -766,7 +1010,8 @@ onMounted(() => {
   color: #2c3e50;
 }
 
-.plan-type, .plan-feature {
+.plan-type,
+.plan-feature {
   text-align: center;
   color: #5a6c7d;
 }
@@ -819,7 +1064,7 @@ onMounted(() => {
   }
 
   .pricing-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

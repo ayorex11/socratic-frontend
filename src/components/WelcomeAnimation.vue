@@ -8,7 +8,7 @@
 
       <!-- Welcome Message -->
       <div class="welcome-message">
-        <h1>Welcome to Socratic</h1>
+        <h1>Welcome to SocraSeek</h1>
         <p>The unexamined life is not worth living</p>
         <button @click="close" class="continue-btn">Continue Learning</button>
       </div>
@@ -133,7 +133,8 @@ setTimeout(() => {
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -146,7 +147,9 @@ setTimeout(() => {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   }
   to {
-    text-shadow: 2px 2px 20px rgba(255, 255, 255, 0.5), 2px 2px 30px rgba(255, 255, 255, 0.3);
+    text-shadow:
+      2px 2px 20px rgba(255, 255, 255, 0.5),
+      2px 2px 30px rgba(255, 255, 255, 0.3);
   }
 }
 

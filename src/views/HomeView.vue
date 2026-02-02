@@ -6,41 +6,41 @@
         <h1 class="hero-title">Transform PDFs into Learning Resources</h1>
         <p class="hero-subtitle">
           Upload your PDFs, get AI-powered summaries, audio explanations, and interactive quizzes.
-          Socratic turns any document into an engaging learning experience.
+          SocraSeek turns any document into an engaging learning experience.
         </p>
         <div class="hero-actions">
-          <router-link to="/register" class="cta-button primary">
-            Start Summarizing
-          </router-link>
-          <router-link to="/pricing" class="cta-button secondary">
-            View Pricing
-          </router-link>
+          <router-link to="/register" class="cta-button primary"> Start Summarizing </router-link>
+          <router-link to="/pricing" class="cta-button secondary"> View Pricing </router-link>
         </div>
       </div>
       <div class="hero-image">
-        <div class="placeholder-image">
-          📚
-        </div>
+        <div class="placeholder-image">📚</div>
       </div>
     </section>
 
     <!-- Workflow Section -->
     <section class="workflow">
       <div class="container">
-        <h2 class="section-title">How Socratic Works</h2>
+        <h2 class="section-title">How SocraSeek Works</h2>
         <div class="workflow-steps">
           <div class="step">
             <div class="step-number">1</div>
             <div class="step-content">
               <h3>Upload Your PDF</h3>
-              <p>Upload any PDF document along with optional past questions to guide the summarization process.</p>
+              <p>
+                Upload any PDF document along with optional past questions to guide the
+                summarization process.
+              </p>
             </div>
           </div>
           <div class="step">
             <div class="step-number">2</div>
             <div class="step-content">
               <h3>AI Analysis & Summary</h3>
-              <p>Our AI analyzes your document and generates comprehensive summaries with key insights.</p>
+              <p>
+                Our AI analyzes your document and generates comprehensive summaries with key
+                insights.
+              </p>
             </div>
           </div>
           <div class="step">
@@ -69,27 +69,40 @@
           <div class="feature-card">
             <div class="feature-icon">📄</div>
             <h3>PDF Summarization</h3>
-            <p>Transform lengthy documents into concise, easy-to-understand summaries with key points highlighted.</p>
+            <p>
+              Transform lengthy documents into concise, easy-to-understand summaries with key points
+              highlighted.
+            </p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">🎵</div>
             <h3>Audio Summaries</h3>
-            <p>Listen to summaries on the go with our text-to-speech audio versions of your documents.</p>
+            <p>
+              Listen to summaries on the go with our text-to-speech audio versions of your
+              documents.
+            </p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">🧩</div>
             <h3>Smart Q&A</h3>
-            <p>Get question and answer pairs generated from your content to test your understanding.</p>
+            <p>
+              Get question and answer pairs generated from your content to test your understanding.
+            </p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">📊</div>
             <h3>Interactive Quizzes</h3>
-            <p>Reinforce learning with automatically generated quizzes based on your summarized content.</p>
+            <p>
+              Reinforce learning with automatically generated quizzes based on your summarized
+              content.
+            </p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">🎯</div>
             <h3>Past Question Integration</h3>
-            <p>Upload past exam questions to guide the AI in focusing on the most relevant content.</p>
+            <p>
+              Upload past exam questions to guide the AI in focusing on the most relevant content.
+            </p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">📥</div>
@@ -107,15 +120,24 @@
         <div class="use-cases-grid">
           <div class="use-case">
             <h3>🎓 Students</h3>
-            <p>Summarize textbooks, research papers, and lecture notes. Prepare for exams with generated quizzes.</p>
+            <p>
+              Summarize textbooks, research papers, and lecture notes. Prepare for exams with
+              generated quizzes.
+            </p>
           </div>
           <div class="use-case">
             <h3>💼 Professionals</h3>
-            <p>Quickly digest reports, whitepapers, and documentation. Stay informed without spending hours reading.</p>
+            <p>
+              Quickly digest reports, whitepapers, and documentation. Stay informed without spending
+              hours reading.
+            </p>
           </div>
           <div class="use-case">
             <h3>📚 Researchers</h3>
-            <p>Process multiple research papers efficiently. Extract key findings and generate study aids.</p>
+            <p>
+              Process multiple research papers efficiently. Extract key findings and generate study
+              aids.
+            </p>
           </div>
         </div>
       </div>
@@ -125,7 +147,7 @@
     <section class="cta-section">
       <div class="container">
         <h2>Ready to Transform Your Reading?</h2>
-        <p>Join students and professionals who are learning smarter with Socratic summaries.</p>
+        <p>Join students and professionals who are learning smarter with SocraSeek summaries.</p>
         <router-link to="/register" class="cta-button primary large">
           Start Summarizing Free
         </router-link>

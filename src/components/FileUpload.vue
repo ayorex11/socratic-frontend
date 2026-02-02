@@ -230,7 +230,7 @@ const refreshUserData = async () => {
     const token = localStorage.getItem('accessToken')
     if (!token) return
 
-    const response = await fetch('https://socratic-f2kh.onrender.com/auth/user/', {
+    const response = await fetch('https://socratic-production-e023.up.railway.app/auth/user/', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -281,9 +281,17 @@ const triggerFileInput = (field) => {
   if (uploading.value) return
 
   if (field === 'study') {
-    studyInput.value.click()
+    if (studyInput.value) {
+      studyInput.value.click()
+    } else {
+      console.error('Study input ref is not available')
+    }
   } else {
-    pastQuestionsInput.value.click()
+    if (pastQuestionsInput.value) {
+      pastQuestionsInput.value.click()
+    } else {
+      console.error('Past questions input ref is not available')
+    }
   }
 }
 
@@ -309,13 +317,19 @@ const handleFileDrop = (event, field) => {
 }
 
 const handleFileSelect = (event, field) => {
+  console.log('File select event triggered for:', field)
   const files = event.target.files
-  if (files.length > 0) {
+  console.log('Files selected:', files)
+  if (files && files.length > 0) {
     handleFile(files[0], field)
+  } else {
+    console.warn('No files selected')
   }
 }
 
 const handleFile = (file, field) => {
+  console.log('Handling file:', file.name, 'for field:', field)
+
   // Validate file type
   const validTypes = {
     study: ['.pdf', '.docx'],
@@ -323,37 +337,51 @@ const handleFile = (file, field) => {
   }
 
   const fileExtension = '.' + file.name.split('.').pop().toLowerCase()
+  console.log('File extension:', fileExtension)
 
   if (!validTypes[field].includes(fileExtension)) {
-    error.value = `Invalid file type. Allowed types: ${validTypes[field].join(', ')}`
+    const errorMsg = `Invalid file type. Allowed types: ${validTypes[field].join(', ')}`
+    console.error(errorMsg)
+    error.value = errorMsg
     return
   }
 
   // Validate file size (10MB limit)
   if (file.size > 10 * 1024 * 1024) {
-    error.value = 'File size must be less than 10MB'
+    const errorMsg = 'File size must be less than 10MB'
+    console.error(errorMsg)
+    error.value = errorMsg
     return
   }
 
   // Store file
   if (field === 'study') {
     form.value.study_material = file
+    console.log('Study material set:', form.value.study_material.name)
   } else {
     form.value.past_questions = file
+    console.log('Past questions set:', form.value.past_questions.name)
   }
 
   error.value = ''
   success.value = ''
+  console.log('File successfully added')
 }
 
 const removeFile = (field) => {
   if (!uploading.value) {
     if (field === 'study') {
       form.value.study_material = null
-      studyInput.value.value = ''
+      if (studyInput.value) {
+        studyInput.value.value = ''
+      }
+      console.log('Study material removed')
     } else {
       form.value.past_questions = null
-      pastQuestionsInput.value.value = ''
+      if (pastQuestionsInput.value) {
+        pastQuestionsInput.value.value = ''
+      }
+      console.log('Past questions removed')
     }
   }
 }
@@ -401,13 +429,16 @@ const handleUpload = async () => {
     }, 300)
 
     // Make API request
-    const response = await fetch('https://socratic-f2kh.onrender.com/socratic/create_processing/', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const response = await fetch(
+      'https://socratic-production-e023.up.railway.app/socratic/create_processing/',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
       },
-      body: formData,
-    })
+    )
 
     clearInterval(progressInterval)
     uploadProgress.value = 100

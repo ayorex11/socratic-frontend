@@ -7,7 +7,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const login = async (credentials) => {
     try {
-      const response = await fetch('https://socratic-f2kh.onrender.com/auth/login/', {
+      const response = await fetch('https://socratic-production-e023.up.railway.app/auth/login/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -60,13 +60,16 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error('No refresh token available')
       }
 
-      const response = await fetch('https://socratic-f2kh.onrender.com/auth/token/refresh/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        'https://socratic-production-e023.up.railway.app/auth/token/refresh/',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refresh: refreshToken }),
         },
-        body: JSON.stringify({ refresh: refreshToken }),
-      })
+      )
 
       if (!response.ok) {
         throw new Error('Token refresh failed')
@@ -115,7 +118,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     if (isTokenExpired(accessExpiration) && !isTokenExpired(refreshExpiration)) {
       console.log('Access token expired, attempting refresh...')
-      refreshToken().catch(error => {
+      refreshToken().catch((error) => {
         console.error('Token refresh failed:', error)
       })
     }
@@ -136,13 +139,15 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         const refreshExpiration = localStorage.getItem('refreshExpiration')
         if (!isTokenExpired(refreshExpiration)) {
-          refreshToken().then(() => {
-            user.value = JSON.parse(storedUser)
-            isAuthenticated.value = true
-            startTokenMonitoring()
-          }).catch(() => {
-            logout()
-          })
+          refreshToken()
+            .then(() => {
+              user.value = JSON.parse(storedUser)
+              isAuthenticated.value = true
+              startTokenMonitoring()
+            })
+            .catch(() => {
+              logout()
+            })
         } else {
           logout()
         }
@@ -153,15 +158,18 @@ export const useAuthStore = defineStore('auth', () => {
   // Updated Google Auth to use credential instead of access_token
   const googleAuth = async (credential) => {
     try {
-      const response = await fetch('https://socratic-f2kh.onrender.com/Account/google/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        'https://socratic-production-e023.up.railway.app/Account/google/',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            credential: credential, // Send the ID token as 'credential'
+          }),
         },
-        body: JSON.stringify({
-          credential: credential  // Send the ID token as 'credential'
-        }),
-      })
+      )
 
       const data = await response.json()
 
@@ -195,6 +203,6 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     checkTokenValidity,
     isTokenExpired,
-    googleAuth
+    googleAuth,
   }
 })

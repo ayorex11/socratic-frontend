@@ -51,7 +51,6 @@
         <router-link to="/browse" class="action-button secondary">🌐 Browse Community </router-link>
       </div>
 
-
       <!-- Recent Documents Section -->
       <div v-if="!loading && documents.length > 0" class="recent-documents">
         <div class="section-header">
@@ -143,7 +142,7 @@ const {
   isConnected: sseConnected,
   connectToAllDocuments,
   disconnect: disconnectSSE,
-  error: sseError
+  error: sseError,
 } = useProcessingSSE()
 
 // Computed properties
@@ -178,7 +177,7 @@ const fetchDocuments = async () => {
     }
 
     const response = await fetch(
-      'https://socratic-f2kh.onrender.com/socratic/list_processing_results/',
+      'https://socratic-production-e023.up.railway.app/socratic/list_processing_results/',
       {
         method: 'GET',
         headers: {
@@ -221,9 +220,8 @@ const setupSSE = () => {
       console.log('SSE UPDATE RECEIVED:', data)
 
       if (data.updates && Array.isArray(data.updates)) {
-
-        documents.value = documents.value.map(doc => {
-          const update = data.updates.find(u => u.id === doc.id)
+        documents.value = documents.value.map((doc) => {
+          const update = data.updates.find((u) => u.id === doc.id)
           if (update) {
             console.log('UPDATING DOC:', doc.id, update)
 
@@ -247,10 +245,9 @@ const setupSSE = () => {
         showToast('Connection issue', 'error')
         setupPolling()
       }
-    }
+    },
   )
 }
-
 
 let pollingInterval = null
 const setupPolling = () => {
@@ -267,8 +264,8 @@ const setupPolling = () => {
       if (!token) return
 
       const response = await fetch(
-        'https://socratic-f2kh.onrender.com/socratic/list_processing_results/',
-        { method: 'GET', headers: { Authorization: `Bearer ${token}` } }
+        'https://socratic-production-e023.up.railway.app/socratic/list_processing_results/',
+        { method: 'GET', headers: { Authorization: `Bearer ${token}` } },
       )
 
       if (response.ok) {
@@ -313,7 +310,7 @@ const downloadPDF = async (documentId) => {
     }
 
     const response = await fetch(
-      `https://socratic-f2kh.onrender.com/socratic/download_pdf/${documentId}/`,
+      `https://socratic-production-e023.up.railway.app/socratic/download_pdf/${documentId}/`,
       {
         method: 'GET',
         headers: {
@@ -371,7 +368,7 @@ const downloadAudio = async (documentId) => {
     }
 
     const response = await fetch(
-      `https://socratic-f2kh.onrender.com/socratic/download_audio/${documentId}/`,
+      `https://socratic-production-e023.up.railway.app/socratic/download_audio/${documentId}/`,
       {
         method: 'GET',
         headers: {
@@ -441,7 +438,7 @@ const deleteDocument = async (documentId) => {
     }
 
     const response = await fetch(
-      `https://socratic-f2kh.onrender.com/socratic/delete/${documentId}/`,
+      `https://socratic-production-e023.up.railway.app/socratic/delete/${documentId}/`,
       {
         method: 'DELETE',
         headers: {

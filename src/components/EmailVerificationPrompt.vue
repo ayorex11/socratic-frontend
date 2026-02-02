@@ -2,7 +2,7 @@
   <div class="verification-container">
     <div class="verification-card">
       <div class="logo-section">
-        <h1>Socratic</h1>
+        <h1>SocraSeek</h1>
         <p>Verify your email address</p>
       </div>
 
@@ -13,7 +13,7 @@
           We've sent a verification link to <strong>{{ email }}</strong>
         </p>
         <p v-else>We've sent a verification link to your email address.</p>
-        <p>Click the link in the email to verify your account and start using Socratic.</p>
+        <p>Click the link in the email to verify your account and start using SocraSeek.</p>
 
         <div class="verification-actions">
           <button @click="resendVerification" :disabled="loading" class="resend-btn">
@@ -73,15 +73,18 @@ const resendVerification = async () => {
   try {
     console.log('Resending verification to:', email.value)
 
-    const response = await fetch('https://socratic-f2kh.onrender.com/registration/resend-email/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      'https://socratic-production-e023.up.railway.app/registration/resend-email/',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.value,
+        }),
       },
-      body: JSON.stringify({
-        email: email.value,
-      }),
-    })
+    )
 
     console.log('Resend response status:', response.status)
     const data = await response.json()

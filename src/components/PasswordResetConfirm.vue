@@ -2,7 +2,7 @@
   <div class="password-reset-confirm-container">
     <div class="password-reset-confirm-card">
       <div class="logo-section">
-        <h1>Socratic</h1>
+        <h1>SocraSeek</h1>
         <p>Set new password</p>
       </div>
 
@@ -126,7 +126,7 @@ const handleResetConfirm = async () => {
 
   try {
     const response = await fetch(
-      'https://socratic-f2kh.onrender.com/resetpassword/password/reset/confirm/',
+      'https://socratic-production-e023.up.railway.app/resetpassword/password/reset/confirm/',
       {
         method: 'POST',
         headers: {
@@ -235,7 +235,8 @@ label {
 
 .password-input {
   width: 100%;
-  padding: clamp(10px, 2.5vw, 12px) clamp(40px, 8vw, 45px) clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
+  padding: clamp(10px, 2.5vw, 12px) clamp(40px, 8vw, 45px) clamp(10px, 2.5vw, 12px)
+    clamp(12px, 3vw, 16px);
   border: 2px solid #ecf0f1;
   border-radius: 8px;
   font-size: clamp(0.9rem, 3vw, 1rem);
