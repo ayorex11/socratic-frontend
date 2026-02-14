@@ -372,7 +372,7 @@ const setupSSE = () => {
       showToast('All documents processed!', 'success')
       disconnectSSE()
       // Ideally we fetch one last time to be sure
-      // fetchDocuments() // Optional, but SSE should have latest data
+      fetchDocuments() // Optional, but SSE should have latest data
     },
     (err) => {
       if (err?.error) {
