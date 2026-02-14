@@ -12,14 +12,14 @@ class CustomEventSource {
     this.abortController = null
     this.reconnectAttempts = 0
     this.maxReconnectAttempts = 5
-    this.shouldReconnect = true // NEW: Control reconnection
-    this.hasError = false // NEW: Track actual errors
+    this.shouldReconnect = true
+    this.hasError = false
+    this.lastEventId = null // NEW: Track Last-Event-ID
 
     this.connect()
   }
 
   async connect() {
-    // Don't reconnect if explicitly closed
     if (!this.shouldReconnect) {
       return
     }
@@ -29,18 +29,31 @@ class CustomEventSource {
       this.readyState = 0 // CONNECTING
       this.hasError = false
 
+      const headers = {
+        Accept: 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        ...(this.options.headers || {}),
+      }
+
+      // Add Last-Event-ID header if we have one
+      if (this.lastEventId) {
+        headers['Last-Event-ID'] = this.lastEventId
+      }
+
       const response = await fetch(this.url, {
         method: 'GET',
-        headers: {
-          Accept: 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          ...(this.options.headers || {}),
-        },
+        headers,
         credentials: this.options.withCredentials ? 'include' : 'same-origin',
         signal: this.abortController.signal,
       })
 
       if (!response.ok) {
+        // If 204 No Content, server is saying "no more data", so stop reconnecting
+        if (response.status === 204) {
+             this.shouldReconnect = false
+             this.close()
+             return
+        }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
@@ -60,9 +73,15 @@ class CustomEventSource {
         const { done, value } = await reader.read()
 
         if (done) {
-          console.log('SSE stream ended normally')
-          // Normal end - don't treat as error
-          this.readyState = 2 // CLOSED
+          console.log('SSE stream ended by server')
+          // Stream ended cleanly.
+          // IMPORTANT: Native EventSource automatically reconnects here unless close() was called.
+          // We should only stop if we intentionally closed it or if the server sent a specific "finished" event previously.
+          // Since we use shouldReconnect to track intentional closure, we check that.
+          if (this.shouldReconnect) {
+             // Treat as a connection drop and reconnect
+             throw new Error('Stream ended unexpectedly')
+          }
           break
         }
 
@@ -72,19 +91,27 @@ class CustomEventSource {
 
         let eventType = 'message'
         let eventData = ''
+        let eventId = null
 
         for (const line of lines) {
           if (line.startsWith('event:')) {
             eventType = line.substring(6).trim()
           } else if (line.startsWith('data:')) {
             eventData += line.substring(5).trim()
+          } else if (line.startsWith('id:')) {
+            eventId = line.substring(3).trim()
+            this.lastEventId = eventId
           } else if (line.startsWith(':')) {
-            // Comment/keepalive - ignore
+            // Heartbeat / Comment
             continue
           } else if (line === '') {
-            // Empty line = end of event
+            // End of event
             if (eventData) {
-              const event = { type: eventType, data: eventData }
+              const event = {
+                type: eventType,
+                data: eventData,
+                lastEventId: this.lastEventId
+              }
 
               if (eventType === 'message' && this.onmessage) {
                 this.onmessage(event)
@@ -92,29 +119,27 @@ class CustomEventSource {
 
               this.dispatchEvent(eventType, event)
 
-              // Handle close event - stop reconnecting
+              // Handle server-sent close signals
               if (eventType === 'close' || eventType === 'complete') {
                 this.shouldReconnect = false
                 this.close()
                 return
               }
 
+              // Reset for next event
               eventType = 'message'
               eventData = ''
             }
           }
         }
       }
-
-      // Stream ended normally - don't reconnect
-      this.shouldReconnect = false
     } catch (error) {
       if (error.name === 'AbortError') {
-        console.log('SSE connection aborted intentionally')
+        // User intentionally aborted
         return
       }
 
-      console.error('SSE connection error:', error)
+      console.warn('SSE connection lost:', error.message)
       this.readyState = 2 // CLOSED
       this.hasError = true
 
@@ -123,12 +148,22 @@ class CustomEventSource {
       }
       this.dispatchEvent('error', { error })
 
-      // Only attempt reconnect if we should and haven't exceeded limit
-      if (this.shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
-        this.reconnectAttempts++
-        const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 30000)
-        console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`)
-        setTimeout(() => this.connect(), delay)
+      // Reconnect logic
+      if (this.shouldReconnect) {
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.reconnectAttempts++
+            // Exponential backoff with jitter
+            const baseDelay = 1000 * Math.pow(2, this.reconnectAttempts - 1)
+            const jitter = Math.random() * 500
+            const delay = Math.min(baseDelay + jitter, 10000) // Cap at 10s
+
+            console.log(`Reconnecting in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts})...`)
+            setTimeout(() => this.connect(), delay)
+        } else {
+            console.error('SSE: Max reconnect attempts reached')
+            this.dispatchEvent('error', { error: 'Max reconnect attempts reached' })
+            this.shouldReconnect = false
+        }
       }
     }
   }
@@ -153,7 +188,7 @@ class CustomEventSource {
   }
 
   close() {
-    this.shouldReconnect = false // Prevent reconnection
+    this.shouldReconnect = false
     if (this.abortController) {
       this.abortController.abort()
       this.abortController = null

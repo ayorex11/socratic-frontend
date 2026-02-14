@@ -334,21 +334,29 @@ const fetchDocuments = async () => {
 }
 
 // Setup SSE connection
+// Setup SSE connection
+const isConnecting = ref(false)
+
 const setupSSE = () => {
+  if (sseConnected.value || isConnecting.value) return
+
   const token = localStorage.getItem('accessToken')
   if (!token) return
+
+  isConnecting.value = true
+  console.log('Initiating SSE connection...')
 
   connectToAllDocuments(
     token,
     (data) => {
-      console.log('SSE UPDATE RECEIVED:', data) // Keep this
+      // console.log('SSE UPDATE RECEIVED:', data) // Reduced noise
 
       if (data.updates && Array.isArray(data.updates)) {
         // Create NEW array - 100% triggers Vue reactivity
         documents.value = documents.value.map((doc) => {
           const update = data.updates.find((u) => u.id === doc.id)
           if (update) {
-            console.log('UPDATING DOC:', doc.id, update) // Keep this
+            console.log('UPDATING DOC:', doc.id, update.status)
 
             const wasProcessing = doc.status !== 'COMPLETED'
             if (update.status === 'COMPLETED' && wasProcessing) {
@@ -363,14 +371,23 @@ const setupSSE = () => {
     (data) => {
       showToast('All documents processed!', 'success')
       disconnectSSE()
-      fetchDocuments()
+      // Ideally we fetch one last time to be sure
+      // fetchDocuments() // Optional, but SSE should have latest data
     },
     (err) => {
       if (err?.error) {
-        showToast('Connection issue', 'error')
+        console.warn('SSE Error:', err)
+        // Don't show toast for every connection retry
+        // showToast('Connection issue', 'error')
       }
     },
   )
+
+  // Reset connecting flag after a short delay to allow connection to establish
+  // or fail.
+  setTimeout(() => {
+    isConnecting.value = false
+  }, 1000)
 }
 
 // Fallback polling

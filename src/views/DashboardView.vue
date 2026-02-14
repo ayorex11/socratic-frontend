@@ -142,12 +142,13 @@ const {
   isConnected: sseConnected,
   connectToAllDocuments,
   disconnect: disconnectSSE,
-  error: sseError,
 } = useProcessingSSE()
 
 // Computed properties
 const recentDocuments = computed(() => {
-  return documents.value.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 6)
+  return [...documents.value]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 6)
 })
 
 const quizCount = computed(() => {
@@ -210,20 +211,27 @@ const fetchDocuments = async () => {
 }
 
 // Setup SSE connection
+// Setup SSE connection
+const isConnecting = ref(false)
+
 const setupSSE = () => {
+  if (sseConnected.value || isConnecting.value) return
+
   const token = localStorage.getItem('accessToken')
   if (!token) return
+
+  isConnecting.value = true
 
   connectToAllDocuments(
     token,
     (data) => {
-      console.log('SSE UPDATE RECEIVED:', data)
+      // console.log('SSE UPDATE RECEIVED:', data)
 
       if (data.updates && Array.isArray(data.updates)) {
         documents.value = documents.value.map((doc) => {
           const update = data.updates.find((u) => u.id === doc.id)
           if (update) {
-            console.log('UPDATING DOC:', doc.id, update)
+            console.log('UPDATING DOC:', doc.id, update.status)
 
             const wasProcessing = doc.status !== 'COMPLETED'
             if (update.status === 'COMPLETED' && wasProcessing) {
@@ -235,54 +243,22 @@ const setupSSE = () => {
         })
       }
     },
-    (data) => {
+    () => {
       showToast('All documents processed!', 'success')
       disconnectSSE()
       fetchDocuments()
     },
     (err) => {
       if (err?.error) {
-        showToast('Connection issue', 'error')
-        setupPolling()
+        console.warn('SSE Error:', err)
+        // showToast('Connection issue', 'error')
       }
     },
   )
-}
 
-let pollingInterval = null
-const setupPolling = () => {
-  if (pollingInterval) return // Already polling
-
-  pollingInterval = setInterval(async () => {
-    if (processingCount.value === 0) {
-      stopPolling()
-      return
-    }
-
-    try {
-      const token = localStorage.getItem('accessToken')
-      if (!token) return
-
-      const response = await fetch(
-        'https://socratic-production-e023.up.railway.app/socratic/list_processing_results/',
-        { method: 'GET', headers: { Authorization: `Bearer ${token}` } },
-      )
-
-      if (response.ok) {
-        const data = await response.json()
-        documents.value = data
-      }
-    } catch (err) {
-      console.error('Polling error:', err)
-    }
-  }, 5000)
-}
-
-const stopPolling = () => {
-  if (pollingInterval) {
-    clearInterval(pollingInterval)
-    pollingInterval = null
-  }
+  setTimeout(() => {
+    isConnecting.value = false
+  }, 1000)
 }
 
 const viewQuiz = (documentId) => {
@@ -474,7 +450,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   disconnectSSE()
-  stopPolling()
 })
 </script>
 

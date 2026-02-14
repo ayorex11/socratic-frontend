@@ -34,9 +34,8 @@
           <ul class="features-list">
             <li>✓ Audio Generation</li>
             <li>✓ Summary Generation</li>
-            <li>✓ <strong>5 questions</strong> per summary & quiz</li>
-            <li>✓ <strong>3 generations</strong> at a time</li>
-            <li>✓ Delete old generations to create new ones</li>
+            <li>✓ <strong>10+ questions</strong> per summary & quiz</li>
+            <li>✓ <strong>3 generations</strong></li>
             <li>✓ Community support</li>
           </ul>
           <button

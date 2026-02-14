@@ -30,7 +30,69 @@ export const useAuthStore = defineStore('auth', () => {
 
         return { success: true }
       } else {
-        return { success: false, error: data }
+        return { success: false, error: data.detail || 'Login failed' }
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error' }
+    }
+  }
+
+  const register = async (userData) => {
+    try {
+      // Extract fingerprint to headers
+      const { fingerprint, ...rest } = userData
+      const headers = {
+        'Content-Type': 'application/json',
+      }
+
+      if (fingerprint) {
+        headers['X-Device-Fingerprint'] = fingerprint
+      }
+
+      // Ensure password fields match backend expectations (password1/password2)
+      const payload = { ...rest }
+      if (payload.password && !payload.password1) {
+        payload.password1 = payload.password
+        payload.password2 = payload.password
+        delete payload.password
+      }
+
+      const response = await fetch(
+        'https://socratic-production-e023.up.railway.app/auth/register/',
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        },
+      )
+
+      const data = await response.json()
+
+      if (response.ok) {
+        if (data.access && data.refresh) {
+          localStorage.setItem('accessToken', data.access)
+          localStorage.setItem('refreshToken', data.refresh)
+          localStorage.setItem('user', JSON.stringify(data.user))
+          localStorage.setItem('accessExpiration', data.access_expiration)
+          localStorage.setItem('refreshExpiration', data.refresh_expiration)
+
+          user.value = data.user
+          isAuthenticated.value = true
+          startTokenMonitoring()
+        }
+        return { success: true }
+      } else {
+        // Handle field-specific errors
+        const errorMessage = data.username
+          ? data.username[0]
+          : data.email
+            ? data.email[0]
+            : data.password1
+              ? data.password1[0]
+              : data.non_field_errors
+                ? data.non_field_errors[0]
+                : data.detail || 'Registration failed'
+        return { success: false, error: errorMessage }
       }
     } catch (error) {
       return { success: false, error: 'Network error' }
@@ -204,5 +266,6 @@ export const useAuthStore = defineStore('auth', () => {
     checkTokenValidity,
     isTokenExpired,
     googleAuth,
+    register,
   }
 })

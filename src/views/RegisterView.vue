@@ -1,47 +1,60 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useFingerprint } from '@/composables/useFingerprint'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const { getFingerprint } = useFingerprint()
 
 // 1. Form state
 const form = ref({
   username: '',
   email: '',
   password: '',
-  password2: '' // Confirmation field
+  password2: '', // Confirmation field
 })
 
 // 2. Local error state
 const localError = ref(null)
 
-// 3. Handle submission
+// 3. Fingerprint state
+const fingerprint = ref(null)
+
+onMounted(async () => {
+  // Generate fingerprint silently in background
+  fingerprint.value = await getFingerprint()
+})
+
+// 4. Handle submission
 const handleSubmit = async () => {
   localError.value = null
 
   if (form.value.password !== form.value.password2) {
-    localError.value = "Passwords do not match."
+    localError.value = 'Passwords do not match.'
     return
   }
 
   try {
     // Call the store action
-    await authStore.register({
+    const result = await authStore.register({
       username: form.value.username,
       email: form.value.email,
-      password: form.value.password
+      password: form.value.password,
+      fingerprint: fingerprint.value, // Pass fingerprint if available
     })
 
-    // On success, navigate to the dashboard/home page
-    router.push({ name: 'home' })
-
+    if (result.success) {
+      // On success, navigate to the dashboard/home page
+      router.push({ name: 'home' })
+    } else {
+      localError.value = result.error || 'Registration failed.'
+    }
   } catch (error) {
-    // Error is set in the store and caught here.
-    // The store provides a detailed error message.
-    localError.value = authStore.error || 'An unexpected registration error occurred.'
-    console.error('Registration API Error:', error)
+    // This catch block might be dead code if store doesn't throw, but good for safety
+    console.error('Registration Error:', error)
+    localError.value = 'An unexpected error occurred.'
   }
 }
 </script>
@@ -61,7 +74,7 @@ const handleSubmit = async () => {
             v-model="form.username"
             required
             :disabled="authStore.loading"
-          >
+          />
         </div>
 
         <div class="form-group">
@@ -72,7 +85,7 @@ const handleSubmit = async () => {
             v-model="form.email"
             required
             :disabled="authStore.loading"
-          >
+          />
         </div>
 
         <div class="form-group">
@@ -83,7 +96,7 @@ const handleSubmit = async () => {
             v-model="form.password"
             required
             :disabled="authStore.loading"
-          >
+          />
         </div>
 
         <div class="form-group">
@@ -94,16 +107,12 @@ const handleSubmit = async () => {
             v-model="form.password2"
             required
             :disabled="authStore.loading"
-          >
+          />
         </div>
 
         <p v-if="localError" class="error-message">{{ localError }}</p>
 
-        <button
-          type="submit"
-          :disabled="authStore.loading"
-          class="submit-button"
-        >
+        <button type="submit" :disabled="authStore.loading" class="submit-button">
           {{ authStore.loading ? 'Registering...' : 'Sign Up' }}
         </button>
       </form>
