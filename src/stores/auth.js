@@ -218,15 +218,21 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Updated Google Auth to use credential instead of access_token
-  const googleAuth = async (credential) => {
+  const googleAuth = async (credential, fingerprint = null) => {
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+      }
+
+      if (fingerprint) {
+        headers['X-Device-Fingerprint'] = fingerprint
+      }
+
       const response = await fetch(
         'https://socratic-production-e023.up.railway.app/Account/google/',
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({
             credential: credential, // Send the ID token as 'credential'
           }),

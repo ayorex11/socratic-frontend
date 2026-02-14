@@ -88,14 +88,18 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useFingerprint } from '@/composables/useFingerprint'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const { getFingerprint } = useFingerprint()
+
 const loading = ref(false)
 const resendLoading = ref(false)
 const error = ref('')
 const showPassword = ref(false)
+const fingerprint = ref(null)
 
 const form = ref({
   username: '',
@@ -120,7 +124,7 @@ const handleGoogleCallback = async (response) => {
   error.value = ''
 
   try {
-    const result = await authStore.googleAuth(response.credential)
+    const result = await authStore.googleAuth(response.credential, fingerprint.value)
 
     if (result.success) {
       console.log('Google login successful!')
@@ -206,10 +210,13 @@ const resendVerification = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (route.query.session_expired) {
     console.log('Session expired - user needs to login again')
   }
+
+  // Generate fingerprint silently
+  fingerprint.value = await getFingerprint()
 
   // Use preloaded Google Sign-In script
   if (window.google) {
