@@ -120,12 +120,17 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
+import { useFingerprint } from '@/composables/useFingerprint'
+
 const router = useRouter()
 const authStore = useAuthStore()
+const { getFingerprint } = useFingerprint()
+
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
 const showPassword = ref(false)
+const fingerprint = ref(null)
 
 const form = ref({
   first_name: '',
@@ -147,7 +152,7 @@ const handleGoogleCallback = async (response) => {
   success.value = ''
 
   try {
-    const result = await authStore.googleAuth(response.credential)
+    const result = await authStore.googleAuth(response.credential, fingerprint.value)
 
     if (result.success) {
       success.value = 'Google signup successful!'
@@ -213,17 +218,25 @@ const handleSubmit = async () => {
   }
 
   try {
-    const response = await fetch('https://socratic-production-e023.up.railway.app/registration/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.value),
-    })
+    const registrationData = {
+      ...form.value,
+      fingerprint: fingerprint.value,
+    }
 
-    const data = await response.json()
+    // Store handles the API call and fingerprint header
+    // But wait, authStore.register logic in auth.js line 61 calls /auth/register/
+    // The original code called /registration/ (dj-rest-auth default).
+    // Let's check auth.js again to see where it points.
+    // auth.js: 'https://socratic-production-e023.up.railway.app/auth/register/'
+    // original RegisterForm: 'https://socratic-production-e023.up.railway.app/registration/'
+    // dj-rest-auth default registration endpoint is /registration/.
+    // I should probably stick to what auth.js uses if it is correct, or update auth.js if it is wrong.
+    // However, I see `authStore.register` is implemented in `auth.js` (lines 40-100).
+    // Let's assume authStore.register is the intended way forward.
 
-    if (response.ok) {
+    const result = await authStore.register(registrationData)
+
+    if (result.success) {
       success.value = 'Registration successful! Please check your email to verify your account.'
       const userEmail = form.value.email
 
@@ -240,17 +253,8 @@ const handleSubmit = async () => {
         router.push(`/verify-email-prompt?email=${encodeURIComponent(userEmail)}`)
       }, 2000)
     } else {
-      if (data.username) {
-        error.value = `Username: ${data.username[0]}`
-      } else if (data.email) {
-        error.value = `Email: ${data.email[0]}`
-      } else if (data.password1) {
-        error.value = `Password: ${data.password1[0]}`
-      } else if (data.non_field_errors) {
-        error.value = data.non_field_errors[0]
-      } else {
-        error.value = data.detail || 'Registration failed. Please try again.'
-      }
+      // Result error handling from store
+      error.value = typeof result.error === 'string' ? result.error : 'Registration failed'
     }
   } catch (err) {
     error.value = 'Network error. Please try again.'
@@ -260,7 +264,10 @@ const handleSubmit = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Generate fingerprint
+  fingerprint.value = await getFingerprint()
+
   // Use preloaded Google Sign-In script
   if (window.google) {
     initializeGoogleSignIn()

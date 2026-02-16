@@ -166,7 +166,7 @@ const handleSubmit = async () => {
   loading.value = true
   error.value = ''
 
-  const result = await authStore.login(form.value)
+  const result = await authStore.login(form.value, fingerprint.value)
 
   if (result.success) {
     console.log('Login successful!', authStore.user)

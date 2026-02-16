@@ -5,13 +5,19 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
 
-  const login = async (credentials) => {
+  const login = async (credentials, fingerprint = null) => {
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+      }
+
+      if (fingerprint) {
+        headers['X-Device-Fingerprint'] = fingerprint
+      }
+
       const response = await fetch('https://socratic-production-e023.up.railway.app/auth/login/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(credentials),
       })
 
@@ -58,7 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       const response = await fetch(
-        'https://socratic-production-e023.up.railway.app/auth/register/',
+        'https://socratic-production-e023.up.railway.app/registration/',
         {
           method: 'POST',
           headers,

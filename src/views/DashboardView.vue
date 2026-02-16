@@ -213,6 +213,7 @@ const fetchDocuments = async () => {
 // Setup SSE connection
 // Setup SSE connection
 const isConnecting = ref(false)
+let connectionWatchdog = null
 
 const setupSSE = () => {
   if (sseConnected.value || isConnecting.value) return
@@ -253,13 +254,31 @@ const setupSSE = () => {
         console.warn('SSE Error:', err)
         // showToast('Connection issue', 'error')
       }
+      isConnecting.value = false // Reset connecting state on error
     },
   )
+
+  // Start watchdog to ensure we stay connected while processing
+  if (!connectionWatchdog) {
+    connectionWatchdog = setInterval(() => {
+      if (processingCount.value > 0 && !sseConnected.value && !isConnecting.value) {
+        console.log('Watchdog: Reconnecting SSE...')
+        setupSSE()
+      }
+    }, 5000)
+  }
 
   setTimeout(() => {
     isConnecting.value = false
   }, 1000)
 }
+
+onUnmounted(() => {
+  disconnectSSE()
+  if (connectionWatchdog) {
+    clearInterval(connectionWatchdog)
+  }
+})
 
 const viewQuiz = (documentId) => {
   router.push(`/quiz/${documentId}`)
@@ -446,10 +465,6 @@ const deleteDocument = async (documentId) => {
 
 onMounted(() => {
   fetchDocuments()
-})
-
-onUnmounted(() => {
-  disconnectSSE()
 })
 </script>
 
