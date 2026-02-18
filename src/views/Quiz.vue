@@ -60,7 +60,9 @@
               class="option-card"
               :class="{
                 selected: getSelectedOption(currentQuestion.id) === index,
-                answered: isQuestionAnswered(currentQuestion.id),
+                answered:
+                  isQuestionAnswered(currentQuestion.id) &&
+                  getSelectedOption(currentQuestion.id) === index,
               }"
               @click="selectOption(index)"
             >
@@ -68,7 +70,13 @@
                 <div class="option-identifier">
                   <span class="option-letter">{{ String.fromCharCode(65 + index) }}</span>
                 </div>
-                <div class="option-status" v-if="isQuestionAnswered(currentQuestion.id)">
+                <div
+                  class="option-status"
+                  v-if="
+                    isQuestionAnswered(currentQuestion.id) &&
+                    getSelectedOption(currentQuestion.id) === index
+                  "
+                >
                   <span class="status-answered">Selected</span>
                 </div>
               </div>
