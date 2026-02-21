@@ -173,6 +173,31 @@
             </button>
           </form>
         </div>
+
+        <!-- Security Section -->
+        <div class="profile-card">
+          <h2>Security</h2>
+          <p class="security-description">
+            If you suspect unauthorized access to your account, you can log out of all devices at once.
+            This will end all active sessions including this one.
+          </p>
+
+          <div v-if="logoutAllError" class="error-message">
+            {{ logoutAllError }}
+          </div>
+
+          <div v-if="logoutAllSuccess" class="success-message">
+            {{ logoutAllSuccess }}
+          </div>
+
+          <button
+            @click="handleLogoutAllDevices"
+            :disabled="loggingOutAll"
+            class="logout-all-btn"
+          >
+            {{ loggingOutAll ? 'Logging out...' : 'Logout All Devices' }}
+          </button>
+        </div>
       </div>
 
       <div class="profile-actions">
@@ -205,6 +230,11 @@ const passwordError = ref('')
 const passwordSuccess = ref('')
 const showNewPassword = ref(false)
 const showConfirmPassword = ref(false)
+
+// Logout all devices state
+const loggingOutAll = ref(false)
+const logoutAllError = ref('')
+const logoutAllSuccess = ref('')
 
 // Transaction state
 const transactions = ref([])
@@ -379,6 +409,28 @@ const goToDashboard = () => {
 
 const goToPricing = () => {
   router.push('/pricing')
+}
+
+const handleLogoutAllDevices = async () => {
+  if (!confirm('Are you sure you want to log out of all devices? You will need to log in again.')) {
+    return
+  }
+
+  loggingOutAll.value = true
+  logoutAllError.value = ''
+  logoutAllSuccess.value = ''
+
+  const result = await authStore.logoutAllDevices()
+
+  if (result.success) {
+    logoutAllSuccess.value = result.message || 'Successfully logged out of all devices.'
+    setTimeout(() => {
+      router.push('/login')
+    }, 1500)
+  } else {
+    logoutAllError.value = result.error
+    loggingOutAll.value = false
+  }
 }
 
 onMounted(() => {
@@ -1059,5 +1111,41 @@ onMounted(() => {
     outline: 2px solid #27ae60;
     outline-offset: 2px;
   }
+}
+
+/* Security Section */
+.security-description {
+  color: #5a6c7d;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.logout-all-btn {
+  width: 100%;
+  padding: 14px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 50px;
+  font-size: 16px;
+}
+
+.logout-all-btn:hover:not(:disabled) {
+  background: #c0392b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.logout-all-btn:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 </style>

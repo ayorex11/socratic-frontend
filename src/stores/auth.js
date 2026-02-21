@@ -116,6 +116,33 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated.value = false
   }
 
+  const logoutAllDevices = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken')
+      const response = await fetch(
+        'https://socratic-production-e023.up.railway.app/Account/logout-all-devices/',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+
+      const data = await response.json()
+
+      if (response.ok) {
+        logout()
+        return { success: true, message: data.message }
+      } else {
+        return { success: false, error: data.error || 'Failed to logout all devices' }
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error' }
+    }
+  }
+
   const isTokenExpired = (expirationDate) => {
     if (!expirationDate) return true
     return new Date() > new Date(expirationDate)
@@ -273,6 +300,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     login,
     logout,
+    logoutAllDevices,
     initializeAuth,
     refreshToken,
     checkTokenValidity,
