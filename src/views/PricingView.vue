@@ -427,20 +427,14 @@ const handleStudentPlan = async () => {
 
     console.log('Initiating student plan payment for email:', userEmail)
 
-    // Get the access token for authorization
-    const accessToken = localStorage.getItem('accessToken')
-    if (!accessToken) {
-      throw new Error('No authentication token found')
-    }
-
     // Call your payment endpoint with authorization
     const response = await fetch(
       'https://socratic-production-e023.up.railway.app/payment/initialize_deposit/',
       {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           amount: 3000, // ₦3,000 for Student plan
@@ -507,20 +501,14 @@ const handlePremiumPlan = async () => {
 
     console.log('Initiating payment for email:', userEmail)
 
-    // Get the access token for authorization
-    const accessToken = localStorage.getItem('accessToken')
-    if (!accessToken) {
-      throw new Error('No authentication token found')
-    }
-
     // Call your payment endpoint with authorization
     const response = await fetch(
       'https://socratic-production-e023.up.railway.app/payment/initialize_deposit/',
       {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           amount: 7500, // ₦7,500 for Nigeria

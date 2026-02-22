@@ -50,9 +50,9 @@ class CustomEventSource {
       if (!response.ok) {
         // If 204 No Content, server is saying "no more data", so stop reconnecting
         if (response.status === 204) {
-             this.shouldReconnect = false
-             this.close()
-             return
+          this.shouldReconnect = false
+          this.close()
+          return
         }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
@@ -79,8 +79,8 @@ class CustomEventSource {
           // We should only stop if we intentionally closed it or if the server sent a specific "finished" event previously.
           // Since we use shouldReconnect to track intentional closure, we check that.
           if (this.shouldReconnect) {
-             // Treat as a connection drop and reconnect
-             throw new Error('Stream ended unexpectedly')
+            // Treat as a connection drop and reconnect
+            throw new Error('Stream ended unexpectedly')
           }
           break
         }
@@ -110,7 +110,7 @@ class CustomEventSource {
               const event = {
                 type: eventType,
                 data: eventData,
-                lastEventId: this.lastEventId
+                lastEventId: this.lastEventId,
               }
 
               if (eventType === 'message' && this.onmessage) {
@@ -151,18 +151,20 @@ class CustomEventSource {
       // Reconnect logic
       if (this.shouldReconnect) {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
-            this.reconnectAttempts++
-            // Exponential backoff with jitter
-            const baseDelay = 1000 * Math.pow(2, this.reconnectAttempts - 1)
-            const jitter = Math.random() * 500
-            const delay = Math.min(baseDelay + jitter, 10000) // Cap at 10s
+          this.reconnectAttempts++
+          // Exponential backoff with jitter
+          const baseDelay = 1000 * Math.pow(2, this.reconnectAttempts - 1)
+          const jitter = Math.random() * 500
+          const delay = Math.min(baseDelay + jitter, 10000) // Cap at 10s
 
-            console.log(`Reconnecting in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts})...`)
-            setTimeout(() => this.connect(), delay)
+          console.log(
+            `Reconnecting in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts})...`,
+          )
+          setTimeout(() => this.connect(), delay)
         } else {
-            console.error('SSE: Max reconnect attempts reached')
-            this.dispatchEvent('error', { error: 'Max reconnect attempts reached' })
-            this.shouldReconnect = false
+          console.error('SSE: Max reconnect attempts reached')
+          this.dispatchEvent('error', { error: 'Max reconnect attempts reached' })
+          this.shouldReconnect = false
         }
       }
     }
@@ -206,16 +208,13 @@ export function useProcessingSSE() {
   /**
    * Connect to SSE endpoint for a single document with auth headers
    */
-  const connectToDocument = (documentId, token, onUpdate, onComplete, onError) => {
+  const connectToDocument = (documentId, onUpdate, onComplete, onError) => {
     disconnect()
 
     const url = `https://socratic-production-e023.up.railway.app/socratic/processing-status-stream/${documentId}/`
 
     try {
       eventSource.value = new CustomEventSource(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         withCredentials: true,
       })
 
@@ -296,16 +295,13 @@ export function useProcessingSSE() {
   /**
    * Connect to SSE endpoint for all user documents
    */
-  const connectToAllDocuments = (token, onUpdate, onComplete, onError) => {
+  const connectToAllDocuments = (onUpdate, onComplete, onError) => {
     disconnect()
 
     const url = `https://socratic-production-e023.up.railway.app/socratic/all-processing-status-stream/`
 
     try {
       eventSource.value = new CustomEventSource(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         withCredentials: true,
       })
 

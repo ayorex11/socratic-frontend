@@ -227,13 +227,10 @@ const remainingGenerations = computed(() => {
 // Method to refresh user data from backend
 const refreshUserData = async () => {
   try {
-    const token = localStorage.getItem('accessToken')
-    if (!token) return
-
     const response = await fetch('https://socratic-production-e023.up.railway.app/auth/user/', {
       method: 'GET',
+      credentials: 'include',
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     })
@@ -412,15 +409,6 @@ const handleUpload = async () => {
       formData.append('past_questions', form.value.past_questions)
     }
 
-    // Get auth token
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      error.value = 'Authentication required. Please log in again.'
-      router.push('/login')
-      return
-    }
-
     // Simulate progress
     const progressInterval = setInterval(() => {
       if (uploadProgress.value < 90) {
@@ -433,9 +421,7 @@ const handleUpload = async () => {
       'https://socratic-production-e023.up.railway.app/socratic/create_processing/',
       {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
         body: formData,
       },
     )

@@ -170,19 +170,12 @@ const processingCount = computed(() => {
 const fetchDocuments = async () => {
   try {
     loading.value = true
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      router.push('/login')
-      return
-    }
-
     const response = await fetch(
       'https://socratic-production-e023.up.railway.app/socratic/list_processing_results/',
       {
         method: 'GET',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       },
@@ -218,13 +211,9 @@ let connectionWatchdog = null
 const setupSSE = () => {
   if (sseConnected.value || isConnecting.value) return
 
-  const token = localStorage.getItem('accessToken')
-  if (!token) return
-
   isConnecting.value = true
 
   connectToAllDocuments(
-    token,
     (data) => {
       // console.log('SSE UPDATE RECEIVED:', data)
 
@@ -297,20 +286,12 @@ const downloadPDF = async (documentId) => {
     }
 
     downloadingPDF.value[documentId] = true
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      router.push('/login')
-      return
-    }
 
     const response = await fetch(
       `https://socratic-production-e023.up.railway.app/socratic/download_pdf/${documentId}/`,
       {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       },
     )
 
@@ -355,20 +336,12 @@ const downloadAudio = async (documentId) => {
     }
 
     downloadingAudio.value[documentId] = true
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      router.push('/login')
-      return
-    }
 
     const response = await fetch(
       `https://socratic-production-e023.up.railway.app/socratic/download_audio/${documentId}/`,
       {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       },
     )
 
@@ -425,19 +398,12 @@ const deleteDocument = async (documentId) => {
     deleting.value[documentId] = true
     deleteConfirmId.value = null
 
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      router.push('/login')
-      return
-    }
-
     const response = await fetch(
       `https://socratic-production-e023.up.railway.app/socratic/delete/${documentId}/`,
       {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       },

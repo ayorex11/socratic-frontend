@@ -293,19 +293,12 @@ watch(processingDocumentsCount, (newCount, oldCount) => {
 const fetchDocuments = async () => {
   try {
     loading.value = true
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      router.push('/login')
-      return
-    }
-
     const response = await fetch(
       'https://socratic-production-e023.up.railway.app/socratic/list_processing_results/',
       {
         method: 'GET',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       },
@@ -340,14 +333,10 @@ const isConnecting = ref(false)
 const setupSSE = () => {
   if (sseConnected.value || isConnecting.value) return
 
-  const token = localStorage.getItem('accessToken')
-  if (!token) return
-
   isConnecting.value = true
   console.log('Initiating SSE connection...')
 
   connectToAllDocuments(
-    token,
     (data) => {
       // console.log('SSE UPDATE RECEIVED:', data) // Reduced noise
 
@@ -401,15 +390,12 @@ const startPolling = () => {
     }
 
     try {
-      const token = localStorage.getItem('accessToken')
-      if (!token) return
-
       const response = await fetch(
         'https://socratic-production-e023.up.railway.app/socratic/list_processing_results/',
         {
           method: 'GET',
+          credentials: 'include',
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         },
@@ -497,20 +483,12 @@ const downloadPDF = async (documentId) => {
     }
 
     downloadingPDF.value = { ...downloadingPDF.value, [documentId]: true }
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      router.push('/login')
-      return
-    }
 
     const response = await fetch(
       `https://socratic-production-e023.up.railway.app/socratic/download_pdf/${documentId}/`,
       {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       },
     )
 
@@ -531,7 +509,7 @@ const downloadPDF = async (documentId) => {
 
       showToast('PDF downloaded successfully!', 'success')
     } else if (response.status === 401) {
-      router.push('/login')
+      router.push('/login?session_expired=true')
     } else {
       showToast('Failed to download PDF', 'error')
     }
@@ -555,20 +533,12 @@ const downloadAudio = async (documentId) => {
     }
 
     downloadingAudio.value = { ...downloadingAudio.value, [documentId]: true }
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      router.push('/login')
-      return
-    }
 
     const response = await fetch(
       `https://socratic-production-e023.up.railway.app/socratic/download_audio/${documentId}/`,
       {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       },
     )
 
@@ -622,19 +592,12 @@ const deleteDocument = async (documentId) => {
     deleting.value = { ...deleting.value, [documentId]: true }
     deleteConfirmId.value = null
 
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      router.push('/login')
-      return
-    }
-
     const response = await fetch(
       `https://socratic-production-e023.up.railway.app/socratic/delete/${documentId}/`,
       {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       },
@@ -644,7 +607,7 @@ const deleteDocument = async (documentId) => {
       documents.value = documents.value.filter((doc) => doc.id !== documentId)
       showToast('Document deleted successfully', 'success')
     } else if (response.status === 401) {
-      router.push('/login')
+      router.push('/login?session_expired=true')
     } else if (response.status === 404) {
       showToast('Document not found', 'error')
       await fetchDocuments()

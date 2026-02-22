@@ -458,19 +458,13 @@ const fetchQuizQuestions = async () => {
     loading.value = true
     error.value = ''
     const documentId = route.params.id
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      router.push('/login')
-      return
-    }
 
     const response = await fetch(
       `https://socratic-production-e023.up.railway.app/quiz/quizzes/${documentId}/start/`,
       {
         method: 'GET',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       },
@@ -607,12 +601,6 @@ const submitAllAnswers = async () => {
   try {
     submitting.value = true
     const documentId = route.params.id
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      router.push('/login')
-      return
-    }
 
     // Prepare answers in the required format: { questionId: "option_text" }
     const submissionData = {}
@@ -637,8 +625,8 @@ const submitAllAnswers = async () => {
       `https://socratic-production-e023.up.railway.app/quiz/quizzes/${documentId}/submit/`,
       {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

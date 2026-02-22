@@ -178,8 +178,8 @@
         <div class="profile-card">
           <h2>Security</h2>
           <p class="security-description">
-            If you suspect unauthorized access to your account, you can log out of all devices at once.
-            This will end all active sessions including this one.
+            If you suspect unauthorized access to your account, you can log out of all devices at
+            once. This will end all active sessions including this one.
           </p>
 
           <div v-if="logoutAllError" class="error-message">
@@ -190,11 +190,7 @@
             {{ logoutAllSuccess }}
           </div>
 
-          <button
-            @click="handleLogoutAllDevices"
-            :disabled="loggingOutAll"
-            class="logout-all-btn"
-          >
+          <button @click="handleLogoutAllDevices" :disabled="loggingOutAll" class="logout-all-btn">
             {{ loggingOutAll ? 'Logging out...' : 'Logout All Devices' }}
           </button>
         </div>
@@ -244,11 +240,10 @@ const transactionError = ref('')
 
 const fetchUserData = async () => {
   try {
-    const accessToken = localStorage.getItem('accessToken')
     const response = await fetch('https://socratic-production-e023.up.railway.app/auth/user/', {
       method: 'GET',
+      credentials: 'include',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     })
@@ -288,13 +283,12 @@ const handlePasswordChange = async () => {
   }
 
   try {
-    const accessToken = localStorage.getItem('accessToken')
     const response = await fetch(
       'https://socratic-production-e023.up.railway.app/auth/password/change/',
       {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -358,13 +352,12 @@ const fetchTransactions = async () => {
   transactionError.value = ''
 
   try {
-    const accessToken = localStorage.getItem('accessToken')
     const response = await fetch(
       'https://socratic-production-e023.up.railway.app/payment/transaction_history/',
       {
         method: 'GET',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       },

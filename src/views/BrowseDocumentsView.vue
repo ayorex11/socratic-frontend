@@ -356,19 +356,12 @@ const debouncedSearch = () => {
 const fetchDocuments = async () => {
   try {
     loading.value = true
-    const token = localStorage.getItem('accessToken')
-
-    if (!token) {
-      router.push('/login')
-      return
-    }
-
     const response = await fetch(
       'https://socratic-production-e023.up.railway.app/socratic/get_all_documents/',
       {
         method: 'GET',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       },
@@ -400,15 +393,12 @@ const clearFilters = () => {
 const downloadPDF = async (documentId) => {
   try {
     downloadingPDF.value[documentId] = true
-    const token = localStorage.getItem('accessToken')
 
     const response = await fetch(
       `https://socratic-production-e023.up.railway.app/socratic/download_pdf/${documentId}/`,
       {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       },
     )
 
@@ -442,15 +432,12 @@ const downloadPDF = async (documentId) => {
 const downloadAudio = async (documentId) => {
   try {
     downloadingAudio.value[documentId] = true
-    const token = localStorage.getItem('accessToken')
 
     const response = await fetch(
       `https://socratic-production-e023.up.railway.app/socratic/download_audio/${documentId}/`,
       {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       },
     )
 

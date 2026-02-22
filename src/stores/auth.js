@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+const API_BASE = 'https://socratic-production-e023.up.railway.app'
+
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
@@ -15,28 +17,26 @@ export const useAuthStore = defineStore('auth', () => {
         headers['X-Device-Fingerprint'] = fingerprint
       }
 
-      const response = await fetch('https://socratic-production-e023.up.railway.app/auth/login/', {
+      const response = await fetch(`${API_BASE}/auth/login/`, {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify(credentials),
       })
 
       const data = await response.json()
 
       if (response.ok) {
-        localStorage.setItem('accessToken', data.access)
-        localStorage.setItem('refreshToken', data.refresh)
+        // Tokens are now stored as HttpOnly cookies by the backend.
+        // We only store non-sensitive user info in localStorage.
         localStorage.setItem('user', JSON.stringify(data.user))
-        localStorage.setItem('accessExpiration', data.access_expiration)
-        localStorage.setItem('refreshExpiration', data.refresh_expiration)
 
         user.value = data.user
         isAuthenticated.value = true
-        startTokenMonitoring()
 
         return { success: true }
       } else {
-        return { success: false, error: data.detail || 'Login failed' }
+        return { success: false, error: data.detail || data }
       }
     } catch (error) {
       return { success: false, error: 'Network error' }
@@ -63,28 +63,20 @@ export const useAuthStore = defineStore('auth', () => {
         delete payload.password
       }
 
-      const response = await fetch(
-        'https://socratic-production-e023.up.railway.app/registration/',
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(payload),
-        },
-      )
+      const response = await fetch(`${API_BASE}/registration/`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      })
 
       const data = await response.json()
 
       if (response.ok) {
-        if (data.access && data.refresh) {
-          localStorage.setItem('accessToken', data.access)
-          localStorage.setItem('refreshToken', data.refresh)
+        if (data.user) {
           localStorage.setItem('user', JSON.stringify(data.user))
-          localStorage.setItem('accessExpiration', data.access_expiration)
-          localStorage.setItem('refreshExpiration', data.refresh_expiration)
-
           user.value = data.user
           isAuthenticated.value = true
-          startTokenMonitoring()
         }
         return { success: true }
       } else {
@@ -105,35 +97,39 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const logout = () => {
-    stopTokenMonitoring()
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
+  const logout = async () => {
+    // Also clear the cookie on the backend via the dj-rest-auth logout endpoint
+    try {
+      await fetch(`${API_BASE}/auth/logout/`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      })
+    } catch (e) {
+      // If logout request fails, still clear local state
+      console.warn('Backend logout request failed:', e)
+    }
     localStorage.removeItem('user')
-    localStorage.removeItem('accessExpiration')
-    localStorage.removeItem('refreshExpiration')
     user.value = null
     isAuthenticated.value = false
   }
 
   const logoutAllDevices = async () => {
     try {
-      const accessToken = localStorage.getItem('accessToken')
-      const response = await fetch(
-        'https://socratic-production-e023.up.railway.app/Account/logout-all-devices/',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
+      const response = await fetch(`${API_BASE}/Account/logout-all-devices/`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      )
+      })
 
       const data = await response.json()
 
       if (response.ok) {
-        logout()
+        localStorage.removeItem('user')
+        user.value = null
+        isAuthenticated.value = false
         return { success: true, message: data.message }
       } else {
         return { success: false, error: data.error || 'Failed to logout all devices' }
@@ -143,108 +139,78 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const isTokenExpired = (expirationDate) => {
-    if (!expirationDate) return true
-    return new Date() > new Date(expirationDate)
-  }
-
   const refreshToken = async () => {
     try {
-      const refreshToken = localStorage.getItem('refreshToken')
-      if (!refreshToken) {
-        throw new Error('No refresh token available')
-      }
-
-      const response = await fetch(
-        'https://socratic-production-e023.up.railway.app/auth/token/refresh/',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refresh: refreshToken }),
+      const response = await fetch(`${API_BASE}/auth/token/refresh/`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      )
+        // No body needed — refresh token comes from the HttpOnly cookie
+      })
 
       if (!response.ok) {
         throw new Error('Token refresh failed')
       }
 
-      const data = await response.json()
-      localStorage.setItem('accessToken', data.access)
-      if (data.access_expiration) {
-        localStorage.setItem('accessExpiration', data.access_expiration)
-      }
-
-      return data.access
+      // Cookie is updated automatically by the backend response
+      return true
     } catch (error) {
-      logout()
+      await logout()
       throw error
     }
   }
 
-  let tokenCheckInterval = null
+  const checkAuth = async () => {
+    // Check if we have user data and verify the cookie is still valid
+    // by calling the dj-rest-auth user endpoint
+    try {
+      const response = await fetch(`${API_BASE}/auth/user/`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-  const startTokenMonitoring = () => {
-    tokenCheckInterval = setInterval(() => {
-      checkTokenValidity()
-    }, 30000)
-  }
-
-  const stopTokenMonitoring = () => {
-    if (tokenCheckInterval) {
-      clearInterval(tokenCheckInterval)
-      tokenCheckInterval = null
-    }
-  }
-
-  const checkTokenValidity = () => {
-    const accessExpiration = localStorage.getItem('accessExpiration')
-    const refreshExpiration = localStorage.getItem('refreshExpiration')
-
-    if (isTokenExpired(accessExpiration) && isTokenExpired(refreshExpiration)) {
-      console.log('Both tokens expired, logging out...')
-      logout()
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login?session_expired=true'
+      if (response.ok) {
+        const data = await response.json()
+        user.value = data
+        isAuthenticated.value = true
+        localStorage.setItem('user', JSON.stringify(data))
+        return true
+      } else {
+        // Cookie expired or invalid
+        localStorage.removeItem('user')
+        user.value = null
+        isAuthenticated.value = false
+        return false
       }
+    } catch (error) {
       return false
     }
-
-    if (isTokenExpired(accessExpiration) && !isTokenExpired(refreshExpiration)) {
-      console.log('Access token expired, attempting refresh...')
-      refreshToken().catch((error) => {
-        console.error('Token refresh failed:', error)
-      })
-    }
-
-    return true
   }
 
-  const initializeAuth = () => {
+  const initializeAuth = async () => {
     const storedUser = localStorage.getItem('user')
-    const accessToken = localStorage.getItem('accessToken')
-    const accessExpiration = localStorage.getItem('accessExpiration')
 
-    if (storedUser && accessToken && accessExpiration) {
-      if (!isTokenExpired(accessExpiration)) {
-        user.value = JSON.parse(storedUser)
-        isAuthenticated.value = true
-        startTokenMonitoring()
-      } else {
-        const refreshExpiration = localStorage.getItem('refreshExpiration')
-        if (!isTokenExpired(refreshExpiration)) {
-          refreshToken()
-            .then(() => {
-              user.value = JSON.parse(storedUser)
-              isAuthenticated.value = true
-              startTokenMonitoring()
-            })
-            .catch(() => {
-              logout()
-            })
-        } else {
-          logout()
+    if (storedUser) {
+      // We have cached user data — set it optimistically
+      user.value = JSON.parse(storedUser)
+      isAuthenticated.value = true
+
+      // Verify the cookie is still valid in the background
+      const valid = await checkAuth()
+      if (!valid) {
+        // Try refreshing the token
+        try {
+          await refreshToken()
+          await checkAuth()
+        } catch {
+          // Token refresh failed — user must login again
+          user.value = null
+          isAuthenticated.value = false
         }
       }
     }
@@ -261,29 +227,22 @@ export const useAuthStore = defineStore('auth', () => {
         headers['X-Device-Fingerprint'] = fingerprint
       }
 
-      const response = await fetch(
-        'https://socratic-production-e023.up.railway.app/Account/google/',
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            credential: credential, // Send the ID token as 'credential'
-          }),
-        },
-      )
+      const response = await fetch(`${API_BASE}/Account/google/`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          credential: credential,
+        }),
+      })
 
       const data = await response.json()
 
       if (response.ok) {
-        localStorage.setItem('accessToken', data.access)
-        localStorage.setItem('refreshToken', data.refresh)
         localStorage.setItem('user', JSON.stringify(data.user))
-        localStorage.setItem('accessExpiration', data.access_expiration)
-        localStorage.setItem('refreshExpiration', data.refresh_expiration)
 
         user.value = data.user
         isAuthenticated.value = true
-        startTokenMonitoring()
 
         return { success: true, isNewUser: data.is_new_user }
       } else {
@@ -303,8 +262,7 @@ export const useAuthStore = defineStore('auth', () => {
     logoutAllDevices,
     initializeAuth,
     refreshToken,
-    checkTokenValidity,
-    isTokenExpired,
+    checkAuth,
     googleAuth,
     register,
   }
