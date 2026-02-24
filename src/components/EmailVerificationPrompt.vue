@@ -12,8 +12,17 @@
         <p v-if="email">
           We've sent a verification link to <strong>{{ email }}</strong>
         </p>
-        <p v-else>We've sent a verification link to your email address.</p>
-        <p>Click the link in the email to verify your account and start using SocraSeek.</p>
+        <div v-else class="email-input-group">
+          <p>Please enter your email address to resend the verification link.</p>
+          <input
+            v-model="manualEmail"
+            type="email"
+            placeholder="Enter your email"
+            class="manual-email-input"
+            :disabled="loading"
+          />
+        </div>
+        <p v-if="email || manualEmail">Click the link in the email to verify your account and start using SocraSeek.</p>
 
         <div class="verification-actions">
           <button @click="resendVerification" :disabled="loading" class="resend-btn">
@@ -46,17 +55,20 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const router = useRouter()
 const email = ref('')
+const manualEmail = ref('')
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
 
 onMounted(() => {
   email.value = route.query.email || ''
+  if (email.value) {
+    manualEmail.value = email.value
+  }
 })
 
 const resendVerification = async () => {
@@ -64,14 +76,23 @@ const resendVerification = async () => {
   error.value = ''
   success.value = ''
 
-  if (!email.value) {
+  const targetEmail = email.value || manualEmail.value
+
+  if (!targetEmail) {
     error.value = 'Email address is required to resend verification.'
     loading.value = false
     return
   }
 
+  // Basic email validation
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetEmail)) {
+    error.value = 'Please enter a valid email address.'
+    loading.value = false
+    return
+  }
+
   try {
-    console.log('Resending verification to:', email.value)
+    console.log('Resending verification to:', targetEmail)
 
     const response = await fetch(
       'https://socratic-production-e023.up.railway.app/registration/resend-email/',
@@ -81,7 +102,7 @@ const resendVerification = async () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: email.value,
+          email: targetEmail,
         }),
       },
     )
@@ -176,6 +197,38 @@ const resendVerification = async () => {
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 3vw, 15px);
+}
+
+.email-input-group {
+  margin: 15px 0 25px 0;
+  text-align: left;
+}
+
+.email-input-group p {
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.manual-email-input {
+  width: 100%;
+  padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
+  border: 2px solid #ecf0f1;
+  border-radius: 8px;
+  font-size: clamp(0.9rem, 3vw, 1rem);
+  transition: all 0.3s ease;
+  min-height: 48px;
+  box-sizing: border-box;
+}
+
+.manual-email-input:focus {
+  outline: none;
+  border-color: #27ae60;
+  box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+}
+
+.manual-email-input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
 }
 
 .resend-btn {
