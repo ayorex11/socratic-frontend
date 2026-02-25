@@ -200,10 +200,6 @@
               <span class="feature-value">3</span>
             </div>
             <div class="comparison-item">
-              <span class="feature-label">Delete to Generate New</span>
-              <span class="feature-value">Required</span>
-            </div>
-            <div class="comparison-item">
               <span class="feature-label">Priority Support</span>
               <span class="feature-value">-</span>
             </div>
@@ -234,10 +230,6 @@
             <div class="comparison-item">
               <span class="feature-label">Simultaneous Generations</span>
               <span class="feature-value">1 per credit</span>
-            </div>
-            <div class="comparison-item">
-              <span class="feature-label">Delete to Generate New</span>
-              <span class="feature-value">Not Required</span>
             </div>
             <div class="comparison-item">
               <span class="feature-label">Priority Support</span>
@@ -272,10 +264,6 @@
               <span class="feature-value">Unlimited</span>
             </div>
             <div class="comparison-item">
-              <span class="feature-label">Delete to Generate New</span>
-              <span class="feature-value">Not Required</span>
-            </div>
-            <div class="comparison-item">
               <span class="feature-label">Priority Support</span>
               <span class="feature-value">✓</span>
             </div>
@@ -306,10 +294,6 @@
             <div class="comparison-item">
               <span class="feature-label">Simultaneous Generations</span>
               <span class="feature-value">Unlimited</span>
-            </div>
-            <div class="comparison-item">
-              <span class="feature-label">Delete to Generate New</span>
-              <span class="feature-value">Not Required</span>
             </div>
             <div class="comparison-item">
               <span class="feature-label">Priority Support</span>
@@ -370,14 +354,6 @@
             <div class="plan-feature">1 / credit</div>
             <div class="plan-feature">Unlimited</div>
             <div class="plan-feature">Unlimited</div>
-          </div>
-
-          <div class="comparison-row">
-            <div class="feature-name">Delete to Generate New</div>
-            <div class="plan-feature">Required</div>
-            <div class="plan-feature">Not Required</div>
-            <div class="plan-feature">Not Required</div>
-            <div class="plan-feature">Not Required</div>
           </div>
 
           <div class="comparison-row">
