@@ -71,6 +71,7 @@
             @view-quiz="viewQuiz"
             @view-pdf="viewPDF"
             @view-audio="viewAudio"
+            @view-flashcards="viewFlashcards"
             @delete="confirmDelete"
           />
         </div>
@@ -298,6 +299,10 @@ onUnmounted(() => {
 
 const viewQuiz = (documentId) => {
   router.push(`/quiz/${documentId}`)
+}
+
+const viewFlashcards = (documentId) => {
+  router.push(`/flashcards/${documentId}`)
 }
 
 const viewPDF = (documentId) => {

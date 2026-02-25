@@ -11,7 +11,7 @@
           <p>Loading document...</p>
         </div>
         <iframe
-          :src="pdfUrl"
+          :src="pdfUrl ? `${pdfUrl}#toolbar=0` : ''"
           class="pdf-iframe"
           @load="isLoading = false"
           title="PDF Viewer"
