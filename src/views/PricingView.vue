@@ -54,7 +54,7 @@
 
         <!-- Pay As You Use Plan -->
         <div class="pricing-card">
-          <div class="plan-badge" style="background-color: #9b59b6;">Pay As You Use</div>
+          <div class="plan-badge" style="background-color: #9b59b6">Pay As You Use</div>
           <div class="plan-header">
             <h3>Single Gen</h3>
             <div class="price">
@@ -74,7 +74,7 @@
             v-if="isLoggedIn && locationStore.isNigeria"
             @click="handlePayUPlan"
             class="plan-button"
-            style="background-color: #9b59b6; color: white;"
+            style="background-color: #9b59b6; color: white"
             :disabled="isProcessing"
           >
             <span v-if="isProcessing">Processing...</span>
@@ -84,7 +84,7 @@
             v-else-if="!isLoggedIn && locationStore.isNigeria"
             to="/register?plan=payu"
             class="plan-button"
-            style="background-color: #9b59b6; color: white;"
+            style="background-color: #9b59b6; color: white"
           >
             Buy 1 Credit
           </router-link>
@@ -213,7 +213,7 @@
             </div>
           </div>
 
-          <div class="comparison-card" style="border-top: 4px solid #9b59b6;">
+          <div class="comparison-card" style="border-top: 4px solid #9b59b6">
             <div class="comparison-card-header">Single Gen (Pay As You Use)</div>
             <div class="comparison-item">
               <span class="feature-label">Audio Generation</span>
@@ -1087,8 +1087,9 @@ onMounted(() => {
   background: #34495e;
   color: white;
   padding: 16px;
-  font-weight: 600;
-  font-size: clamp(1rem, 3vw, 1.1rem);
+  font-weight: 700;
+  font-size: clamp(1.1rem, 3vw, 1.2rem);
+  letter-spacing: 0.5px;
 }
 
 .comparison-card.featured-card .comparison-card-header {
@@ -1103,8 +1104,8 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #ecf0f1;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .comparison-item:last-child {
@@ -1116,16 +1117,16 @@ onMounted(() => {
 }
 
 .feature-label {
-  font-weight: 500;
-  color: #2c3e50;
-  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+  font-weight: 600;
+  color: #1e293b;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
   text-align: left;
 }
 
 .feature-value {
-  font-weight: 600;
-  color: #27ae60;
-  font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+  font-weight: 700;
+  color: #10b981;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 /* Desktop Table - Hidden on mobile */
@@ -1144,18 +1145,19 @@ onMounted(() => {
   grid-template-columns: 2fr 1fr 1fr 1fr;
   background: #34495e;
   color: white;
-  font-weight: 600;
+  font-weight: 700;
   padding: clamp(16px, 3vw, 20px);
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  letter-spacing: 0.5px;
 }
 
 .comparison-row {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
-  padding: clamp(12px, 2.5vw, 15px) clamp(16px, 3vw, 20px);
-  border-bottom: 1px solid #ecf0f1;
+  padding: clamp(16px, 3vw, 20px);
+  border-bottom: 1px solid #e2e8f0;
   align-items: center;
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 .comparison-row:last-child {
@@ -1168,18 +1170,18 @@ onMounted(() => {
 
 .feature-name {
   text-align: left;
-  font-weight: 500;
-  color: #2c3e50;
+  font-weight: 600;
+  color: #1e293b;
 }
 
 .plan-type,
 .plan-feature {
   text-align: center;
-  color: #5a6c7d;
+  color: #334155;
 }
 
 .plan-feature {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .payment-methods-info {
