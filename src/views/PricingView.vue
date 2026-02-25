@@ -52,6 +52,45 @@
           </router-link>
         </div>
 
+        <!-- Pay As You Use Plan -->
+        <div class="pricing-card">
+          <div class="plan-badge" style="background-color: #9b59b6;">Pay As You Use</div>
+          <div class="plan-header">
+            <h3>Single Gen</h3>
+            <div class="price">
+              {{ locationStore.isNigeria ? '₦500' : '$1' }}<span>/credit</span>
+            </div>
+            <div v-if="!locationStore.isNigeria" class="coming-soon-badge">Coming Soon</div>
+          </div>
+          <ul class="features-list">
+            <li>✓ Audio Generation</li>
+            <li>✓ Premium AI Models</li>
+            <li>✓ <strong>Flashcards Generation</strong></li>
+            <li>✓ Export capabilities</li>
+            <li>✓ Unlocked forever for specific doc</li>
+            <li>✓ Top quality output</li>
+          </ul>
+          <button
+            v-if="isLoggedIn && locationStore.isNigeria"
+            @click="handlePayUPlan"
+            class="plan-button"
+            style="background-color: #9b59b6; color: white;"
+            :disabled="isProcessing"
+          >
+            <span v-if="isProcessing">Processing...</span>
+            <span v-else>Buy 1 Credit</span>
+          </button>
+          <router-link
+            v-else-if="!isLoggedIn && locationStore.isNigeria"
+            to="/register?plan=payu"
+            class="plan-button"
+            style="background-color: #9b59b6; color: white;"
+          >
+            Buy 1 Credit
+          </router-link>
+          <button v-else class="plan-button disabled" disabled>Coming Soon</button>
+        </div>
+
         <!-- Student Plan -->
         <div class="pricing-card student-card">
           <div class="plan-badge student-badge">Student Discount</div>
@@ -66,6 +105,7 @@
           <ul class="features-list">
             <li>✓ Audio Generation</li>
             <li>✓ Summary Generation</li>
+            <li>✓ <strong>Flashcards Generation</strong></li>
             <li>✓ <strong>20+ questions</strong> per summary & quiz</li>
             <li>✓ <strong>Unlimited generations</strong> at a time</li>
             <li>✓ No need to delete - generate freely</li>
@@ -105,6 +145,7 @@
           <ul class="features-list">
             <li>✓ Audio Generation</li>
             <li>✓ Summary Generation</li>
+            <li>✓ <strong>Flashcards Generation</strong></li>
             <li>✓ <strong>20+ questions</strong> per summary & quiz</li>
             <li>✓ <strong>Unlimited generations</strong> at a time</li>
             <li>✓ No need to delete - generate freely</li>
@@ -147,6 +188,10 @@
               <span class="feature-value">✓</span>
             </div>
             <div class="comparison-item">
+              <span class="feature-label">Flashcards Generation</span>
+              <span class="feature-value">-</span>
+            </div>
+            <div class="comparison-item">
               <span class="feature-label">Questions per Summary</span>
               <span class="feature-value">5</span>
             </div>
@@ -168,6 +213,42 @@
             </div>
           </div>
 
+          <div class="comparison-card" style="border-top: 4px solid #9b59b6;">
+            <div class="comparison-card-header">Single Gen (Pay As You Use)</div>
+            <div class="comparison-item">
+              <span class="feature-label">Audio Generation</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Summary Generation</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Flashcards Generation</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Questions per Summary</span>
+              <span class="feature-value">20+</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Simultaneous Generations</span>
+              <span class="feature-value">1 per credit</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Delete to Generate New</span>
+              <span class="feature-value">Not Required</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Priority Support</span>
+              <span class="feature-value">-</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Export Capabilities</span>
+              <span class="feature-value">✓</span>
+            </div>
+          </div>
+
           <div class="comparison-card student-comparison-card">
             <div class="comparison-card-header">Student Plan</div>
             <div class="comparison-item">
@@ -176,6 +257,10 @@
             </div>
             <div class="comparison-item">
               <span class="feature-label">Summary Generation</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
+              <span class="feature-label">Flashcards Generation</span>
               <span class="feature-value">✓</span>
             </div>
             <div class="comparison-item">
@@ -211,6 +296,10 @@
               <span class="feature-value">✓</span>
             </div>
             <div class="comparison-item">
+              <span class="feature-label">Flashcards Generation</span>
+              <span class="feature-value">✓</span>
+            </div>
+            <div class="comparison-item">
               <span class="feature-label">Questions per Summary</span>
               <span class="feature-value">20+</span>
             </div>
@@ -238,12 +327,14 @@
           <div class="comparison-header">
             <div class="feature-name">Feature</div>
             <div class="plan-type">Starter</div>
+            <div class="plan-type">Single Gen</div>
             <div class="plan-type">Student</div>
             <div class="plan-type">Premium</div>
           </div>
 
           <div class="comparison-row">
             <div class="feature-name">Audio Generation</div>
+            <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
@@ -254,6 +345,15 @@
             <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
+            <div class="plan-feature">✓</div>
+          </div>
+
+          <div class="comparison-row">
+            <div class="feature-name">Flashcards Generation</div>
+            <div class="plan-feature">-</div>
+            <div class="plan-feature">✓</div>
+            <div class="plan-feature">✓</div>
+            <div class="plan-feature">✓</div>
           </div>
 
           <div class="comparison-row">
@@ -261,11 +361,13 @@
             <div class="plan-feature">5</div>
             <div class="plan-feature">20+</div>
             <div class="plan-feature">20+</div>
+            <div class="plan-feature">20+</div>
           </div>
 
           <div class="comparison-row">
             <div class="feature-name">Simultaneous Generations</div>
             <div class="plan-feature">3</div>
+            <div class="plan-feature">1 / credit</div>
             <div class="plan-feature">Unlimited</div>
             <div class="plan-feature">Unlimited</div>
           </div>
@@ -275,10 +377,12 @@
             <div class="plan-feature">Required</div>
             <div class="plan-feature">Not Required</div>
             <div class="plan-feature">Not Required</div>
+            <div class="plan-feature">Not Required</div>
           </div>
 
           <div class="comparison-row">
             <div class="feature-name">Priority Support</div>
+            <div class="plan-feature">-</div>
             <div class="plan-feature">-</div>
             <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
@@ -287,6 +391,7 @@
           <div class="comparison-row">
             <div class="feature-name">Export Capabilities</div>
             <div class="plan-feature">-</div>
+            <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
             <div class="plan-feature">✓</div>
           </div>
@@ -460,6 +565,76 @@ const handleStudentPlan = async () => {
 
     if (authUrl) {
       // Redirect to Paystack payment page
+      window.location.href = authUrl
+    } else {
+      console.error('Invalid payment response structure:', data)
+      showToast(
+        'Payment server did not return authorization URL. Please contact support if this persists.',
+        'error',
+        6000,
+      )
+    }
+  } catch (error) {
+    console.error('Payment error:', error)
+    showToast(`Payment initialization failed: ${error.message}. Please try again.`, 'error')
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+// Handle Single Generation (PAYU) for logged-in users
+const handlePayUPlan = async () => {
+  if (!isLoggedIn.value) {
+    router.push('/register?plan=payu')
+    return
+  }
+
+  if (!locationStore.isNigeria) {
+    return
+  }
+
+  isProcessing.value = true
+
+  try {
+    const userEmail = getUserEmail()
+
+    if (!userEmail) {
+      alert('Unable to retrieve your email. Please ensure your account has a valid email address.')
+      return
+    }
+
+    console.log('Initiating PAYU payment for email:', userEmail)
+
+    const response = await fetch(
+      'https://socratic-production-e023.up.railway.app/payment/initialize_payu/',
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: 500, // ₦500 for single generation
+          email: userEmail,
+        }),
+      },
+    )
+
+    console.log('Payment response status:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Payment error response:', errorText)
+      throw new Error(`Payment initialization failed: ${response.status} - ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('Payment response data:', data)
+
+    const authUrl =
+      data.data?.data?.authorization_url || data.data?.authorization_url || data.authorization_url
+
+    if (authUrl) {
       window.location.href = authUrl
     } else {
       console.error('Invalid payment response structure:', data)

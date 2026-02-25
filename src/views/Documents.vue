@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="documents-page">
     <div class="page-header">
@@ -107,7 +108,10 @@
           :deleting="deleting[doc.id]"
           @download-pdf="downloadPDF"
           @download-audio="downloadAudio"
+          @view-pdf="viewPDF"
+          @view-audio="viewAudio"
           @view-quiz="viewQuiz"
+          @view-flashcards="viewFlashcards"
           @delete="confirmDelete"
         />
       </div>
@@ -267,11 +271,12 @@ const filteredDocuments = computed(() => {
     case 'completed':
       filtered = filtered.filter((doc) => doc.status === 'COMPLETED')
       break
-    case 'recent':
+    case 'recent': {
       const oneWeekAgo = new Date()
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
       filtered = filtered.filter((doc) => new Date(doc.created_at) > oneWeekAgo)
       break
+    }
     case 'all':
     default:
       break
@@ -357,7 +362,7 @@ const setupSSE = () => {
         })
       }
     },
-    (data) => {
+    () => {
       showToast('All documents processed!', 'success')
       disconnectSSE()
       // Ideally we fetch one last time to be sure
@@ -452,10 +457,11 @@ const getTabCount = (tabValue) => {
       ).length
     case 'completed':
       return documents.value.filter((doc) => doc.status === 'COMPLETED').length
-    case 'recent':
+    case 'recent': {
       const oneWeekAgo = new Date()
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
       return documents.value.filter((doc) => new Date(doc.created_at) > oneWeekAgo).length
+    }
     default:
       return 0
   }
@@ -469,6 +475,28 @@ const clearFilters = () => {
 
 const viewQuiz = (documentId) => {
   router.push(`/quiz/${documentId}`)
+}
+
+const viewFlashcards = (documentId) => {
+  router.push(`/flashcards/${documentId}`)
+}
+
+const viewPDF = (documentId) => {
+  const doc = documents.value.find((d) => d.id === documentId)
+  if (doc?.pdf_view_url) {
+    window.open(doc.pdf_view_url, '_blank')
+  } else {
+    showToast('PDF view URL not available. Please try again later.', 'error')
+  }
+}
+
+const viewAudio = (documentId) => {
+  const doc = documents.value.find((d) => d.id === documentId)
+  if (doc?.audio_view_url) {
+    window.open(doc.audio_view_url, '_blank')
+  } else {
+    showToast('Audio view URL not available. Please try again later.', 'error')
+  }
 }
 
 const downloadPDF = async (documentId) => {

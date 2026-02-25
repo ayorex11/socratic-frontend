@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="quiz-page">
     <div class="quiz-container">
@@ -396,7 +397,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -438,10 +439,6 @@ const options = computed(() => {
     currentQuestion.value.option_3,
     currentQuestion.value.option_4,
   ].filter((option) => option !== undefined && option !== null)
-})
-
-const isLastQuestion = computed(() => {
-  return currentQuestionIndex.value === questions.value.length - 1
 })
 
 const progressPercentage = computed(() => {
@@ -545,7 +542,7 @@ const getSelectedOption = (questionId) => {
 }
 
 const isQuestionAnswered = (questionId) => {
-  return userAnswers.value.hasOwnProperty(questionId)
+  return Object.prototype.hasOwnProperty.call(userAnswers.value, questionId)
 }
 
 // New methods for review mode
@@ -711,13 +708,18 @@ watch(timeRemaining, (newTime) => {
 })
 
 // Start timer if time limit is set
+let timerInterval = null
 if (timeLimit.value > 0) {
-  setInterval(() => {
+  timerInterval = setInterval(() => {
     if (timeRemaining.value > 0 && !quizCompleted.value && !submitting.value) {
       timeRemaining.value--
     }
   }, 1000)
 }
+
+onUnmounted(() => {
+  if (timerInterval) clearInterval(timerInterval)
+})
 
 onMounted(() => {
   fetchQuizQuestions()
@@ -1236,8 +1238,8 @@ onMounted(() => {
   height: 140px;
   border-radius: 50%;
   background: conic-gradient(
-    #10b981 0% v-bind('results.scorePercentage') %,
-    #e2e8f0 v-bind('results.scorePercentage') % 100%
+    #10b981 0% calc(v-bind('results.scorePercentage') * 1%),
+    #e2e8f0 calc(v-bind('results.scorePercentage') * 1%) 100%
   );
   display: flex;
   align-items: center;

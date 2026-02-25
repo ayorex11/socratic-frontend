@@ -32,7 +32,7 @@ class CustomEventSource {
       const headers = {
         Accept: 'text/event-stream',
         'Cache-Control': 'no-cache',
-        ...(this.options.headers || {}),
+        ...this.options.headers,
       }
 
       // Add Last-Event-ID header if we have one
@@ -270,7 +270,7 @@ export function useProcessingSSE() {
         }
       })
 
-      eventSource.value.addEventListener('timeout', (event) => {
+      eventSource.value.addEventListener('timeout', () => {
         console.log('SSE timeout - will reconnect')
         if (onError) onError({ error: 'Connection timeout' })
       })
@@ -357,7 +357,7 @@ export function useProcessingSSE() {
         }
       })
 
-      eventSource.value.addEventListener('timeout', (event) => {
+      eventSource.value.addEventListener('timeout', () => {
         console.log('SSE timeout - will reconnect')
         if (onError) onError({ error: 'Connection timeout' })
       })

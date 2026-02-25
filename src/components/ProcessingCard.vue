@@ -10,7 +10,10 @@
             </svg>
           </div>
           <div>
-            <h3 class="document-title">{{ document.document_title }}</h3>
+            <div class="title-wrapper">
+              <h3 class="document-title">{{ document.document_title }}</h3>
+              <span v-if="document.is_premium_generation" class="premium-doc-badge">Premium ✨</span>
+            </div>
             <p class="completion-time">Completed {{ formatTime(document.created_at) }}</p>
           </div>
         </div>
@@ -28,11 +31,9 @@
       </div>
 
       <div class="action-grid">
-        <button
+        <div
           v-if="document.pdf_generated"
-          @click="$emit('download-pdf', document.id)"
           class="action-card pdf-card"
-          :disabled="downloadingPDF"
         >
           <div class="action-icon pdf-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -42,16 +43,25 @@
           </div>
           <div class="action-info">
             <div class="action-label">PDF Report</div>
-            <div class="action-sublabel">Download</div>
+            <div class="action-buttons">
+              <button class="btn-action view" @click="$emit('view-pdf', document.id)">View</button>
+              <button
+                class="btn-action download"
+                @click="$emit('download-pdf', document.id)"
+                :disabled="downloadingPDF || (!document.is_premium_generation && !isPremiumUser)"
+                :title="(!document.is_premium_generation && !isPremiumUser) ? 'Premium Required' : 'Download'"
+              >
+                <span v-if="!document.is_premium_generation && !isPremiumUser">🔒 DL</span>
+                <span v-else>Download</span>
+              </button>
+            </div>
           </div>
-          <div v-if="downloadingPDF" class="mini-spinner dark"></div>
-        </button>
+          <div v-if="downloadingPDF" class="mini-spinner dark" style="position: absolute; top: 10px; right: 10px;"></div>
+        </div>
 
-        <button
+        <div
           v-if="document.audio_generated"
-          @click="$emit('download-audio', document.id)"
           class="action-card audio-card"
-          :disabled="downloadingAudio"
         >
           <div class="action-icon audio-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -60,10 +70,21 @@
           </div>
           <div class="action-info">
             <div class="action-label">Audio Summary</div>
-            <div class="action-sublabel">Download</div>
+            <div class="action-buttons">
+              <button class="btn-action view" @click="$emit('view-audio', document.id)">Listen</button>
+              <button
+                class="btn-action download"
+                @click="$emit('download-audio', document.id)"
+                :disabled="downloadingAudio || (!document.is_premium_generation && !isPremiumUser)"
+                :title="(!document.is_premium_generation && !isPremiumUser) ? 'Premium Required' : 'Download'"
+              >
+                <span v-if="!document.is_premium_generation && !isPremiumUser">🔒 DL</span>
+                <span v-else>Download</span>
+              </button>
+            </div>
           </div>
-          <div v-if="downloadingAudio" class="mini-spinner dark"></div>
-        </button>
+          <div v-if="downloadingAudio" class="mini-spinner dark" style="position: absolute; top: 10px; right: 10px;"></div>
+        </div>
 
         <button
           v-if="document.quiz_generated"
@@ -79,6 +100,23 @@
           <div class="action-info">
             <div class="action-label">Practice Quiz</div>
             <div class="action-sublabel">Start now</div>
+          </div>
+        </button>
+
+        <button
+          v-if="document.flashcards"
+          @click="$emit('view-flashcards', document.id)"
+          class="action-card flashcard-card"
+        >
+          <div class="action-icon flashcard-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="16" rx="2" ry="2"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div class="action-info">
+            <div class="action-label">Flashcards</div>
+            <div class="action-sublabel">Review</div>
           </div>
         </button>
       </div>
@@ -116,7 +154,10 @@
     <div v-else class="card-content processing-content">
       <div class="processing-header">
         <div class="title-row">
-          <h3 class="document-title">{{ document.document_title }}</h3>
+          <div class="title-wrapper">
+            <h3 class="document-title">{{ document.document_title }}</h3>
+            <span v-if="document.is_premium_generation" class="premium-doc-badge">Premium ✨</span>
+          </div>
           <div class="status-badge processing-badge">
             <div class="pulse-dot"></div>
             Processing
@@ -155,7 +196,7 @@
       <!-- Compact Stage Tracker -->
       <div class="stage-tracker">
         <div
-          v-for="(stage, index) in stages"
+          v-for="stage in stages"
           :key="stage.key"
           class="stage-dot"
           :class="{
@@ -186,6 +227,13 @@
 <script setup>
 import { computed } from 'vue'
 import { FileText, Brain, FileCheck, Mic, HelpCircle, Clock } from 'lucide-vue-next'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+
+const isPremiumUser = computed(() => {
+  return authStore.user?.premium_user || false
+})
 
 const props = defineProps({
   document: {
@@ -206,7 +254,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['download-pdf', 'download-audio', 'view-quiz', 'delete'])
+defineEmits(['download-pdf', 'download-audio', 'view-pdf', 'view-audio', 'view-quiz', 'view-flashcards', 'delete'])
 
 // Stage configuration
 const STAGE_CONFIG = {
@@ -456,6 +504,15 @@ const formatTime = (timestamp) => {
   background: #fffbeb;
 }
 
+.flashcard-card {
+  border-color: #8b5cf6;
+}
+
+.flashcard-card:hover:not(:disabled) {
+  border-color: #7c3aed;
+  background: #f5f3ff;
+}
+
 .action-icon {
   width: 48px;
   height: 48px;
@@ -478,6 +535,10 @@ const formatTime = (timestamp) => {
   background: #f59e0b;
 }
 
+.flashcard-icon {
+  background: #8b5cf6;
+}
+
 .action-info {
   flex: 1;
 }
@@ -493,6 +554,68 @@ const formatTime = (timestamp) => {
   font-size: 12px;
   color: #6b7280;
   font-weight: 500;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  justify-content: center;
+}
+
+.btn-action {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-action.view {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.btn-action.view:hover {
+  background: #e5e7eb;
+}
+
+.btn-action.download {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.btn-action.download:hover:not(:disabled) {
+  background: #bae6fd;
+}
+
+.btn-action.download:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px 0;
+}
+
+.title-wrapper .document-title {
+  margin: 0;
+}
+
+.premium-doc-badge {
+  background: #fdf2e9;
+  color: #d35400;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 1px solid #e67e22;
+  white-space: nowrap;
 }
 
 /* FAILED STATE */

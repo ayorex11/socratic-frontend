@@ -38,7 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         return { success: false, error: data.detail || data }
       }
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Network error' }
     }
   }
@@ -92,7 +92,7 @@ export const useAuthStore = defineStore('auth', () => {
                 : data.detail || 'Registration failed'
         return { success: false, error: errorMessage }
       }
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Network error' }
     }
   }
@@ -134,7 +134,7 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         return { success: false, error: data.error || 'Failed to logout all devices' }
       }
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Network error' }
     }
   }
@@ -187,7 +187,7 @@ export const useAuthStore = defineStore('auth', () => {
         isAuthenticated.value = false
         return false
       }
-    } catch (error) {
+    } catch {
       return false
     }
   }

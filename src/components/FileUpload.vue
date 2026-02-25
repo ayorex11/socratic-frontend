@@ -151,6 +151,24 @@
           </div>
         </div>
 
+        <!-- Use Premium Generation Toggle -->
+        <div v-if="!userStore.user?.premium_user" class="premium-toggle-group">
+          <label class="premium-checkbox-label">
+            <input
+              type="checkbox"
+              v-model="usePremium"
+              :disabled="premiumCredits <= 0 || uploading"
+            />
+            <span class="toggle-text">Use Premium Generation (Costs 1 Credit)</span>
+            <span class="credit-balance">
+              (Balance: {{ premiumCredits }})
+            </span>
+          </label>
+          <p class="premium-toggle-hint" v-if="premiumCredits <= 0">
+            You have no premium credits. <router-link to="/pricing">Buy a single generation credit</router-link> to unlock premium AI models, flashcards, and unrestricted downloads.
+          </p>
+        </div>
+
         <!-- Submit Button -->
         <button
           type="submit"
@@ -164,7 +182,10 @@
         <!-- Premium Badge for Free Users -->
         <div v-if="!userStore.user?.premium_user" class="free-user-notice">
           <div class="premium-badge">Free</div>
-          <p>You have {{ remainingGenerations }} free generations remaining</p>
+          <p>You have {{ remainingGenerations }} free generations remaining.</p>
+          <p v-if="premiumCredits > 0" class="premium-credits-notice">
+            You also have {{ premiumCredits }} premium credit(s) available.
+          </p>
         </div>
       </form>
     </div>
@@ -196,6 +217,7 @@ const uploadProgress = ref(0)
 const progressMessage = ref('Uploading files...')
 const error = ref('')
 const success = ref('')
+const usePremium = ref(false)
 
 const studyInput = ref(null)
 const pastQuestionsInput = ref(null)
@@ -222,6 +244,10 @@ const remainingGenerations = computed(() => {
   const usedGenerations = userStore.user?.number_of_generations || 0
   const remaining = 3 - usedGenerations
   return Math.max(0, remaining)
+})
+
+const premiumCredits = computed(() => {
+  return userStore.user?.premium_credits || 0
 })
 
 // Method to refresh user data from backend
@@ -403,6 +429,7 @@ const handleUpload = async () => {
     const formData = new FormData()
     formData.append('document_title', form.value.document_title.trim())
     formData.append('study_material', form.value.study_material)
+    formData.append('use_premium', usePremium.value)
 
     // Add past questions if present
     if (form.value.past_questions) {
@@ -783,6 +810,54 @@ input[type='text']:disabled {
 
 .upgrade-link:hover {
   text-decoration: underline;
+}
+
+.premium-toggle-group {
+  margin: clamp(16px, 3vw, 20px) 0;
+  padding: clamp(12px, 3vw, 16px);
+  background: #fdf2e9;
+  border: 1px solid #e67e22;
+  border-radius: 8px;
+}
+
+.premium-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: #d35400;
+  font-weight: 600;
+  margin: 0;
+}
+
+.premium-checkbox-label input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.credit-balance {
+  font-weight: normal;
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+.premium-toggle-hint {
+  font-size: 0.85rem;
+  color: #d35400;
+  margin: 8px 0 0 28px;
+}
+
+.premium-toggle-hint a {
+  color: #e67e22;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.premium-credits-notice {
+  color: #e67e22;
+  font-weight: 600;
+  margin-top: 5px;
 }
 
 .upload-btn {
