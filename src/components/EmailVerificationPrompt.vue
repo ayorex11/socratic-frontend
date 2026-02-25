@@ -113,6 +113,8 @@ const resendVerification = async () => {
 
     if (response.ok) {
       success.value = 'Verification email sent successfully! Please check your inbox.'
+    } else if (response.status === 404) {
+      error.value = 'Account not found. Please check your email address or register for a new account.'
     } else {
       if (data.detail) {
         error.value = data.detail
