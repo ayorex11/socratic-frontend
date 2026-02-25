@@ -10,19 +10,39 @@
           <div class="spinner"></div>
           <p>Loading document...</p>
         </div>
-        <iframe
-          :src="pdfUrl ? `${pdfUrl}#toolbar=0` : ''"
-          class="pdf-iframe"
-          @load="isLoading = false"
-          title="PDF Viewer"
-        ></iframe>
+
+        <div class="pdf-toolbar" v-if="!isLoading && pageCount > 0">
+          <div class="zoom-controls">
+            <button @click="zoomOut" class="tool-btn" :disabled="scale <= 0.5">-</button>
+            <span class="zoom-level">{{ Math.round(scale * 100) }}%</span>
+            <button @click="zoomIn" class="tool-btn" :disabled="scale >= 3">+</button>
+          </div>
+          <div class="page-controls">
+            <button @click="prevPage" class="tool-btn" :disabled="currentPage <= 1">&lt;</button>
+            <span class="page-info">{{ currentPage }} / {{ pageCount }}</span>
+            <button @click="nextPage" class="tool-btn" :disabled="currentPage >= pageCount">&gt;</button>
+          </div>
+        </div>
+
+        <div class="pdf-container" ref="pdfContainer">
+          <VuePdfEmbed
+            v-if="pdfUrl"
+            :source="pdfUrl"
+            :page="currentPage"
+            :width="pdfWidth"
+            @rendered="onRendered"
+            @loaded="onLoaded"
+            class="vue-pdf-embed"
+          />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
+import VuePdfEmbed from 'vue-pdf-embed'
 
 const props = defineProps({
   isOpen: {
@@ -42,15 +62,76 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const isLoading = ref(true)
+const currentPage = ref(1)
+const pageCount = ref(0)
+const scale = ref(1.0)
+const pdfWidth = ref(800)
+const pdfContainer = ref(null)
 
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     isLoading.value = true
+    currentPage.value = 1
+    scale.value = 1.0
     document.body.style.overflow = 'hidden'
+    setTimeout(updateWidth, 100)
   } else {
     document.body.style.overflow = ''
   }
 })
+
+// Listen to window resizes to adjust PDF width dynamically
+onMounted(() => {
+  window.addEventListener('resize', updateWidth)
+})
+
+const updateWidth = () => {
+  if (pdfContainer.value) {
+    // 48px is the padding of the modal body
+    const containerWidth = pdfContainer.value.clientWidth - 48
+    pdfWidth.value = containerWidth * scale.value
+  }
+}
+
+watch(scale, () => {
+  updateWidth()
+})
+
+const onLoaded = (pdf) => {
+  pageCount.value = pdf.numPages
+}
+
+const onRendered = () => {
+  isLoading.value = false
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+    scrollToTop()
+  }
+}
+
+const nextPage = () => {
+  if (currentPage.value < pageCount.value) {
+    currentPage.value++
+    scrollToTop()
+  }
+}
+
+const zoomIn = () => {
+  if (scale.value < 3) scale.value += 0.25
+}
+
+const zoomOut = () => {
+  if (scale.value > 0.5) scale.value -= 0.25
+}
+
+const scrollToTop = () => {
+  if (pdfContainer.value) {
+    pdfContainer.value.scrollTop = 0
+  }
+}
 
 const close = () => {
   emit('close')
@@ -128,15 +209,71 @@ const close = () => {
   padding: 0;
   background: #e2e8f0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
 }
 
-.pdf-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: white; /* Optional: adds a white background behind the PDF if it's transparent */
+.pdf-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.zoom-controls, .page-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tool-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tool-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.tool-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zoom-level, .page-info {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #475569;
+  min-width: 48px;
+  text-align: center;
+}
+
+.pdf-container {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.vue-pdf-embed {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: white;
+  margin: 0 auto;
 }
 
 .loading-state {
