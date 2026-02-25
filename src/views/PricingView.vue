@@ -1142,7 +1142,7 @@ onMounted(() => {
 
 .comparison-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 1.5fr repeat(4, 1fr);
   background: #34495e;
   color: white;
   font-weight: 700;
@@ -1153,7 +1153,7 @@ onMounted(() => {
 
 .comparison-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 1.5fr repeat(4, 1fr);
   padding: clamp(16px, 3vw, 20px);
   border-bottom: 1px solid #e2e8f0;
   align-items: center;
@@ -1174,7 +1174,11 @@ onMounted(() => {
   color: #1e293b;
 }
 
-.plan-type,
+.plan-type {
+  text-align: center;
+  color: #ffffff;
+}
+
 .plan-feature {
   text-align: center;
   color: #334155;

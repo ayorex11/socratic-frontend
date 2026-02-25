@@ -114,8 +114,8 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
 }
 
-const handleLogout = () => {
-  authStore.logout()
+const handleLogout = async () => {
+  await authStore.logout()
   closeMobileMenu()
   // Redirect to home page after logout
   router.push('/')

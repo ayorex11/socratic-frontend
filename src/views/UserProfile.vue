@@ -306,8 +306,8 @@ const handlePasswordChange = async () => {
       passwordForm.value.new_password2 = ''
 
       // Logout user after 2 seconds so they can verify legitimacy
-      setTimeout(() => {
-        authStore.logout()
+      setTimeout(async () => {
+        await authStore.logout()
         router.push('/login')
       }, 2000)
     } else {
