@@ -69,6 +69,8 @@
             @download-pdf="downloadPDF"
             @download-audio="downloadAudio"
             @view-quiz="viewQuiz"
+            @view-pdf="viewPDF"
+            @view-audio="viewAudio"
             @delete="confirmDelete"
           />
         </div>
@@ -116,6 +118,22 @@
           </div>
         </div>
       </div>
+
+      <!-- PDF Viewer Modal -->
+      <PdfViewerModal
+        :is-open="isPdfModalOpen"
+        :pdf-url="currentPdfUrl"
+        :title="currentDocumentTitle"
+        @close="closePdfModal"
+      />
+
+      <!-- Audio Player Modal -->
+      <AudioPlayerModal
+        :is-open="isAudioModalOpen"
+        :audio-url="currentAudioUrl"
+        :title="currentDocumentTitle"
+        @close="closeAudioModal"
+      />
     </div>
   </div>
 </template>
@@ -124,6 +142,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ProcessingCard from '../components/ProcessingCard.vue'
+import PdfViewerModal from '../components/PdfViewerModal.vue'
+import AudioPlayerModal from '../components/AudioPlayerModal.vue'
 import { useProcessingSSE } from '../composables/useProcessingSSE'
 
 const router = useRouter()
@@ -136,6 +156,13 @@ const downloadingPDF = ref({})
 const downloadingAudio = ref({})
 const deleting = ref({})
 const deleteConfirmId = ref(null)
+
+// Modal States
+const isPdfModalOpen = ref(false)
+const currentPdfUrl = ref('')
+const isAudioModalOpen = ref(false)
+const currentAudioUrl = ref('')
+const currentDocumentTitle = ref('')
 
 // SSE composable
 const {
@@ -271,6 +298,38 @@ onUnmounted(() => {
 
 const viewQuiz = (documentId) => {
   router.push(`/quiz/${documentId}`)
+}
+
+const viewPDF = (documentId) => {
+  const doc = documents.value.find((d) => d.id === documentId)
+  if (doc?.pdf_view_url) {
+    currentPdfUrl.value = doc.pdf_view_url
+    currentDocumentTitle.value = doc.document_title || 'Document'
+    isPdfModalOpen.value = true
+  } else {
+    showToast('PDF view URL not available. Please try again later.', 'error')
+  }
+}
+
+const viewAudio = (documentId) => {
+  const doc = documents.value.find((d) => d.id === documentId)
+  if (doc?.audio_view_url) {
+    currentAudioUrl.value = doc.audio_view_url
+    currentDocumentTitle.value = doc.document_title || 'Audio Recording'
+    isAudioModalOpen.value = true
+  } else {
+    showToast('Audio view URL not available. Please try again later.', 'error')
+  }
+}
+
+const closePdfModal = () => {
+  isPdfModalOpen.value = false
+  currentPdfUrl.value = ''
+}
+
+const closeAudioModal = () => {
+  isAudioModalOpen.value = false
+  currentAudioUrl.value = ''
 }
 
 // Download PDF function
