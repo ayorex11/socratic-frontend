@@ -33,9 +33,7 @@
 
     <!-- Flashcards UI -->
     <div v-else class="flashcards-container">
-      <div class="progress-indicator">
-        Card {{ currentIndex + 1 }} of {{ flashcards.length }}
-      </div>
+      <div class="progress-indicator">Card {{ currentIndex + 1 }} of {{ flashcards.length }}</div>
 
       <div class="flashcard-viewport">
         <transition :name="transitionName" mode="out-in">
@@ -62,18 +60,10 @@
       </div>
 
       <div class="flashcard-controls">
-        <button
-          @click="prevCard"
-          class="control-btn"
-          :disabled="currentIndex === 0"
-        >
+        <button @click="prevCard" class="control-btn" :disabled="currentIndex === 0">
           ← Previous
         </button>
-        <button
-          @click="resetDeck"
-          class="control-btn secondary"
-          title="Restart Deck"
-        >
+        <button @click="resetDeck" class="control-btn secondary" title="Restart Deck">
           ↺ Restart
         </button>
         <button
@@ -133,15 +123,21 @@ const fetchFlashcards = async () => {
       document.value = data
 
       // Parse flashcards if necessary (sometimes it comes as a string)
-      if (typeof data.flashcards === 'string') {
+      let rawFlashcards = data.flashcards
+      if (typeof rawFlashcards === 'string') {
         try {
-          flashcards.value = JSON.parse(data.flashcards)
+          rawFlashcards = JSON.parse(rawFlashcards)
         } catch {
-          flashcards.value = data.flashcards
+          rawFlashcards = []
         }
-      } else {
-        flashcards.value = data.flashcards || []
       }
+
+      // Normalize flashcard format: backend sends {term, definition},
+      // frontend expects {front, back}
+      flashcards.value = (rawFlashcards || []).map((card) => ({
+        front: card.front || card.term || card.question || '',
+        back: card.back || card.definition || card.answer || '',
+      }))
     } else if (response.status === 401) {
       router.push('/login?session_expired=true')
     } else {
@@ -269,7 +265,9 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(66, 153, 225, 0.15);
 }
 
-.loading-state, .error-state, .empty-state {
+.loading-state,
+.error-state,
+.empty-state {
   text-align: center;
   padding: 60px 20px;
   background: white;
@@ -290,11 +288,16 @@ onUnmounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
-.error-icon, .empty-icon {
+.error-icon,
+.empty-icon {
   font-size: 3rem;
   margin-bottom: 16px;
 }
@@ -326,7 +329,7 @@ onUnmounted(() => {
   background: white;
   padding: 8px 16px;
   border-radius: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .flashcard-viewport {
@@ -364,7 +367,8 @@ onUnmounted(() => {
   transform: rotateY(180deg);
 }
 
-.flashcard-front, .flashcard-back {
+.flashcard-front,
+.flashcard-back {
   position: absolute;
   width: 100%;
   height: 100%;

@@ -20,7 +20,9 @@
           <div class="page-controls">
             <button @click="prevPage" class="tool-btn" :disabled="currentPage <= 1">&lt;</button>
             <span class="page-info">{{ currentPage }} / {{ pageCount }}</span>
-            <button @click="nextPage" class="tool-btn" :disabled="currentPage >= pageCount">&gt;</button>
+            <button @click="nextPage" class="tool-btn" :disabled="currentPage >= pageCount">
+              &gt;
+            </button>
           </div>
         </div>
 
@@ -47,16 +49,16 @@ import VuePdfEmbed from 'vue-pdf-embed'
 const props = defineProps({
   isOpen: {
     type: Boolean,
-    required: true
+    required: true,
   },
   pdfUrl: {
     type: String,
-    required: true
+    required: true,
   },
   title: {
     type: String,
-    default: ''
-  }
+    default: '',
+  },
 })
 
 const emit = defineEmits(['close'])
@@ -68,17 +70,20 @@ const scale = ref(1.0)
 const pdfWidth = ref(800)
 const pdfContainer = ref(null)
 
-watch(() => props.isOpen, (newVal) => {
-  if (newVal) {
-    isLoading.value = true
-    currentPage.value = 1
-    scale.value = 1.0
-    document.body.style.overflow = 'hidden'
-    setTimeout(updateWidth, 100)
-  } else {
-    document.body.style.overflow = ''
-  }
-})
+watch(
+  () => props.isOpen,
+  (newVal) => {
+    if (newVal) {
+      isLoading.value = true
+      currentPage.value = 1
+      scale.value = 1.0
+      document.body.style.overflow = 'hidden'
+      setTimeout(updateWidth, 100)
+    } else {
+      document.body.style.overflow = ''
+    }
+  },
+)
 
 // Listen to window resizes to adjust PDF width dynamically
 onMounted(() => {
@@ -205,11 +210,13 @@ const close = () => {
 
 .modal-body.pdf-body {
   flex: 1;
+  min-height: 0;
   position: relative;
   padding: 0;
   background: #e2e8f0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .pdf-toolbar {
@@ -219,10 +226,11 @@ const close = () => {
   padding: 12px 24px;
   background: #ffffff;
   border-bottom: 1px solid #cbd5e1;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.zoom-controls, .page-controls {
+.zoom-controls,
+.page-controls {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -253,7 +261,8 @@ const close = () => {
   cursor: not-allowed;
 }
 
-.zoom-level, .page-info {
+.zoom-level,
+.page-info {
   font-size: 0.95rem;
   font-weight: 500;
   color: #475569;
@@ -263,6 +272,7 @@ const close = () => {
 
 .pdf-container {
   flex: 1;
+  min-height: 0;
   overflow: auto;
   padding: 24px;
   display: flex;
@@ -300,8 +310,12 @@ const close = () => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 640px) {
