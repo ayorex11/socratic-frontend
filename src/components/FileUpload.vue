@@ -160,12 +160,12 @@
               :disabled="premiumCredits <= 0 || uploading"
             />
             <span class="toggle-text">Use Premium Generation (Costs 1 Credit)</span>
-            <span class="credit-balance">
-              (Balance: {{ premiumCredits }})
-            </span>
+            <span class="credit-balance"> (Balance: {{ premiumCredits }}) </span>
           </label>
           <p class="premium-toggle-hint" v-if="premiumCredits <= 0">
-            You have no premium credits. <router-link to="/pricing">Buy a single generation credit</router-link> to unlock premium AI models, flashcards, and unrestricted downloads.
+            You have no premium credits.
+            <router-link to="/pricing">Buy a single generation credit</router-link> to unlock
+            premium AI models, flashcards, and unrestricted downloads.
           </p>
         </div>
 
@@ -411,10 +411,12 @@ const removeFile = (field) => {
 
 // Upload method with user data refresh
 const handleUpload = async () => {
-  // Check generation limit before uploading
+  // Check generation limit before uploading (allow pay-as-you-go with premium credits)
   if (!userStore.user?.premium_user && remainingGenerations.value <= 0) {
-    error.value = 'You have reached your free generation limit. Please upgrade to premium.'
-    return
+    if (!(usePremium.value && premiumCredits.value > 0)) {
+      error.value = 'You have reached your free generation limit. Please upgrade to premium.'
+      return
+    }
   }
 
   if (!canSubmit.value || uploading.value) return
