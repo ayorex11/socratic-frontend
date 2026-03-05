@@ -14,7 +14,11 @@
         </div>
       </div>
       <div class="hero-image">
-        <div class="placeholder-image">📚</div>
+        <img
+          src="/hero-reading.png"
+          alt="Two students reading together"
+          class="hero-illustration"
+        />
       </div>
     </section>
 
@@ -257,9 +261,11 @@
   order: -1;
 }
 
-.placeholder-image {
-  font-size: clamp(4rem, 15vw, 8rem);
-  opacity: 0.8;
+.hero-illustration {
+  width: 100%;
+  max-width: clamp(250px, 40vw, 450px);
+  height: auto;
+  mix-blend-mode: multiply;
 }
 
 /* Workflow Section */
@@ -495,21 +501,36 @@
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
-  .hero-title,
-  .section-title,
-  .step-content h3,
-  .feature-card h3,
-  .use-case h3,
-  .cta-section h2 {
-    color: #ffffff;
+  .home {
+    background: #121212;
   }
 
-  .hero-subtitle,
+  .hero {
+    background: #121212;
+  }
+
+  .hero-title {
+    color: #27ae60;
+  }
+
+  .hero-subtitle {
+    color: #b0b0b0;
+  }
+
+  .section-title {
+    color: #27ae60;
+  }
+
+  .step-content h3,
+  .feature-card h3,
+  .use-case h3 {
+    color: #2ecc71;
+  }
+
   .step-content p,
   .feature-card p,
-  .use-case p,
-  .cta-section p {
-    color: #cccccc;
+  .use-case p {
+    color: #b0b0b0;
   }
 
   .workflow,
@@ -517,15 +538,28 @@
     background: #1a1a1a;
   }
 
+  .features {
+    background: #121212;
+  }
+
   .feature-card,
   .use-case {
     background: #2d2d2d;
-    color: #ffffff;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   }
 
-  .feature-card p,
-  .use-case p {
-    color: #aaaaaa;
+  .cta-button.secondary {
+    color: #2ecc71;
+    border-color: #2ecc71;
+  }
+
+  .cta-button.secondary:hover {
+    background: #2ecc71;
+    color: #121212;
+  }
+
+  .hero-illustration {
+    mix-blend-mode: screen;
   }
 }
 
