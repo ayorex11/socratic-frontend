@@ -81,6 +81,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { API_BASE } from '@/config'
 
 const route = useRoute()
 const router = useRouter()
@@ -107,16 +108,13 @@ const fetchFlashcards = async () => {
   error.value = ''
 
   try {
-    const response = await fetch(
-      `https://socratic-production-e023.up.railway.app/socratic/retrieve/${documentId}/`,
-      {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    const response = await fetch(`${API_BASE}/socratic/retrieve/${documentId}/`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+    })
 
     if (response.ok) {
       const data = await response.json()

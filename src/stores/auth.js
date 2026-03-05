@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-
-const API_BASE = 'https://socratic-production-e023.up.railway.app'
+import { API_BASE } from '@/config'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)

@@ -48,6 +48,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { API_BASE } from '@/config'
 
 const router = useRouter()
 const email = ref('')
@@ -61,18 +62,15 @@ const handleResetRequest = async () => {
   success.value = ''
 
   try {
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/resetpassword/password/reset/',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email.value,
-        }),
+    const response = await fetch(`${API_BASE}/resetpassword/password/reset/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        email: email.value,
+      }),
+    })
 
     const data = await response.json()
 

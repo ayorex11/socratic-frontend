@@ -210,6 +210,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { API_BASE } from '@/config'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -240,7 +241,7 @@ const transactionError = ref('')
 
 const fetchUserData = async () => {
   try {
-    const response = await fetch('https://socratic-production-e023.up.railway.app/auth/user/', {
+    const response = await fetch(`${API_BASE}/auth/user/`, {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -283,20 +284,17 @@ const handlePasswordChange = async () => {
   }
 
   try {
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/auth/password/change/',
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          new_password1: passwordForm.value.new_password1,
-          new_password2: passwordForm.value.new_password2,
-        }),
+    const response = await fetch(`${API_BASE}/auth/password/change/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        new_password1: passwordForm.value.new_password1,
+        new_password2: passwordForm.value.new_password2,
+      }),
+    })
 
     const data = await response.json()
 
@@ -352,16 +350,13 @@ const fetchTransactions = async () => {
   transactionError.value = ''
 
   try {
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/payment/transaction_history/',
-      {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    const response = await fetch(`${API_BASE}/payment/transaction_history/`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+    })
 
     if (response.ok) {
       const data = await response.json()

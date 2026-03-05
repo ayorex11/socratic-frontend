@@ -78,6 +78,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { API_BASE } from '@/config'
 
 const router = useRouter()
 const route = useRoute()
@@ -125,21 +126,18 @@ const handleResetConfirm = async () => {
   }
 
   try {
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/resetpassword/password/reset/confirm/',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          new_password1: passwordForm.value.new_password1,
-          new_password2: passwordForm.value.new_password2,
-          uid: uid.value,
-          token: token.value,
-        }),
+    const response = await fetch(`${API_BASE}/resetpassword/password/reset/confirm/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        new_password1: passwordForm.value.new_password1,
+        new_password2: passwordForm.value.new_password2,
+        uid: uid.value,
+        token: token.value,
+      }),
+    })
 
     const data = await response.json()
 

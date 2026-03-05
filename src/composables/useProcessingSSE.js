@@ -1,4 +1,5 @@
 import { ref, onUnmounted } from 'vue'
+import { API_BASE } from '@/config'
 
 /**
  * Custom SSE implementation that supports Authorization headers
@@ -211,7 +212,7 @@ export function useProcessingSSE() {
   const connectToDocument = (documentId, onUpdate, onComplete, onError) => {
     disconnect()
 
-    const url = `https://socratic-production-e023.up.railway.app/socratic/processing-status-stream/${documentId}/`
+    const url = `${API_BASE}/socratic/processing-status-stream/${documentId}/`
 
     try {
       eventSource.value = new CustomEventSource(url, {
@@ -298,7 +299,7 @@ export function useProcessingSSE() {
   const connectToAllDocuments = (onUpdate, onComplete, onError) => {
     disconnect()
 
-    const url = `https://socratic-production-e023.up.railway.app/socratic/all-processing-status-stream/`
+    const url = `${API_BASE}/socratic/all-processing-status-stream/`
 
     try {
       eventSource.value = new CustomEventSource(url, {

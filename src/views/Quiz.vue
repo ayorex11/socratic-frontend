@@ -399,6 +399,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { API_BASE } from '@/config'
 
 const route = useRoute()
 const router = useRouter()
@@ -456,16 +457,13 @@ const fetchQuizQuestions = async () => {
     error.value = ''
     const documentId = route.params.id
 
-    const response = await fetch(
-      `https://socratic-production-e023.up.railway.app/quiz/quizzes/${documentId}/start/`,
-      {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    const response = await fetch(`${API_BASE}/quiz/quizzes/${documentId}/start/`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+    })
 
     if (response.ok) {
       const data = await response.json()
@@ -618,19 +616,16 @@ const submitAllAnswers = async () => {
     })
 
     // Proper JSON parsing and submission
-    const response = await fetch(
-      `https://socratic-production-e023.up.railway.app/quiz/quizzes/${documentId}/submit/`,
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          answers: submissionData,
-        }),
+    const response = await fetch(`${API_BASE}/quiz/quizzes/${documentId}/submit/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        answers: submissionData,
+      }),
+    })
 
     if (response.ok) {
       const result = await response.json()

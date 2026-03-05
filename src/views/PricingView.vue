@@ -396,6 +396,7 @@ import { useRouter } from 'vue-router'
 import { useLocationStore } from '@/stores/locationStore'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import { API_BASE } from '@/config'
 
 const locationStore = useLocationStore()
 const authStore = useAuthStore()
@@ -509,20 +510,17 @@ const handleStudentPlan = async () => {
     console.log('Initiating student plan payment for email:', userEmail)
 
     // Call your payment endpoint with authorization
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/payment/initialize_deposit/',
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: 3000, // ₦3,000 for Student plan
-          email: userEmail,
-        }),
+    const response = await fetch(`${API_BASE}/payment/initialize_deposit/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        amount: 3000, // ₦3,000 for Student plan
+        email: userEmail,
+      }),
+    })
 
     console.log('Payment response status:', response.status)
 
@@ -581,20 +579,17 @@ const handlePayUPlan = async () => {
 
     console.log('Initiating PAYU payment for email:', userEmail)
 
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/payment/initialize_payu/',
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: 500, // ₦500 for single generation
-          email: userEmail,
-        }),
+    const response = await fetch(`${API_BASE}/payment/initialize_payu/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        amount: 500, // ₦500 for single generation
+        email: userEmail,
+      }),
+    })
 
     console.log('Payment response status:', response.status)
 
@@ -653,20 +648,17 @@ const handlePremiumPlan = async () => {
     console.log('Initiating payment for email:', userEmail)
 
     // Call your payment endpoint with authorization
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/payment/initialize_deposit/',
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: 7500, // ₦7,500 for Nigeria
-          email: userEmail,
-        }),
+    const response = await fetch(`${API_BASE}/payment/initialize_deposit/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        amount: 7500, // ₦7,500 for Nigeria
+        email: userEmail,
+      }),
+    })
 
     console.log('Payment response status:', response.status)
 

@@ -196,6 +196,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { API_BASE } from '@/config'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -253,7 +254,7 @@ const premiumCredits = computed(() => {
 // Method to refresh user data from backend
 const refreshUserData = async () => {
   try {
-    const response = await fetch('https://socratic-production-e023.up.railway.app/auth/user/', {
+    const response = await fetch(`${API_BASE}/auth/user/`, {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -446,14 +447,11 @@ const handleUpload = async () => {
     }, 300)
 
     // Make API request
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/socratic/create_processing/',
-      {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      },
-    )
+    const response = await fetch(`${API_BASE}/socratic/create_processing/`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    })
 
     clearInterval(progressInterval)
     uploadProgress.value = 100

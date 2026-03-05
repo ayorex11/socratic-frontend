@@ -246,6 +246,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { API_BASE } from '@/config'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -356,16 +357,13 @@ const debouncedSearch = () => {
 const fetchDocuments = async () => {
   try {
     loading.value = true
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/socratic/get_all_documents/',
-      {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    const response = await fetch(`${API_BASE}/socratic/get_all_documents/`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+    })
 
     if (response.ok) {
       const data = await response.json()
@@ -394,13 +392,10 @@ const downloadPDF = async (documentId) => {
   try {
     downloadingPDF.value[documentId] = true
 
-    const response = await fetch(
-      `https://socratic-production-e023.up.railway.app/socratic/download_pdf/${documentId}/`,
-      {
-        method: 'GET',
-        credentials: 'include',
-      },
-    )
+    const response = await fetch(`${API_BASE}/socratic/download_pdf/${documentId}/`, {
+      method: 'GET',
+      credentials: 'include',
+    })
 
     if (response.ok) {
       const blob = await response.blob()
@@ -433,13 +428,10 @@ const downloadAudio = async (documentId) => {
   try {
     downloadingAudio.value[documentId] = true
 
-    const response = await fetch(
-      `https://socratic-production-e023.up.railway.app/socratic/download_audio/${documentId}/`,
-      {
-        method: 'GET',
-        credentials: 'include',
-      },
-    )
+    const response = await fetch(`${API_BASE}/socratic/download_audio/${documentId}/`, {
+      method: 'GET',
+      credentials: 'include',
+    })
 
     if (response.ok) {
       const blob = await response.blob()

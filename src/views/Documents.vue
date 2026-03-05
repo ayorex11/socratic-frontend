@@ -193,6 +193,7 @@ import ProcessingCard from '../components/ProcessingCard.vue'
 import PdfViewerModal from '../components/PdfViewerModal.vue'
 import AudioPlayerModal from '../components/AudioPlayerModal.vue'
 import { useProcessingSSE } from '../composables/useProcessingSSE'
+import { API_BASE } from '@/config'
 
 const router = useRouter()
 const documents = ref([])
@@ -323,16 +324,13 @@ watch(processingDocumentsCount, (newCount, oldCount) => {
 const fetchDocuments = async () => {
   try {
     loading.value = true
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/socratic/list_processing_results/',
-      {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    const response = await fetch(`${API_BASE}/socratic/list_processing_results/`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+    })
 
     if (response.ok) {
       const data = await response.json()
@@ -421,16 +419,13 @@ const startPolling = () => {
     }
 
     try {
-      const response = await fetch(
-        'https://socratic-production-e023.up.railway.app/socratic/list_processing_results/',
-        {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      const response = await fetch(`${API_BASE}/socratic/list_processing_results/`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      )
+      })
 
       if (response.ok) {
         const data = await response.json()
@@ -552,13 +547,10 @@ const downloadPDF = async (documentId) => {
 
     downloadingPDF.value = { ...downloadingPDF.value, [documentId]: true }
 
-    const response = await fetch(
-      `https://socratic-production-e023.up.railway.app/socratic/download_pdf/${documentId}/`,
-      {
-        method: 'GET',
-        credentials: 'include',
-      },
-    )
+    const response = await fetch(`${API_BASE}/socratic/download_pdf/${documentId}/`, {
+      method: 'GET',
+      credentials: 'include',
+    })
 
     if (response.ok) {
       const blob = await response.blob()
@@ -602,13 +594,10 @@ const downloadAudio = async (documentId) => {
 
     downloadingAudio.value = { ...downloadingAudio.value, [documentId]: true }
 
-    const response = await fetch(
-      `https://socratic-production-e023.up.railway.app/socratic/download_audio/${documentId}/`,
-      {
-        method: 'GET',
-        credentials: 'include',
-      },
-    )
+    const response = await fetch(`${API_BASE}/socratic/download_audio/${documentId}/`, {
+      method: 'GET',
+      credentials: 'include',
+    })
 
     if (response.ok) {
       const blob = await response.blob()
@@ -660,16 +649,13 @@ const deleteDocument = async (documentId) => {
     deleting.value = { ...deleting.value, [documentId]: true }
     deleteConfirmId.value = null
 
-    const response = await fetch(
-      `https://socratic-production-e023.up.railway.app/socratic/delete/${documentId}/`,
-      {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    const response = await fetch(`${API_BASE}/socratic/delete/${documentId}/`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+    })
 
     if (response.ok || response.status === 204) {
       documents.value = documents.value.filter((doc) => doc.id !== documentId)

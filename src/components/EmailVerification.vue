@@ -39,6 +39,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { API_BASE } from '@/config'
 
 const route = useRoute()
 const router = useRouter()
@@ -58,18 +59,15 @@ onMounted(async () => {
   try {
     console.log('Verifying email with key:', key)
 
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/registration/verify-email/',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          key: key,
-        }),
+    const response = await fetch(`${API_BASE}/registration/verify-email/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        key: key,
+      }),
+    })
 
     console.log('Verification response status:', response.status)
 

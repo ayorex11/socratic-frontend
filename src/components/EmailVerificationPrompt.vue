@@ -22,7 +22,9 @@
             :disabled="loading"
           />
         </div>
-        <p v-if="email || manualEmail">Click the link in the email to verify your account and start using SocraSeek.</p>
+        <p v-if="email || manualEmail">
+          Click the link in the email to verify your account and start using SocraSeek.
+        </p>
 
         <div class="verification-actions">
           <button @click="resendVerification" :disabled="loading" class="resend-btn">
@@ -56,6 +58,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { API_BASE } from '@/config'
 
 const route = useRoute()
 const email = ref('')
@@ -94,18 +97,15 @@ const resendVerification = async () => {
   try {
     console.log('Resending verification to:', targetEmail)
 
-    const response = await fetch(
-      'https://socratic-production-e023.up.railway.app/registration/resend-email/',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: targetEmail,
-        }),
+    const response = await fetch(`${API_BASE}/registration/resend-email/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify({
+        email: targetEmail,
+      }),
+    })
 
     console.log('Resend response status:', response.status)
     const data = await response.json()
@@ -114,7 +114,8 @@ const resendVerification = async () => {
     if (response.ok) {
       success.value = 'Verification email sent successfully! Please check your inbox.'
     } else if (response.status === 404) {
-      error.value = 'Account not found. Please check your email address or register for a new account.'
+      error.value =
+        'Account not found. Please check your email address or register for a new account.'
     } else {
       if (data.detail) {
         error.value = data.detail
