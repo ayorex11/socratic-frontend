@@ -558,8 +558,15 @@
     color: #121212;
   }
 
+  .hero-image {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 24px rgba(39, 174, 96, 0.15);
+  }
+
   .hero-illustration {
-    mix-blend-mode: normal;
+    mix-blend-mode: multiply;
   }
 }
 
