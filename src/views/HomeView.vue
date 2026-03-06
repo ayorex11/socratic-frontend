@@ -196,17 +196,17 @@ const faqItems = [
   {
     question: 'What file formats does SocraSeek support?',
     answer:
-      'SocraSeek currently supports PDF files. Simply upload your PDF document and our AI will process it to generate summaries, Q&A pairs, flashcards, audio explanations, and interactive quizzes.',
+      'SocraSeek supports both PDF and DOCX files. Simply upload your document and our AI will process it to generate summaries, Q&A pairs, flashcards, audio explanations, and interactive quizzes.',
   },
   {
     question: 'How does the AI summarization work?',
     answer:
-      'When you upload a PDF, our AI extracts the text, analyzes the content, and generates a comprehensive summary highlighting key points. You can also upload past exam questions to guide the AI in focusing on the most relevant content.',
+      'When you upload a PDF or DOCX file, our AI extracts the text, analyzes the content, and generates a comprehensive summary highlighting key points. You can also upload past exam questions to guide the AI in focusing on the most relevant content.',
   },
   {
     question: 'What learning resources are generated from my PDF?',
     answer:
-      'SocraSeek generates multiple resources from a single PDF: a written summary, question & answer pairs, flashcards for quick review, an audio summary you can listen to on the go, a downloadable PDF report, and an interactive quiz to test your understanding.',
+      'SocraSeek generates multiple resources from a single document: a written summary, question & answer pairs, flashcards for quick review, an audio summary you can listen to on the go, a downloadable PDF report, and an interactive quiz to test your understanding.',
   },
   {
     question: 'Is there a free plan available?',
