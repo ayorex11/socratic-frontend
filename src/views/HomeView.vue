@@ -147,6 +147,29 @@
       </div>
     </section>
 
+    <!-- FAQ Section -->
+    <section class="faq">
+      <div class="container">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <div class="faq-list">
+          <div
+            v-for="(item, index) in faqItems"
+            :key="index"
+            class="faq-item"
+            :class="{ active: openFaq === index }"
+          >
+            <button class="faq-question" @click="toggleFaq(index)">
+              <span>{{ item.question }}</span>
+              <span class="faq-icon">{{ openFaq === index ? '−' : '+' }}</span>
+            </button>
+            <div class="faq-answer" :class="{ open: openFaq === index }">
+              <p>{{ item.answer }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="cta-section">
       <div class="container">
@@ -161,7 +184,56 @@
 </template>
 
 <script setup>
-// Component logic can go here
+import { ref } from 'vue'
+
+const openFaq = ref(null)
+
+function toggleFaq(index) {
+  openFaq.value = openFaq.value === index ? null : index
+}
+
+const faqItems = [
+  {
+    question: 'What file formats does SocraSeek support?',
+    answer:
+      'SocraSeek currently supports PDF files. Simply upload your PDF document and our AI will process it to generate summaries, Q&A pairs, flashcards, audio explanations, and interactive quizzes.',
+  },
+  {
+    question: 'How does the AI summarization work?',
+    answer:
+      'When you upload a PDF, our AI extracts the text, analyzes the content, and generates a comprehensive summary highlighting key points. You can also upload past exam questions to guide the AI in focusing on the most relevant content.',
+  },
+  {
+    question: 'What learning resources are generated from my PDF?',
+    answer:
+      'SocraSeek generates multiple resources from a single PDF: a written summary, question & answer pairs, flashcards for quick review, an audio summary you can listen to on the go, a downloadable PDF report, and an interactive quiz to test your understanding.',
+  },
+  {
+    question: 'Is there a free plan available?',
+    answer:
+      'Yes! Our Starter plan is completely free and lets you generate summaries with basic features. For longer, more detailed summaries, audio explanations, and additional features, check out our Premium or Student plans.',
+  },
+  {
+    question: 'What is the Student plan?',
+    answer:
+      'The Student plan offers premium features at a discounted price for students. If your email is from an educational institution (e.g., a .edu or university domain), you may be eligible for the student discount automatically.',
+  },
+  {
+    question: 'Can I browse documents from other users?',
+    answer:
+      'Yes! SocraSeek has a community feature where you can browse summaries and study materials shared by other users. Free users can access documents from other free users, while Premium users can access all community documents.',
+  },
+  {
+    question: 'How do the interactive quizzes work?',
+    answer:
+      'After your document is processed, SocraSeek generates a multiple-choice quiz based on the content. You can take the quiz, see your score, and review explanations for each question. Your attempts are tracked so you can monitor your progress over time.',
+  },
+  {
+    question: 'Can I download my summaries and study materials?',
+    answer:
+      'Absolutely! Premium and Pay-As-You-Use users can download PDF reports of their summaries and audio files of their audio summaries for offline studying. These are available directly from your dashboard.',
+  },
+]
 </script>
 
 <style scoped>
@@ -366,6 +438,94 @@
   font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
+/* FAQ Section */
+.faq {
+  padding: clamp(50px, 8vw, 100px) 0;
+}
+
+.faq-list {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.faq-item {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.faq-item:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.faq-item.active {
+  box-shadow: 0 4px 16px rgba(39, 174, 96, 0.15);
+}
+
+.faq-question {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(16px, 3vw, 20px) clamp(20px, 4vw, 24px);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+  font-weight: 600;
+  color: #2c3e50;
+  text-align: left;
+  gap: 16px;
+  transition: color 0.2s ease;
+}
+
+.faq-question:hover {
+  color: #27ae60;
+}
+
+.faq-icon {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #27ae60;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.faq-item.active .faq-icon {
+  transform: rotate(180deg);
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.35s ease,
+    padding 0.35s ease;
+  padding: 0 clamp(20px, 4vw, 24px);
+}
+
+.faq-answer.open {
+  max-height: 300px;
+  padding: 0 clamp(20px, 4vw, 24px) clamp(16px, 3vw, 20px);
+}
+
+.faq-answer p {
+  color: #5a6c7d;
+  line-height: 1.7;
+  font-size: clamp(0.9rem, 2.5vw, 0.95rem);
+  margin: 0;
+}
+
 /* Use Cases Section */
 .use-cases {
   padding: clamp(50px, 8vw, 100px) 0;
@@ -546,6 +706,39 @@
   .use-case {
     background: #2d2d2d;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .faq {
+    background: #121212;
+  }
+
+  .faq-item {
+    background: #2d2d2d;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .faq-item:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .faq-item.active {
+    box-shadow: 0 4px 16px rgba(46, 204, 113, 0.2);
+  }
+
+  .faq-question {
+    color: #e0e0e0;
+  }
+
+  .faq-question:hover {
+    color: #2ecc71;
+  }
+
+  .faq-icon {
+    color: #2ecc71;
+  }
+
+  .faq-answer p {
+    color: #b0b0b0;
   }
 
   .cta-button.secondary {
