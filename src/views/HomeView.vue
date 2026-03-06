@@ -559,7 +559,7 @@
   }
 
   .hero-illustration {
-    mix-blend-mode: screen;
+    mix-blend-mode: normal;
   }
 }
 
