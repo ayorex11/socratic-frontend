@@ -1,5 +1,8 @@
 <template>
   <div class="layout">
+    <!-- Route transition loading bar -->
+    <div class="route-loading-bar" :class="{ active: isRouteLoading }"></div>
+
     <nav class="navbar">
       <div class="nav-container">
         <!-- Logo -->
@@ -70,9 +73,17 @@
     <!-- Toast Notifications -->
     <ToastContainer />
 
-    <!-- Main Content -->
-    <main class="main-content">
+    <!-- Main Content — only render after auth state is resolved -->
+    <main class="main-content" v-if="authStore.authReady">
       <router-view />
+    </main>
+
+    <!-- Auth loading state — shown while verifying session -->
+    <main class="main-content auth-loading-state" v-else>
+      <div class="auth-loading-spinner">
+        <div class="spinner-ring"></div>
+        <p class="spinner-text">Loading...</p>
+      </div>
     </main>
   </div>
 </template>
@@ -88,6 +99,7 @@ const authStore = useAuthStore()
 const router = useRouter()
 const showWelcome = ref(false)
 const isMobileMenuOpen = ref(false)
+const isRouteLoading = ref(false)
 
 // Watch for authentication changes to show welcome animation
 watch(
@@ -145,6 +157,22 @@ const handleResize = () => {
   }
 }
 
+// Route transition loading bar
+let routeLoadingTimeout = null
+router.beforeEach(() => {
+  // Small delay so instant navigations don't flash the bar
+  routeLoadingTimeout = setTimeout(() => {
+    isRouteLoading.value = true
+  }, 80)
+})
+router.afterEach(() => {
+  clearTimeout(routeLoadingTimeout)
+  // Brief delay to let the bar reach the end before hiding
+  setTimeout(() => {
+    isRouteLoading.value = false
+  }, 150)
+})
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('keydown', handleEscapeKey)
@@ -161,6 +189,59 @@ onUnmounted(() => {
 <style scoped>
 .layout {
   min-height: 100vh;
+}
+
+/* Route transition loading bar */
+.route-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: linear-gradient(90deg, #27ae60, #2ecc71, #27ae60);
+  z-index: 9999;
+  transition: width 0.1s ease;
+  pointer-events: none;
+}
+
+.route-loading-bar.active {
+  width: 85%;
+  transition: width 8s cubic-bezier(0.1, 0.5, 0.3, 1);
+}
+
+/* Auth loading spinner */
+.auth-loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.spinner-ring {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e9ecef;
+  border-top-color: #27ae60;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-text {
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .navbar {
@@ -451,6 +532,15 @@ onUnmounted(() => {
   .logout-btn:hover {
     transform: none;
   }
+
+  .route-loading-bar,
+  .route-loading-bar.active {
+    transition: none;
+  }
+
+  .spinner-ring {
+    animation: none;
+  }
 }
 
 /* Dark mode support */
@@ -494,6 +584,15 @@ onUnmounted(() => {
   .mobile-overlay {
     background: rgba(0, 0, 0, 0.7);
   }
+
+  .spinner-ring {
+    border-color: #333;
+    border-top-color: #27ae60;
+  }
+
+  .spinner-text {
+    color: #adb5bd;
+  }
 }
 
 /* High contrast mode */
@@ -509,3 +608,4 @@ onUnmounted(() => {
   }
 }
 </style>
+

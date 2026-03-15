@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
@@ -115,12 +116,25 @@ const router = createRouter({
 })
 
 // Add navigation guard to protect authenticated routes
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
-  // Check token validity on every route change for authenticated users
-  if (authStore.isAuthenticated) {
-    // Rely on network requests to 401 instead of manual client-side token checking
+  // Wait until auth initialization is complete before making any decisions.
+  // This prevents the flash where dashboard renders with stale localStorage state
+  // before the server confirms the session has expired.
+  if (!authStore.authReady) {
+    await new Promise((resolve) => {
+      const unwatch = watch(
+        () => authStore.authReady,
+        (ready) => {
+          if (ready) {
+            unwatch()
+            resolve()
+          }
+        },
+        { immediate: true },
+      )
+    })
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
@@ -138,3 +152,4 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
+

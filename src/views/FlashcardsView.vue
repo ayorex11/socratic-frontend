@@ -344,7 +344,7 @@ onUnmounted(() => {
 .flashcard {
   width: 100%;
   max-width: 600px;
-  height: 400px;
+  min-height: 400px;
   cursor: pointer;
   perspective: 1000px;
   user-select: none;
@@ -402,13 +402,16 @@ onUnmounted(() => {
 .card-content {
   flex: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   font-size: clamp(1.2rem, 3.5vw, 1.8rem);
   font-weight: 500;
   color: #2d3748;
   line-height: 1.5;
   overflow-y: auto;
+  margin: auto 0;
+  max-height: 280px;
+  word-break: break-word;
 }
 
 .flip-hint {

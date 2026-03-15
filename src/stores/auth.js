@@ -5,6 +5,7 @@ import { API_BASE } from '@/config'
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
+  const authReady = ref(false)
 
   const login = async (credentials, fingerprint = null) => {
     try {
@@ -195,11 +196,8 @@ export const useAuthStore = defineStore('auth', () => {
     const storedUser = localStorage.getItem('user')
 
     if (storedUser) {
-      // We have cached user data — set it optimistically
-      user.value = JSON.parse(storedUser)
-      isAuthenticated.value = true
-
-      // Verify the cookie is still valid in the background
+      // Do NOT set isAuthenticated optimistically — wait for server verification.
+      // This prevents the dashboard from flashing before redirect on expired sessions.
       const valid = await checkAuth()
       if (!valid) {
         // Try refreshing the token
@@ -213,6 +211,9 @@ export const useAuthStore = defineStore('auth', () => {
         }
       }
     }
+
+    // Signal that auth state is now resolved — safe to render and navigate
+    authReady.value = true
   }
 
   // Updated Google Auth to use credential instead of access_token
@@ -256,6 +257,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user,
     isAuthenticated,
+    authReady,
     login,
     logout,
     logoutAllDevices,
