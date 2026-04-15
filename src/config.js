@@ -6,5 +6,5 @@
  * In development, the Vite proxy rewrites /api → the backend.
  */
 export const API_BASE = import.meta.env.DEV
-  ? '' // In dev, use Vite proxy (relative URLs go through /api proxy)
+  ? '/api'  // Routes through Vite proxy → backend
   : 'https://api.socraseek.com'
