@@ -115,37 +115,10 @@ const router = createRouter({
   routes,
 })
 
-// Add navigation guard to protect authenticated routes
-router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore()
-
-  // Wait until auth initialization is complete before making any decisions.
-  // This prevents the flash where dashboard renders with stale localStorage state
-  // before the server confirms the session has expired.
-  if (!authStore.authReady) {
-    await new Promise((resolve) => {
-      const unwatch = watch(
-        () => authStore.authReady,
-        (ready) => {
-          if (ready) {
-            unwatch()
-            resolve()
-          }
-        },
-        { immediate: true },
-      )
-    })
-  }
-
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    // Redirect to login if trying to access protected route without auth
-    next('/login')
-  } else if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    // Redirect to dashboard if trying to access login/register while authenticated
-    next('/dashboard')
-  } else if (to.path === '/' && authStore.isAuthenticated) {
-    // Redirect authenticated users from home to dashboard
-    next('/dashboard')
+// Redirect any route attempt to the hiatus (home) page
+router.beforeEach((to, from, next) => {
+  if (to.path !== '/') {
+    next('/')
   } else {
     next()
   }

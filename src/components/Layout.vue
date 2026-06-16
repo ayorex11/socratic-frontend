@@ -1,9 +1,9 @@
 <template>
-  <div class="layout">
+  <div class="layout" :class="{ 'hiatus-layout': isHiatus }">
     <!-- Route transition loading bar -->
     <div class="route-loading-bar" :class="{ active: isRouteLoading }"></div>
 
-    <nav class="navbar">
+    <nav class="navbar" v-if="!isHiatus">
       <div class="nav-container">
         <!-- Logo -->
         <div class="nav-logo">
@@ -68,18 +68,18 @@
     </nav>
 
     <!-- Welcome Animation -->
-    <WelcomeAnimation v-if="showWelcome" @close="showWelcome = false" />
+    <WelcomeAnimation v-if="showWelcome && !isHiatus" @close="showWelcome = false" />
 
     <!-- Toast Notifications -->
     <ToastContainer />
 
     <!-- Main Content — only render after auth state is resolved -->
-    <main class="main-content" v-if="authStore.authReady">
+    <main class="main-content" :class="{ 'hiatus-content': isHiatus }" v-if="authStore.authReady || isHiatus">
       <router-view />
     </main>
 
     <!-- Auth loading state — shown while verifying session -->
-    <main class="main-content auth-loading-state" v-else>
+    <main class="main-content auth-loading-state" v-else-if="!isHiatus">
       <div class="auth-loading-spinner">
         <div class="spinner-ring"></div>
         <p class="spinner-text">Loading...</p>
@@ -89,14 +89,29 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import WelcomeAnimation from './WelcomeAnimation.vue'
 import ToastContainer from './ToastContainer.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
+const isHiatus = computed(() => route.path === '/')
+
+watch(
+  isHiatus,
+  (newVal) => {
+    if (newVal) {
+      document.body.classList.add('hiatus-layout-body')
+    } else {
+      document.body.classList.remove('hiatus-layout-body')
+    }
+  },
+  { immediate: true },
+)
+
 const showWelcome = ref(false)
 const isMobileMenuOpen = ref(false)
 const isRouteLoading = ref(false)
@@ -403,6 +418,14 @@ onUnmounted(() => {
   min-height: calc(100vh - clamp(60px, 8vw, 70px));
 }
 
+.hiatus-layout {
+  background-color: #1a1a2e;
+}
+
+.hiatus-content {
+  min-height: 100vh;
+}
+
 /* Mobile Overlay */
 .mobile-overlay {
   position: fixed;
@@ -606,6 +629,12 @@ onUnmounted(() => {
   .logout-btn {
     border: 1px solid #000;
   }
+}
+</style>
+
+<style>
+body.hiatus-layout-body {
+  background-color: #1a1a2e !important;
 }
 </style>
 
